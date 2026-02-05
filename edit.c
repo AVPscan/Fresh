@@ -75,16 +75,15 @@ int CharType(const unsigned char* buf, int* len) {
     unsigned char c = *buf; int l;
     if (c < 128) { *len = 1;
         if (c >= '0' && c <= '9') return 1;
-        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return 2;
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || c == '$') return 2;
         if (c >= 33 && c <= 126) return 4;
         if (c == 0) return 5;
         return 3; }
-    if ((c & 0xE0) == 0xC0)      l = 2;
+    if ((c & 0xE0) == 0xC0) l = 2;
     else if ((c & 0xF0) == 0xE0) l = 3;
-        else if ((c & 0xF8) == 0xF0) l = 4;
-            else { *len = 1; return 5; }
-    *len = l; for (int i = 1; i < l; i++) if ((buf[i] & 0xC0) != 0x80) return 5;
-    return 2; }
+    else if ((c & 0xF8) == 0xF0) l = 4;
+    else { *len = 1; return 5; }
+    *len = l; return 2; }
 
 // --- Сердце Движка ---
 uint32_t GetHash(const char *s, int len) {
@@ -124,25 +123,50 @@ int AddOrUpdateToken(LogicEngine *le, unsigned char *name, int len, int level) {
     le->tokens[low].weight = 10; le->tokens[low].level = level; le->tokens[low].role = ROLE_UNKNOWN;
     le->tokens[low].parent_idx = -1; le->tokens[low].v_width = StrLen(name); le->t_count++; return low; }
 
+void ProcessSign(LogicEngine *le, unsigned char *name, int len) {
+    // Для первого запуска: просто разбиваем всё на одиночные знаки.
+    // Это позволит автомату собрать честную статистику по каждой скобке.
+    for (int i = 0; i < len; i++) {
+        unsigned char one_char = name[i];       
+        // Добавляем каждый знак как отдельный токен.
+        // stack_ptr пока передаем как есть, позже он будет меняться здесь.
+        int idx = AddOrUpdateToken(le, &one_char, 1, le->ps.stack_ptr);
+        if (idx >= 0) { le->tokens[idx].role |= ROLE_OP; }
+    } }
+
 void StepAnalysis(LogicEngine *le) {
     int len, type, first_type, total_len = 0;
     unsigned char *src = (unsigned char *)(le->buffer + le->ps.read_ptr);
     unsigned char *dst = (unsigned char *)(le->buffer + le->ps.write_ptr);
-    if (le->ps.read_ptr >= le->buffer_end) { le->analysis = 0; if (le->was_repaired) { SaveRepairedPart(le); le->was_repaired = 0; } }
-    while (le->ps.read_ptr < le->buffer_end) { type = CharType(src, &len); if (type != 5 && type != 3) break;
-        le->ps.read_ptr += len; src += len; if (type == 5) le->was_repaired = 1; }
+    if (le->ps.read_ptr >= le->buffer_end) { 
+        le->analysis = 0; if (le->was_repaired) { SaveRepairedPart(le); le->was_repaired = 0; } 
+        return; }
+    while (le->ps.read_ptr < le->buffer_end) { type = CharType(src, &len); 
+        if (type != 5 && type != 3) break;
+        le->ps.read_ptr += len; src += len; if (type == 5) le->was_repaired = 1;  }
     if (le->ps.read_ptr >= le->buffer_end) return;
-    
-    first_type = type; unsigned char *token_start = dst;
+    unsigned char *token_start = dst;
+    first_type = type;
+    if (first_type == 4 && (*src == '-' || *src == '+')) { int next_len; int next_type = CharType(src + len, &next_len);
+        if (next_type == 1) first_type = 1; }
     while (le->ps.read_ptr < le->buffer_end) { type = CharType(src, &len);
-        if (type == 5) { le->ps.read_ptr += len; src += len; le->was_repaired = 1; continue; }
-        if (type != first_type) break;
+        if (type == 5) { le->ps.read_ptr += len; src += len; le->was_repaired = 1; continue;  }
+        int should_collect = 0;
+        if (first_type == 1) {
+            if (type == 1 || type == 2) should_collect = 1;
+            else if (*src == '.') {  int nl; int nt = CharType(src + 1, &nl);
+                if (nt == 1 || nt == 2) should_collect = 1; }
+            else if (total_len > 0 && (*src == '-' || *src == '+')) { unsigned char prev = *(dst - 1);
+                if (prev == 'e' || prev == 'E') should_collect = 1; }
+            else if (total_len == 0 && (type == 4 && (*src == '-' || *src == '+'))) should_collect = 1; } 
+        else if (first_type == 2) { if (type == 2 || type == 1) should_collect = 1; }
+        else { if (type == first_type) should_collect = 1; }
+        if (!should_collect) break;
         for (int i = 0; i < len; i++) *dst++ = *src++;
         le->ps.read_ptr += len; total_len += len; }
-    if (first_type == 4 && type == 1 && total_len > 0) { if (*(dst - 1) == '-' || *(dst - 1) == '+') total_len--; }
     if (total_len > 0) {
         if (first_type == 1 || first_type == 2) AddOrUpdateToken(le, (char*)token_start, total_len, le->ps.stack_ptr);
-        else ProcessSign(le, token_start, total_len);
+        else  ProcessSign(le, token_start, total_len);
         le->ps.write_ptr += total_len; } }
 
 void HeartBeat(LogicEngine *le) {
