@@ -2,10 +2,8 @@ name: C/C++ CI
 
 on:
   push:
-  workflow_dispatch:
     branches: [ "main" ]
-  pull_request:
-  workflow_dispatch: 
+  pull_request: 
     branches: [ "main" ]
 
 jobs:
