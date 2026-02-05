@@ -99,6 +99,32 @@ void TryLinkFile(LogicEngine *le, const char *name) {
         // Для "всеядности" мы просто фиксируем факт связи
     } }
 
+int NextChunk(LogicEngine *le) {
+    if (!le->file_h) return 1;
+    size_t tail = 0;
+    if (le->buffer_end > 0 && le->ps.read_ptr < le->buffer_end) {
+        tail = le->buffer_end - le->ps.read_ptr;
+        if (tail > 0) {
+            if (tail > NBuf) tail = NBuf; 
+            memmove(FileBuf, FileBuf + le->ps.read_ptr, tail); } }
+    int read = os_read_file_at(le->file_h, le->file_offset, FileBuf + tail, DBuf);
+    if (read <= 0) {
+        if (tail == 0) { os_close_file(le->file_h); le->file_h = NULL; le->analysis = 0; return 1; }
+        le->is_eof = 1; } 
+    else le->file_offset += read;
+    size_t total = tail + read;
+    size_t safe_end = total;
+    if (!le->is_eof && total > NBuf) {
+        size_t limit = total - NBuf;
+        while (safe_end > limit) {
+            int l; int type = CharType(FileBuf + safe_end - 1, &l);
+            if (type == 3 || type == 4) break;
+            safe_end--; }
+        if (safe_end <= limit) safe_end = total; }
+    le->ps.read_ptr = 0;
+    le->buffer_end = safe_end;
+    return 0; }
+
 int AddOrUpdateToken(LogicEngine *le, unsigned char *name, int len, int level) {
     if (len <= 0 || !name) return -1;
     TryLinkFile(le, name); // Проверка на файл-сигнатуру
@@ -135,6 +161,8 @@ void ProcessSign(LogicEngine *le, unsigned char *name, int len) {
     } }
 
 void StepAnalysis(LogicEngine *le) {
+    if (le->ps.read_ptr >= le->buffer_end) {
+        if (NextChunk(le)) { le->analysis = 0; return; } }
     int len, type, first_type, total_len = 0;
     unsigned char *src = (unsigned char *)(le->buffer + le->ps.read_ptr);
     unsigned char *dst = (unsigned char *)(le->buffer + le->ps.write_ptr);
