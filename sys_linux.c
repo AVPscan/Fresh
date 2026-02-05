@@ -56,7 +56,7 @@
 #define LCur  "\033[u"
 #define Cce   "\033[K"
 
-extern unsigned char FileBuf[DBuf+NBuf];
+unsigned char FileBuf[DBuf+NBuf];
 void* os_open_file(const char* name) { return (void*)fopen(name, "rb"); }
 void* os_create_file(const char* name) { return (void*)fopen(name, "wb"); }
 void  os_close_file(void* handle) { if (handle) fclose((FILE*)handle); }
