@@ -1,5 +1,5 @@
 # 🛒 Code editor / редактор кода
-[![Build on Linux](https://github.com/AVPscan/Code_editor/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/c-cpp.yml)
+[![Build on Linux](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml)
  
 **Author:** Алексей Васильевич Поздняков (Alexey V. Pozdnyakov)  
 **Email:** avp70ru@mail.ru  
