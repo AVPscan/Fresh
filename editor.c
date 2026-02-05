@@ -21,5 +21,5 @@ int main() {
     if (k[0] != 27) printf ( Cna Lcur "%s    ", k);
     else printf (Cnu Lcur "%d    ", k[1]);
     if (k[0] == 27 && k[1] == K_ESC) break; }
-  SetInputMode(1); printf(ShCur Cce); fflush(stdout);
+  SetInputMode(0); printf(ShCur Cce); fflush(stdout);
   return 0; }
