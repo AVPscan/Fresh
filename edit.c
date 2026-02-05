@@ -232,7 +232,22 @@ void StepAnalysis(LogicEngine *le) {
 // --- Интерфейс и Главный Цикл ---
 
 void HandleInput(LogicEngine *le, const char *key) { }
-void RenderScreen(LogicEngine *le) { }
+void RenderScreen(LogicEngine *le) {
+    if (le->analysis) {
+        printf("\rАнализ [%s]: %ld/%ld байт. Токенов: %d (Уровень: %d)   ", 
+               le->current_file, le->file_offset, le->file_size, le->t_count, le->ps.stack_ptr);
+        fflush(stdout); } 
+    else if (le->t_count > 0) {
+        static int done = 0;
+        if (done) return;
+        printf("\n\n--- ОТЧЕТ АВТОМАТА ---\n");
+        printf("Всего уникальных токенов: %d\n", le->t_count);
+        printf("Топ токенов по весу (Level > 0):\n");
+        for (int i = 0; i < le->t_count && i < 15; i++) {
+            if (le->tokens[i].level > 0)
+                printf("[%s] вес:%d lvl:%d cnt:%d\n", 
+                       le->tokens[i].name, le->tokens[i].weight, le->tokens[i].level, le->tokens[i].count); }
+        done = 1; }}
 
 void HeartBeat(LogicEngine *le) {
     uint64_t start_analyze;
