@@ -85,17 +85,13 @@ int CharType(const unsigned char* buf, int* len) {
 
 int NextChunk(LogicEngine *le) {
     if (!le->current_file) return 1;
-
-    // Авто-инициализация открытия при первом обращении
     if (!le->file_h) {
         le->file_h = os_open_file(le->current_file);
         if (!le->file_h) { le->current_file = 0; le->analysis = 0; return 1; }
         le->file_offset = 0;
         le->is_eof = 0;
         le->buffer_end = 0;
-        le->ps.read_ptr = 0;
-    }
-
+        le->ps.read_ptr = 0; }
     size_t tail = 0;
     if (le->buffer_end > 0 && le->ps.read_ptr < le->buffer_end) {
         tail = le->buffer_end - le->ps.read_ptr;
@@ -121,7 +117,6 @@ int NextChunk(LogicEngine *le) {
 }
 
 void SaveRepairedPart(LogicEngine *le) {
-    // Твоя функция сохранения очищенного кода из FileBuf до ps.write_ptr
 }
 
 int AddOrUpdateToken(LogicEngine *le, unsigned char *name, int len, int level) {
@@ -229,8 +224,6 @@ void StepAnalysis(LogicEngine *le) {
     }
 }
 
-// --- Интерфейс и Главный Цикл ---
-
 void HandleInput(LogicEngine *le, const char *key) { }
 void RenderScreen(LogicEngine *le) {
     if (le->analysis) {
@@ -254,22 +247,13 @@ void HeartBeat(LogicEngine *le) {
     while (1) {
         const char *key = GetKey(); 
         if (key && key[0] == 27 && key[1] == 1 && key[2] == 0) break; 
-        
         HandleInput(le, key); 
         RenderScreen(le); 
-        
         if (le->analysis) {
             start_analyze = os_get_ms();
-            while ((os_get_ms() - start_analyze) < ANALYZE_QUANTA) {
-                StepAnalysis(le);
-                if (!le->analysis) break;
-            }
-        }
+            while ((os_get_ms() - start_analyze) < ANALYZE_QUANTA) if (!le->analysis) StepAnalysis(le); }
         delay_ms(10); 
-    } 
-}
-
-// --- Входная точка ---
+    } }
 
 int main(int argc, char *argv[]) {
     LogicEngine le = {0};
