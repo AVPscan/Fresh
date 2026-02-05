@@ -51,7 +51,7 @@
 
 #define DBuf 4096
 #define NBuf 1024
-
+unsigned char FileBuf[DBuf+NBuf];
 enum {
     K_ESC = 1, K_UP, K_DOW, K_RIG, K_LEF, 
     K_HOM, K_END, K_PUP, K_PDN, K_INS, K_DEL,
