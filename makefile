@@ -8,7 +8,7 @@
 #
 
 CC ?= gcc
-TARGET = products
+TARGET = editor
 
 UNAME_S := $(shell uname -s)
 
