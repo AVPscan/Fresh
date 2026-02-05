@@ -15,18 +15,8 @@
 // --- Константы проектирования ---
 #define MAX_LOGIC_PAIRS  32    
 #define MAX_PAIR_STR     32   
-#define MAX_TOKEN_LEN    64    
-#define MAX_NOISE_WORDS  64    
 #define NEST_STACK_DEPTH 128   
 #define ANALYZE_QUANTA   20    
-
-// --- Битовые маски ролей токена ---
-#define ROLE_UNKNOWN    0
-#define ROLE_GLOBAL     1     
-#define ROLE_LOCAL      2     
-#define ROLE_OP         4     
-#define ROLE_BLOCK      8     
-#define ROLE_NOISE      16    
 
 // --- Основные структуры ---
 typedef struct {
@@ -42,19 +32,33 @@ typedef struct {
 } Token_t;
 
 typedef struct {
-    int         parse_ptr, current_line, nest_stack[NEST_STACK_DEPTH], stack_ptr, in_comment, in_string;
+    int         read_ptr;       // Текущая позиция чтения в FileBuf
+    int         write_ptr;      // Позиция для записи (если нужно)
+    int         current_line;
+    int         nest_stack[NEST_STACK_DEPTH];
+    int         stack_ptr;
+    int         in_comment;
+    int         in_string;
 } ParseState;
 
 typedef struct {
     Token_t*    tokens;
     Pair_t      pairs[MAX_LOGIC_PAIRS];
     ParseState  ps;
+    
+    // Файловый блок для NextChunk
+    void*       file_h;         // Хендл открытого файла
+    long        file_offset;    // Текущее смещение для os_read_file_at
+    long        file_size;      // Общий размер (для прогресса)
+    int         is_eof;         // Флаг достижения конца физического файла
+    
     char        eol_str[MAX_PAIR_STR];
     uint32_t    noise_hashes[MAX_NOISE_WORDS];
     int         t_count, t_cap, p_count, n_count, indent_step, eol_len;
+    
     int         ready_to_help;      
-    int         analysis;           // Флаг анализа
-    int         buffer_end;         // Конец текущего буфера для анализа
+    int         analysis;           // Флаг: идет ли процесс анализа
+    int         buffer_end;         // Конец валидных данных в FileBuf
     uint64_t    tokens_at_last_check; 
 } LogicEngine;
 
