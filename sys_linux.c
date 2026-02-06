@@ -17,7 +17,7 @@
 #include <termios.h>    // Для tcgetattr
 #include <fcntl.h>      // Для fcntl
 #include <unistd.h>     // Для read, close
-
+#include <stdint.h>
 #include "sys.h"
 
 //#define USE_BW
@@ -58,6 +58,8 @@
 
 #define DBuf 4096
 #define NBuf 1024
+#define RING_BUF_SLOTS 16
+#define RING_BUF_SLOT_SIZE 128
 
 void* os_open_file(const char* name) { return (void*)fopen(name, "rb"); }
 void* os_create_file(const char* name) { return (void*)fopen(name, "wb"); }
@@ -98,9 +100,7 @@ void   os_printf(const char* format, ...) {
     va_start(args, format);
     vprintf(format, args);
     va_end(args); }
-void delay_ms(int ms) {
-    if (ms > 0) { struct timespec ts; ts.tv_sec = ms / 1000;
-    ts.tv_nsec = (ms % 1000) * 1000000L; nanosleep(&ts, NULL); } }
+
 unsigned char FileBuf[DBuf+NBuf];
 void SWD(void) {
     char *path = (char *)FileBuf;
@@ -160,3 +160,34 @@ int os_sync_size(void) {
         TS.ratio = (TS.w > 0) ? (TS.h * 100) / TS.w : 0;
         TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
     return 0; }
+
+char *GetBuf(void) {
+    static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
+    return (char*)FileBuf + (idx * RING_BUF_SLOT_SIZE); }
+    
+const char *Button(const char *label, int active) {
+    char *b = GetBuf();
+    if (active) snprintf(b, 128, "\033[7;53m%s\033[27;55m", label);
+    else snprintf(b, 128, "\033[1m%s\033[22m", label);
+    return b; }
+
+uint64_t get_cycles(void) {
+    union { uint64_t total; struct { uint32_t lo, hi; } part; } t;
+    __asm__ __volatile__ ("rdtsc" : "=a" (t.part.lo), "=d" (t.part.hi));
+    return t.total; }
+
+void delay_ms(int ms) {
+    static uint64_t cpu_hz = 0; if (cpu_hz == 0) {
+        struct timespec ts = {0, 10000000L}; uint64_t start = get_cycles();
+        nanosleep(&ts, NULL); cpu_hz = (get_cycles() - start) * 100;
+        if (cpu_hz == 0) cpu_hz = 1; }
+    uint64_t total_cycles = (uint64_t)ms * (cpu_hz / 1000);
+    uint64_t start_time = get_cycles();
+    if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L};
+        nanosleep(&sleep_ts, NULL); }
+    struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start);
+    uint32_t safety = 0; while ((get_cycles() - start_time) < total_cycles) {
+        __asm__ volatile("pause"); if (++safety > 2000) {
+            struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+            if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
+            safety = 0; } } }

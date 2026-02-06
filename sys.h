@@ -18,6 +18,7 @@
 
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 //#define USE_BW
 #define USE_RGB
@@ -57,6 +58,8 @@
 
 #define DBuf 4096
 #define NBuf 1024
+#define RING_BUF_SLOTS 16
+#define RING_BUF_SLOT_SIZE 128
 
 typedef struct {
     int w, h;       // Ширина и высота в символах (cols, rows)
@@ -88,11 +91,14 @@ char* os_strdup(const char* s);
 void  os_printf(const char* format, ...);
 int   os_snprintf(char* buf, size_t size, const char* format, ...);
 void SWD(void);
-void  delay_ms(int ms);
 
 void  SetInputMode(int raw);
 const char* GetKey(void);
 
 int os_sync_size(void);
+char *GetBuf(void);
+const char *Button(const char *label, int active);
+uint64_t get_cycles(void);
+void  delay_ms(int ms);
 #endif /* SYS_H */
 
