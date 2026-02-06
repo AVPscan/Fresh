@@ -130,24 +130,33 @@ KeyIDMap nameid[] = {
     {"[15~", K_F5}, {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8},
     {"[20~", K_F9}, {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12} };
 const char* GetKey(void) {
-    static char b[6]; char *p = b;
+    static unsigned char b[6]; unsigned char *p = b;
     os_memset(b, 0, sizeof(b));
-    if (read(0, p, 1) <= 0) { *p =27; return b; }
-    unsigned char c = *(unsigned char*)p; int len;
+    if (read(0, p, 1) <= 0) { *p =27; return (char*)b; }
+    unsigned char c = *p; int len;
     if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
         while (--len > 0) read(0, ++p, 1);
-        return b; }
-    if (c > 32 && c < 127) return b; 
+        return (char*)b; }
+    if (c > 32 && c < 127) return (char*)b; 
     *p++ = 27; *p = c;
-    if (c != 27) return b; 
-    unsigned char *s1,*s2;
+    if (c != 27) return (char*)b; 
+    const unsigned char *s1,*s2;
     if (read(0, p, 1) > 0) { 
-        if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return b; }
-        s1 = (unsigned char*)p; len = 4; while (--len > 0 && read(0, ++s1, 1) > 0);
-        for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) { s1 = (unsigned char*)p; s2 = (unsigned char*)nameid[j].name;
+        if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return (char*)b; }
+        s1 = p; len = 4; while (--len > 0 && read(0, (unsigned char*)++s1, 1) > 0);
+        for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) { s1 = p; s2 = (const unsigned char*)nameid[j].name;
             while (*s1 && *s1 == *s2) { s1++; s2++; }
             if (*s1 == '\0' && *s2 == '\0') { *p++ = nameid[j].id; *p = 0; break; } }
         if (*p != 0) b[1] = 0; }
-    return b; }
+    return (char*)b; }
 
+TermState TS = {0};
+int os_sync_size(void) {
+    struct winsize ws;
+    if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
+    if (ws.ws_col != TS.w || ws.ws_row != TS.h) {
+        TS.w = ws.ws_col; TS.h = ws.ws_row;
+        TS.ratio = (TS.w > 0) ? (TS.h * 100) / TS.w : 0;
+        TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
+    return 0; }

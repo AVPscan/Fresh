@@ -10,6 +10,12 @@
 #ifndef SYS_H
 #define SYS_H
 
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <sys/ioctl.h>
+#endif
+
 #include <stddef.h>
 #include <stdarg.h>
 
@@ -51,6 +57,13 @@
 
 #define DBuf 4096
 #define NBuf 1024
+
+typedef struct {
+    int w, h;       // Ширина и высота в символах (cols, rows)
+    int ratio;      // Целочисленный коэффициент пропорций (H * 100 / W)
+    int pw, ph;     // Виртуальные пиксели (для Брайля: 2x4)
+} TermState;
+extern TermState TS;
 extern unsigned char FileBuf[DBuf+NBuf];
 enum {
     K_NO,
@@ -80,5 +93,6 @@ void  delay_ms(int ms);
 void  SetInputMode(int raw);
 const char* GetKey(void);
 
+int os_sync_size(void);
 #endif /* SYS_H */
 

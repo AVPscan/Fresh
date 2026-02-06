@@ -15,7 +15,8 @@
 extern unsigned char FileBuf[DBuf+NBuf];
 
 int main() {
-  SetInputMode(1); printf(HCur SCur); fflush(stdout);
+  os_sync_size();
+  SetInputMode(1); printf("%d %d ", TS.w, TS.h); printf(HCur SCur); fflush(stdout);
   while (1) {
     delay_ms(60);
     const char* k = GetKey();
