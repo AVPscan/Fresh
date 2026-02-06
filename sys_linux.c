@@ -133,15 +133,21 @@ const char* GetKey(void) {
     static char b[6]; char *p = b;
     os_memset(b, 0, sizeof(b));
     if (read(0, p, 1) <= 0) { *p =27; return b; }
-    unsigned char c = *(unsigned char*)p;
+    unsigned char c = *(unsigned char*)p; int len;
     if (c > 127) {
-        int len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
-        while (--len > 0) read(0, ++p, 1); }
-    else if (c < 33 || c == 127) { *p++ = 27; *p = c;
-              if (c == 27) { int i = 0; while (i < 4 && read(0, p + i, 1) > 0) i++;
-                  if (i > 0) { for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) {
-                      const char *s1 = p, *s2 = nameid[j].name; while (*s1 && *s1 == *s2) { s1++; s2++; }
-                      if (*s1 == '\0' && *s2 == '\0') { *p++ = nameid[j].id; *p = 0;} }
-                  } } }
+        len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
+        while (--len > 0) read(0, ++p, 1);
+        return b; }
+    if (c > 32 && c < 127) return b; 
+    *p++ = 27; *p = c;
+    if (c != 27) return b; 
+    unsigned char *s1,*s2;
+    if (read(0, p, 1) > 0) { 
+        if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return b; }
+        s1 = (unsigned char*)p; len = 4; while (--len > 0 && read(0, ++s1, 1) > 0);
+        for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) { s1 = (unsigned char*)p; s2 = (unsigned char*)nameid[j].name;
+            while (*s1 && *s1 == *s2) { s1++; s2++; }
+            if (*s1 == '\0' && *s2 == '\0') { *p++ = nameid[j].id; *p = 0; break; } }
+        if (*p != 0) b[1] = 0; }
     return b; }
 
