@@ -1,0 +1,96 @@
+name: Linux musl static +(Cross-Platform)
+
+# Внимание: Разрешение на запись необходимо для создания релиза и загрузки файлов
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.00)'
+        required: true
+        type: string
+
+jobs:
+
+  # Задача 1: Сборка исполняемого файла для Linux (статический MUSL)
+  build-linux:
+    # Используем чистый контейнер Alpine Linux, где по умолчанию только MUSL
+    runs-on: ubuntu-latest
+    container: alpine:latest
+    steps:
+      - name: Checkout repository
+        # Используем специальный action для работы в контейнере
+        uses: actions/checkout@v4
+      
+      # Используем пакет 'build-base' (включает gcc, libc-dev) и 'make'
+      - name: Install build tools (GCC, make, and musl in Alpine)
+        run: apk add --no-cache build-base make musl binutils
+
+      - name: Run make musl
+        # Просто вызываем вашу цель make musl, которая теперь умная
+        run: make musl
+        
+      - name: Check binary status
+        run: |
+          # 'file' покажет "statically linked", 'ldd' покажет "not a dynamic executable"
+          file products
+          ldd products || echo "✅ Статус: Statically linked"
+          
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-executable
+          path: products
+
+  # Задача 4: Создание релиза и прикрепление артефактов
+  create-release:
+    needs: [build-linux]
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Get the release version from tag or input
+        id: get_version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Download Linux Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-executable
+          path: ./artefacts/linux # Скачиваем в уникальную поддиректорию
+
+      - name: Create Release
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="v${{ steps.get_version.outputs.version }}"
+          RELEASE_NAME="Release v${{ steps.get_version.outputs.version }}"
+          
+          gh release create "$TAG_NAME" \
+            --repo="$GITHUB_REPOSITORY" \
+            --title="$RELEASE_NAME" \
+            --generate-notes \
+            --latest
+            
+          echo "UPLOAD_URL=$(gh release view "$TAG_NAME" --repo="$GITHUB_REPOSITORY" --json uploadUrl -q .uploadUrl)" >> $GITHUB_ENV
+
+      - name: Upload Linux Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./artefacts/linux/products # Указываем путь к файлу в поддиректории
+          asset_name: Code_editor-v${{ steps.get_version.outputs.version }}
+          asset_content_type: application/octet-stream
