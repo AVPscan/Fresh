@@ -18,6 +18,8 @@
 #include <fcntl.h>      // Для fcntl
 #include <unistd.h>     // Для read, close
 #include <stdint.h>
+#include <sys/mman.h>
+#include <stddef.h>
 #include "sys.h"
 
 //#define USE_BW
@@ -160,6 +162,15 @@ int os_sync_size(void) {
         TS.ratio = (TS.w > 0) ? (TS.h * 100) / TS.w : 0;
         TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
     return 0; }
+
+size_t GetBuff(size_t *size) {
+    size_t aligned = (*size + 0xFFF) & ~0xFFF;  // 4096
+    void *ptr = mmap(0, aligned, 3, 34, -1, 0); // Прямой системный вызов: 3 = READ|WRITE, 34 = PRIVATE|ANONYMOUS
+    if (ptr == (void*)-1) return 0;
+    *size = aligned; return (size_t)ptr; }
+
+void FreeBuff(size_t ptr, size_t size) {
+    if (ptr) munmap((void*)ptr, size); }
 
 char *GetBuf(void) {
     static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
