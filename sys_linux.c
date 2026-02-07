@@ -163,14 +163,15 @@ int os_sync_size(void) {
         TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
     return 0; }
 
+static size_t GlobalBuf = 0, GlobalLen = 0;
 size_t GetBuff(size_t *size) {
-    size_t aligned = (*size + 0xFFF) & ~0xFFF;  // 4096
-    void *ptr = mmap(0, aligned, 3, 34, -1, 0); // Прямой системный вызов: 3 = READ|WRITE, 34 = PRIVATE|ANONYMOUS
-    if (ptr == (void*)-1) return 0;
-    *size = aligned; return (size_t)ptr; }
+    GlobalLen = (*size + 0xFFF) & ~0xFFF;             // size < (GlobalLen=X*4096)
+    void *ptr = mmap(0, GlobalLen, 3, 34, -1, 0);     // Прямой системный вызов: 3 = READ|WRITE, 34 = PRIVATE|ANONYMOUS
+    if (ptr == (void*)-1) { GlobalBuf = 0; GlobalLen = 0; return 0; }
+    GlobalBuf = (size_t)ptr; *size = GlobalLen; return GlobalBuf; }
 
-void FreeBuff(size_t ptr, size_t size) {
-    if (ptr) munmap((void*)ptr, size); }
+void FreeBuff(void) {
+    if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
 
 char *GetBuf(void) {
     static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
