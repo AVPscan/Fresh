@@ -110,10 +110,16 @@ size_t GetBuff(size_t *size) {
     void *ptr = mmap(0, GlobalLen, 3, 34, -1, 0);     // Прямой системный вызов: 3 = READ|WRITE, 34 = PRIVATE|ANONYMOUS
     if (ptr == (void*)-1) { GlobalBuf = 0; GlobalLen = 0; return 0; }
     GlobalBuf = (size_t)ptr; *size = GlobalLen; return GlobalBuf; }
-
 void FreeBuff(void) {
     if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
 
+int GetC(void) { if (!GlobalBuf || !TS.w) return 1;
+    struct timespec cs, ce; char *p = (char *)GlobalBuf; memset(p, ' ', TS.w - 1); p[TS.w - 1] = '\r';
+    clock_gettime(CLOCK_MONOTONIC, &cs);
+    for(int i = 0; i < 100; i++) write(1, p, TS.w);
+    clock_gettime(CLOCK_MONOTONIC, &ce); 
+    long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.w * 100)); }
+    
 void SWD(void) { if (!GlobalBuf) return;
     char *path = (char *)GlobalBuf;
     ssize_t len = readlink("/proc/self/exe", path, 1024);
@@ -149,11 +155,3 @@ void delay_ms(int ms) {
         if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
                                if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
                                safety = 0; } } }
-
-typedef struct {          // задел на потом))
-    int x, y, w, h;       // Положение окна на экране
-    int curX, curY;       // Положение курсора внутри данных (в файле)
-    int viewX, viewY;     // Смещение "камеры" относительно данных
-    size_t dataPtr;       // Смещение в GlobalBuf, где лежат данные этого окна
-    uint32_t flags;       // Тип: скроллбары, рамки, активное/пассивное
-} TUI_Window;
