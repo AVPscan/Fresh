@@ -1,3 +1,6 @@
+[![Build on Linux](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml)
+
+
 # 🌀 Balidan Linux: Code Editor / OS Concept
 > **"Нормальный терминал" на базе Форт-логики и динамической видеопамяти.**
 
