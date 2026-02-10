@@ -47,8 +47,10 @@
 #define Cls   "\033[2J\033[H"
 #define SCur  "\033[s"
 #define LCur  "\033[u"
-#define Cce   "\033[K"
 #define Cha   "\033[G"
+#define ZCur  "\033[K"
+#define LWOn  "\033[?7h"
+#define LWOff "\033[?7l"
 
 enum { K_NO, K_CRA, K_CRB, K_CRC, K_CRD, K_CRE, K_CRF, K_CRG, 
     K_DEL, K_TAB, K_LF,  K_CRK, K_CRL, K_ENT, K_CRN, K_CRO, K_CRP, K_CRQ, K_CRR, K_CRS, K_CRT, K_CRU, 
