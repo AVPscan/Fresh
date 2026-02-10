@@ -13,13 +13,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <time.h>
-#include <sys/time.h>
 #include <termios.h>
 #include <fcntl.h>   
 #include <unistd.h>     
 #include <stdint.h>
 #include <sys/mman.h>
-#include <stddef.h>
 #include <sys/ioctl.h>
 #include "sys.h"
 
