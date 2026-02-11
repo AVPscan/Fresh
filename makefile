@@ -8,7 +8,7 @@
 #
 
 CC ?= gcc
-TARGET = editor
+TARGET = fresh
 
 UNAME_S := $(shell uname -s)
 
@@ -29,7 +29,7 @@ else
 	GET_SIZE = stat -c%s $(TARGET)$(EXT)
 endif
 
-SOURCES = editor.c $(SYS_SRC)
+SOURCES = fresh.c $(SYS_SRC)
 
 BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra
 
