@@ -23,8 +23,6 @@
 
 #define RING_BUF_SLOTS 16
 #define RING_BUF_SLOT_SIZE 128
-typedef uintptr_t Cell;
-const Cell DIRTY_MASK = (Cell)0x8181818181818181ULL & (Cell)-1;
 
 void* os_open_file(const char* name) { return (void*)fopen(name, "rb"); }
 void* os_create_file(const char* name) { return (void*)fopen(name, "wb"); }
