@@ -16,6 +16,7 @@
 //#define USE_BW
 //#define USE_RGB
 
+#define Crs   "\033[0m"
 #ifdef USE_BW
   #define Cnn ""
   #define Cna ""
@@ -31,7 +32,7 @@
     #define Cnu "\033[38;2;30;144;255m"
     #define Cap "\033[38;2;34;139;34m"
     #define Cam "\033[38;2;220;20;60m"
-  #else // обычные
+  #else
     #define Cnn "\033[38;5;244m" // Номер (Серый)
     #define Cna "\033[38;5;166m" // Имя (Оранжевый)
     #define Cpr "\033[38;5;178m" // Цена (Золотистый) — хорошо выделяется
@@ -42,17 +43,17 @@
 #endif
 
 typedef uintptr_t Cell;
-#define CELL_SIZE sizeof(uintptr_t)
-#define SYSTEM_SECTOR_SIZE  0
-#define GLOBAL_SIZE_STR     8192
-#define GLOBAL_STRING       2048
+#define CELL_SIZE sizeof(Cell)
+
+#define SYSTEM_SECTOR_SIZE  0    // атрибуты 76543210 бит из них 70 обновить 321 цвет 654 фон
+#define GLOBAL_SIZE_STR     8192 // 2048 utf8 на 4 байта  X=4096 всё это масштабируется изменением размера шрифта терминала.
+#define GLOBAL_STRING       2048 // так хочется           Y=8192 это не перебор, в играх можно использовать как теневые экраны, причём много экранов.
 #define GLOBAL_DATA_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
 #define GLOBAL_ATTR_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
 #define GLOBAL_TOKEN_SIZE   (GLOBAL_SIZE_STR * GLOBAL_STRING) * 4
 #define GLOBAL_LINE_SIZE    GLOBAL_SIZE_STR * 6
-#define GLOBAL_SIZE         GLOBAL_DATA_SIZE * 6 + GLOBAL_LINE_SIZE
+#define GLOBAL_SIZE_VRAM    GLOBAL_DATA_SIZE * 6 + GLOBAL_LINE_SIZE + SYSTEM_SECTOR_SIZE
 
-#define Crs   "\033[0m"
 #define HCur  "\033[?25l"
 #define ShCur "\033[?25h"
 #define Cls   "\033[2J\033[H"
@@ -80,15 +81,15 @@ int   os_snprintf(char* buf, size_t size, const char* format, ...);
 void os_memset(void* buf, int val, size_t len);
 void  SetInputMode(int raw);
 const char* GetKey(void);
+uint64_t GetCycles(void);
+void  Delay_ms(int ms);
 size_t GetVram(size_t *size);
 void FreeVram(void);
-int GetC(void);
 void SWD(void);
-int os_sync_size(void);
 int GetWH(int *h);
+int GetC(void);
+int SyncSize(void);
 char *GetBuf(void);
 const char *Button(const char *label, int active);
-uint64_t get_cycles(void);
-void  delay_ms(int ms);
 
 #endif /* SYS_H */

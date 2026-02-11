@@ -16,7 +16,7 @@
 
 const Cell DIRTY_MASK = (Cell)0x8181818181818181ULL & (Cell)-1;
 const Cell CLEAN_MASK = ~((Cell)0x8181818181818181ULL & (Cell)-1);
-inline int is_cell_dirty(const void *ptr) { return (*(const Cell *)ptr & DIRTY_MASK) != 0; }
+
 typedef struct {
     uint16_t len;                                               // длина в байтах токена
     uint16_t visual;                                            // визуальная ширина в ячейках терминала токена
@@ -24,14 +24,14 @@ typedef struct {
 typedef struct {
     uint16_t len;                                               // Текущая длина в байтах строки
     uint16_t count;                                             // Текущее кол-во токенов в стороке
-    uint16_t visual;                                            // Общая визуальная ширина строки
+    uint16_t visual;                                            // Общая визуальная длина строки
 } LineData;
-char      *G_DATA      = NULL;
-char      *G_ATTRIBUTE = NULL;
-Token     *G_TOKENS    = NULL;
-LineData  *G_LINE      = NULL;
-#define GET_BLINE(row)      (G_DATA + ((size_t)(row) << 13))
-#define GET_ATTR(row,col)   (G_ATTRIBUTE + ((size_t)(row) << 13) + (size_t)(col))
+char          *G_DATA      = NULL;
+unsigned char *G_ATTRIBUTE = NULL;
+Token         *G_TOKENS    = NULL;
+LineData      *G_LINE      = NULL;
+#define GET_BLINE(row)      (char*)(G_DATA + ((size_t)(row) << 13))
+#define GET_ATTR(row,col)   (unsigned char*)(G_ATTRIBUTE + ((size_t)(row) << 13) + (size_t)(col))
 #define GET_TOKEN(row)      (Token*)((char*)G_TOKENS + ((size_t)(row) << 13))
 #define GET_DLINE(row)      (LineData*)((char*)G_LINE + (((size_t)(row) << 2) + ((size_t)(row) << 1)))
 uint32_t decode_utf8_fast(unsigned char *s, int *len) {         // Декодер
@@ -68,10 +68,8 @@ int get_vis_width(uint32_t cp) {
     )) return 2;
     return 1; }
 void smart_append(int row, int col, unsigned char *key) {
-    if (row < 0 || col < 0) return;
-    int len; uint32_t cp = decode_utf8_fast(key, &len);
-    if (key[0] < 32) return;                     // Игнорируем функциональные клавиши из GetKey
-    int vw = get_vis_width(cp);
+    if (row < 0 || col < 0 || key[0] < 32) return;
+    int len; uint32_t cp = decode_utf8_fast(key, &len); int vw = get_vis_width(cp);
     LineData *ld = GET_DLINE(row);                              // "Мозг" строки
     char *d_ptr = GET_BLINE(row) + ld->len;                     // Текущий хвост в G_DATA
     Token *t_ptr = GET_TOKEN(row);                              // Начало массива токенов для строки
@@ -82,11 +80,11 @@ void smart_append(int row, int col, unsigned char *key) {
         if (ld->count < (GLOBAL_SIZE_STR / 4) && ld->len + len < GLOBAL_SIZE_STR) {
             memcpy(d_ptr, key, len); t_ptr[ld->count].len = len; t_ptr[ld->count].visual = vw;
             ld->len += len; ld->count++; ld->visual += vw; } }
-    unsigned char *a_ptr = (unsigned char*)GET_ATTR(row, ld->visual - (vw ? vw : 0));
+    unsigned char *a_ptr = GET_ATTR(row, ld->visual - (vw ? vw : 0));
     *a_ptr |= 0x81; }                                           // Помечаем ячейку атрибутов грязной (dirty бит 0x81)
 int view_x = 0, view_y = 0;
 void CRD(int row) {
-    Cell *attr_ptr = (Cell*)GET_ATTR(row, 0); for (size_t i = 0; i < (GLOBAL_SIZE_STR / sizeof(Cell)); i++) attr_ptr[i] &= CLEAN_MASK; }
+    Cell *attr_ptr = (Cell*)GET_ATTR(row, 0); for (size_t i = 0; i < (GLOBAL_SIZE_STR / CELL_SIZE); i++) attr_ptr[i] &= CLEAN_MASK; }
 void render_line_auto(int world_row, int screen_row) { int w, h; w = GetWH(&h); (void)w;
     printf("\033[%d;1H%s", screen_row + 1, LWOff);
     if (world_row < 0 || world_row >= GLOBAL_STRING) { printf("\033[%d;1H%s%s", screen_row + 1, LWOff, ELin); return; }
@@ -109,22 +107,24 @@ void refresh_world(int cur_x, int cur_y) {
     if (screen_x >= 1 && screen_x <= w && screen_y >= 1 && screen_y <= h) printf("\033[%d;%dH%s", screen_y, screen_x, ShCur);
     else printf("\033[1;1H%s", HCur);
     fflush(stdout); }
+    
 void help() {
     printf(Cnn "Created by " Cna "Alexey Pozdnyakov" Cnn " in " Cna "02.2026" Cnn 
            " version " Cna "1.10" Cnn ", email " Cna "avp70ru@mail.ru" Cnn 
            " github " Cna "https://github.com" Cnn "\n"); }
+           
 int main(int argc, char *argv[]) {
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   return 0; }
   int len, cur_x = 0, cur_y = 0; size_t sz, Vram; if (!(Vram = GetVram(&sz))) return 0;
   G_DATA = (char*)(Vram + SYSTEM_SECTOR_SIZE);                  // Данные (байты)
-  G_ATTRIBUTE = (char*)(G_DATA + GLOBAL_DATA_SIZE);             // цвет, жирность.. аттрибут изменения токена x081
+  G_ATTRIBUTE = (unsigned char*)(G_DATA + GLOBAL_DATA_SIZE);    // цвет, фон, обновление токена x081
   G_TOKENS = (Token*)(G_ATTRIBUTE + GLOBAL_ATTR_SIZE);          // Метаданные (атомы) в строке
   G_LINE = (LineData*)((char*)G_TOKENS + GLOBAL_TOKEN_SIZE);    // Строки
-  SWD(); delay_ms(0); SetInputMode(1); printf(Cls); fflush(stdout);
+  SWD(); Delay_ms(0); SetInputMode(1); printf(Cls); fflush(stdout);
   while (1) {
-    if (os_sync_size()) refresh_world(cur_x, cur_y); 
-    delay_ms(30);
+    if (SyncSize()) refresh_world(cur_x, cur_y); 
+    Delay_ms(30);
     const char* k = GetKey();
     if (k[0] == 27 && k[1] == K_NO) continue;
     if (k[0] == 27 && k[1] == K_ESC) break;

@@ -39,12 +39,12 @@ int   os_snprintf(char* buf, size_t size, const char* format, ...) {
 void   os_printf(const char* format, ...) {
     va_list args; va_start(args, format); vprintf(format, args); va_end(args); }
 void os_memset(void* buf, int val, size_t len) { if (len == 0) return;
-    uint8_t *p = (uint8_t *)buf; uint8_t v = (uint8_t)val; const size_t word_size = sizeof(uintptr_t);
-    while (((uintptr_t)p & (word_size - 1)) && len > 0) { *p++ = v; len--; }
-    if (len >= word_size) {
-        uintptr_t vW = v; for (size_t i = 1; i < word_size; i <<= 1) vW |= (vW << (i * 8));
-        uintptr_t *pW = (uintptr_t *)p; size_t countW = len / word_size;for (size_t i = 0; i < countW; i++) pW[i] = vW;
-        p = (uint8_t *)(pW + countW); len %= word_size; }
+    uint8_t *p = (uint8_t *)buf; uint8_t v = (uint8_t)val;
+    while (((Cell)p & (CELL_SIZE - 1)) && len > 0) { *p++ = v; len--; }
+    if (len >= CELL_SIZE) {
+        Cell vW = v; for (size_t i = 1; i < CELL_SIZE; i <<= 1) vW |= (vW << (i * 8));
+        Cell *pW = (Cell *)p; size_t countW = len / CELL_SIZE; for (size_t i = 0; i < countW; i++) pW[i] = vW;
+        p = (uint8_t *)(pW + countW); len %= CELL_SIZE; }
     while (len--) *p++ = v; }
 
 void SetInputMode(int raw) {
@@ -81,39 +81,32 @@ const char* GetKey(void) {
         if (*p != 0) b[1] = 0; }
     return (char*)b; }
 
-typedef struct {
-    int w, h;       // Ширина и высота в символах (cols, rows)
-    int ratio;      // Целочисленный коэффициент пропорций (H * 100 / W)
-    int pw, ph;     // Виртуальные пиксели (для Брайля: 2x4)
-} TermState;
-static TermState TS = {0};
+uint64_t GetCycles(void) {
+    union { uint64_t total; struct { uint32_t lo, hi; } part; } t;
+    __asm__ __volatile__ ("rdtsc" : "=a" (t.part.lo), "=d" (t.part.hi));
+    return t.total; }
 
-int os_sync_size(void) {
-    struct winsize ws;
-    if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
-    if (ws.ws_col != TS.w || ws.ws_row != TS.h) {
-        TS.w = ws.ws_col; TS.h = ws.ws_row;
-        TS.ratio = (TS.w > 0) ? (TS.h * 100) / TS.w : 0;
-        TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
-    return 0; }
-int GetWH(int *h) { *h = TS.h; return TS.w; }
-
+void Delay_ms(int ms) {
+    static uint64_t cpu_hz = 0;
+    if (cpu_hz == 0) { struct timespec ts = {0, 10000000L}; uint64_t start = GetCycles();
+        nanosleep(&ts, NULL); cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
+    uint64_t total_cycles = (uint64_t)ms * (cpu_hz / 1000); uint64_t start_time = GetCycles();
+    if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
+    struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); uint32_t safety = 0;
+    while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
+        if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+                               if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
+                               safety = 0; } } }
+                               
 static size_t GlobalBuf = 0, GlobalLen = 0;
 size_t GetVram(size_t *size) {
-    GlobalLen = (GLOBAL_SIZE + 4096 + 0xFFF) & ~0xFFF;
+    GlobalLen = (GLOBAL_SIZE_VRAM + 4096 + 0xFFF) & ~0xFFF;
      void *ptr = mmap(0, GlobalLen, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (ptr == MAP_FAILED) { GlobalBuf = 0; GlobalLen = 0; return 0; }
     GlobalBuf = (size_t)ptr; *size = GlobalLen; return GlobalBuf; }
 
 void FreeVram(void) {
     if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
-
-int GetC(void) { if (!GlobalBuf || !TS.w) return 1;
-    struct timespec cs, ce; char *p = (char *)(GlobalBuf + GlobalLen - 4096); os_memset(p, ' ', TS.w - 1); p[TS.w - 1] = '\r';
-    clock_gettime(CLOCK_MONOTONIC, &cs);
-    for(int i = 0; i < 100; i++) write(1, p, TS.w);
-    clock_gettime(CLOCK_MONOTONIC, &ce); 
-    long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.w * 100)); }
     
 void SWD(void) { if (!GlobalBuf) return;
     char *path = (char *)(GlobalBuf + GlobalLen - 4096);
@@ -123,10 +116,34 @@ void SWD(void) { if (!GlobalBuf) return;
                           const char *home = getenv("HOME"); if (home != NULL) chdir(home);
                           return; }
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
+
+typedef struct {
+    int w, h;       // Ширина и высота в символах (cols, rows)
+    int ratio;      // Целочисленный коэффициент пропорций (H * 100 / W)
+    int pw, ph;     // Виртуальные пиксели (для Брайля: 2x4)
+} TermState;
+static TermState TS = {0};
+int GetWH(int *h) { *h = TS.h; return TS.w; }
+    
+int GetC(void) { if (!GlobalBuf || !TS.w) return 1;
+    struct timespec cs, ce; char *p = (char *)(GlobalBuf + GlobalLen - 4096); os_memset(p, ' ', TS.w - 1); p[TS.w - 1] = '\r';
+    clock_gettime(CLOCK_MONOTONIC, &cs);
+    for(int i = 0; i < 100; i++) write(1, p, TS.w);
+    clock_gettime(CLOCK_MONOTONIC, &ce); 
+    long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.w * 100)); }
+    
+int SyncSize(void) {
+    struct winsize ws;
+    if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
+    if (ws.ws_col != TS.w || ws.ws_row != TS.h) {
+        TS.w = ws.ws_col; TS.h = ws.ws_row;
+        TS.ratio = (TS.w > 0) ? (TS.h * 100) / TS.w : 0;
+        TS.pw = TS.w * 2; TS.ph = TS.h * 4; return 1; }
+    return 0; }
     
 char *GetBuf(void) {
     static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
-    return (char*)(GlobalBuf + GlobalLen - 4096) + (idx * RING_BUF_SLOT_SIZE); }
+    return (char*)(GlobalBuf + GlobalLen - 4096 + idx * RING_BUF_SLOT_SIZE); }
     
 const char *Button(const char *label, int active) {
     char *b = GetBuf();
@@ -134,19 +151,3 @@ const char *Button(const char *label, int active) {
     else snprintf(b, 128, "\033[1m%s\033[22m", label);
     return b; }
 
-uint64_t get_cycles(void) {
-    union { uint64_t total; struct { uint32_t lo, hi; } part; } t;
-    __asm__ __volatile__ ("rdtsc" : "=a" (t.part.lo), "=d" (t.part.hi));
-    return t.total; }
-
-void delay_ms(int ms) {
-    static uint64_t cpu_hz = 0;
-    if (cpu_hz == 0) { struct timespec ts = {0, 10000000L}; uint64_t start = get_cycles();
-        nanosleep(&ts, NULL); cpu_hz = (get_cycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
-    uint64_t total_cycles = (uint64_t)ms * (cpu_hz / 1000); uint64_t start_time = get_cycles();
-    if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
-    struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); uint32_t safety = 0;
-    while ((get_cycles() - start_time) < total_cycles) { __asm__ volatile("pause");
-        if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-                               if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
-                               safety = 0; } } }
