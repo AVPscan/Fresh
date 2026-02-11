@@ -91,6 +91,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./artefacts/linux/editor # Указываем путь к файлу в поддиректории
-          asset_name: Code_editor-v${{ steps.get_version.outputs.version }}
+          asset_path: ./artefacts/linux/fresh # Указываем путь к файлу в поддиректории
+          asset_name: Fresh-v${{ steps.get_version.outputs.version }}
           asset_content_type: application/octet-stream
