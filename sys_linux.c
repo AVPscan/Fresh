@@ -100,8 +100,8 @@ int GetWH(int *h) { *h = TS.h; return TS.w; }
 
 static size_t GlobalBuf = 0, GlobalLen = 0;
 size_t GetVram(void) {
-    GlobalLen = (GLOBAL_SIZE + 0xFFF) & ~0xFFF;             // size < (GlobalLen=X*4096)
-    void *ptr = mmap(0, GlobalLen, 3, 34, -1, 0);     // Прямой системный вызов: 3 = READ|WRITE, 34 = PRIVATE|ANONYMOUS
+    GlobalLen = (GLOBAL_SIZE + 4096 + 0xFFF) & ~0xFFF;
+     void *ptr = mmap(0, GlobalLen, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (ptr == (void*)-1) { GlobalBuf = 0; GlobalLen = 0; return 0; }
     GlobalBuf = (size_t)ptr; *size = GlobalLen; return GlobalBuf; }
 
@@ -109,14 +109,14 @@ void FreeVram(void) {
     if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
 
 int GetC(void) { if (!GlobalBuf || !TS.w) return 1;
-    struct timespec cs, ce; char *p = (char *)GlobalBuf; os_memset(p, ' ', TS.w - 1); p[TS.w - 1] = '\r';
+    struct timespec cs, ce; char *p = (char *)(GlobalBuf + GlobalLen - 4096); os_memset(p, ' ', TS.w - 1); p[TS.w - 1] = '\r';
     clock_gettime(CLOCK_MONOTONIC, &cs);
     for(int i = 0; i < 100; i++) write(1, p, TS.w);
     clock_gettime(CLOCK_MONOTONIC, &ce); 
     long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.w * 100)); }
     
 void SWD(void) { if (!GlobalBuf) return;
-    char *path = (char *)GlobalBuf;
+    char *path = (char *)(GlobalBuf + GlobalLen - 4096);
     ssize_t len = readlink("/proc/self/exe", path, 1024);
     if (len <= 0) return;
     path[len] = '\0'; if (strncmp(path, "/nix/store", 10) == 0) {
@@ -126,7 +126,7 @@ void SWD(void) { if (!GlobalBuf) return;
     
 char *GetBuf(void) {
     static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
-    return (char*)GlobalBuf + (idx * RING_BUF_SLOT_SIZE); }
+    return (char*)(GlobalBuf + GlobalLen - 4096) + (idx * RING_BUF_SLOT_SIZE); }
     
 const char *Button(const char *label, int active) {
     char *b = GetBuf();
