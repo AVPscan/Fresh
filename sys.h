@@ -41,6 +41,7 @@
   #endif
 #endif
 
+typedef uintptr_t Cell;
 #define CELL_SIZE sizeof(uintptr_t)
 #define SYSTEM_SECTOR_SIZE  0
 #define GLOBAL_SIZE_STR     8192
