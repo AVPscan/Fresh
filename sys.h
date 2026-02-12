@@ -46,7 +46,7 @@ typedef uintptr_t Cell;
 #define CELL_SIZE sizeof(Cell)
 
 #define SYSTEM_SECTOR_SIZE  8192 // атрибуты 76543210 бит из них 70 обновить 321 цвет 654 фон
-#define GLOBAL_TOKEN_STR    4096 // 4096 utf8 на 4 байта  X=8192 всё это масштабируется изменением размера шрифта терминала.
+#define GLOBAL_TOKEN_STR    4096 // 4096 utf8 на 4 байта  X=10922 всё это масштабируется изменением размера шрифта терминала.
 #define GLOBAL_STRING       2048 // так хочется           Y=8192 это не перебор, в играх можно использовать как теневые экраны, причём много экранов.
 #define GLOBAL_SIZE_STR     (GLOBAL_TOKEN_STR * 4)
 #define GLOBAL_DATA_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
