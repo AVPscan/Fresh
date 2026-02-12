@@ -19,6 +19,9 @@ const Cell DIRTY_MASK = UNIT * 0x81;
 const Cell CLEAN_MASK = ~DIRTY_MASK;
 
 typedef struct {
+    uint8_t data;                                               // 7fffccc0
+} Attr;
+typedef struct {
     uint16_t len;                                               // длина в байтах токена
     uint16_t visual;                                            // визуальная ширина в ячейках терминала токена
 } Token;
@@ -28,13 +31,14 @@ typedef struct {
     uint16_t visual;                                            // Общая визуальная длина строки
 } LineData;
 char          *G_DATA      = NULL;
-unsigned char *G_ATTRIBUTE = NULL;
+Attr          *G_ATTRIBUTE = NULL;
 Token         *G_TOKENS    = NULL;
 LineData      *G_LINE      = NULL;
-#define GET_BLINE(row)      (char*)(G_DATA + ((size_t)(row) << 13))
-#define GET_ATTR(row,col)   (unsigned char*)(G_ATTRIBUTE + ((size_t)(row) << 13) + (size_t)(col))
-#define GET_TOKEN(row)      (Token*)((char*)G_TOKENS + ((size_t)(row) << 13))
+#define GET_BLINE(row)      (char*)(G_DATA + ((size_t)(row) << 15))
+#define GET_ATTR(row,col)   (Attr*)(G_ATTRIBUTE + ((size_t)(row) << 15) + (size_t)(col))
+#define GET_TOKEN(row,col)  (Token*)((char*)G_TOKENS + ((size_t)(row) << 15) + ((size_t)(col) << 2))
 #define GET_DLINE(row)      (LineData*)((char*)G_LINE + (((size_t)(row) << 2) + ((size_t)(row) << 1)))
+
 uint32_t decode_utf8_fast(unsigned char *s, int *len) {         // Декодер
     unsigned char c = s[0];
     if (c < 0x80) { *len = 1; return c; }
@@ -69,21 +73,23 @@ int get_vis_width(uint32_t cp) {
     )) return 2;
     return 1; }
 
-void smart_append(int row, int col, unsigned char *key) {
-    if (row < 0 || col < 0 || key[0] < 32) return;
+int smart_append(int row, int col, unsigned char *key) {
+    if (row < 0 || col < 0 || key[0] < 32) return 1;
     int len; uint32_t cp = decode_utf8_fast(key, &len); int vw = get_vis_width(cp);
-    LineData *ld = GET_DLINE(row);                              // "Мозг" строки
-    char *d_ptr = GET_BLINE(row) + ld->len;                     // Текущий хвост в G_DATA
-    Token *t_ptr = GET_TOKEN(row);                              // Начало массива токенов для строки
-    if (is_combining(cp) && ld->count > 0) {                    // ПРИЛИПАЛА: расширяем последний токен
+    LineData *ld = GET_DLINE(row);                                      // "Мозг" строки
+    Token *t_ptr = GET_TOKEN(row,0);                                    // Начало массива токенов для строки
+    if (is_combining(cp) && ld->count > 0) {                            // ПРИЛИПАЛА: расширяем последний токен
         Token *last = &t_ptr[ld->count - 1];
-        if (ld->len + len < GLOBAL_SIZE_STR) { memcpy(d_ptr, key, len); last->len += len; ld->len += len; } }
-    else if (vw > 0) {                                          // НОВЫЙ СИМВОЛ
-        if (ld->count < (GLOBAL_SIZE_STR / 4) && ld->len + len < GLOBAL_SIZE_STR) {
-            memcpy(d_ptr, key, len); t_ptr[ld->count].len = len; t_ptr[ld->count].visual = vw;
+        if (ld->len + len < GLOBAL_SIZE_STR) { memcpy((GET_BLINE(row) + ld->len), key, len); last->len += len; ld->len += len; } }
+        else if (vw > 0) {                                              // НОВЫЙ СИМВОЛ
+                  if (ld->count < (GLOBAL_SIZE_STR / 4) && ld->len + len < GLOBAL_SIZE_STR) {
+                      memcpy((GET_BLINE(row) + ld->len), key, len); t_ptr[ld->count].len = len; t_ptr[ld->count].visual = vw;
             ld->len += len; ld->count++; ld->visual += vw; } }
-    unsigned char *a_ptr = GET_ATTR(row, ld->visual - (vw ? vw : 0));
-    *a_ptr |= 0x81; }                                           // Помечаем ячейку атрибутов грязной (dirty бит 0x81)
+//    *GET_ATTR(row, ld->visual - (vw ? vw : 0)) |= (uint8_t)(0x81); 
+    return len; }
+
+void LineAdd(int row, int col, char *str) { while (*str) str += smart_append(row,col, (unsigned char*)str); }
+
 int view_x = 0, view_y = 0;
 void CRD(int row) {
     Cell *dat = (Cell*)GET_ATTR(row, 0); size_t i = (GLOBAL_SIZE_STR / CELL_SIZE); while (i--) *dat++ &= CLEAN_MASK; }
@@ -91,7 +97,7 @@ void render_line_auto(int world_row, int screen_row) { int w, h; w = GetCR(&h); 
     printf("\033[%d;1H%s", screen_row + 1, LWOff);
     if (world_row < 0 || world_row >= GLOBAL_STRING) { printf("\033[%d;1H%s%s", screen_row + 1, LWOff, ELin); return; }
     LineData *ld = GET_DLINE(world_row);
-    Token *t_ptr = GET_TOKEN(world_row);
+    Token *t_ptr = GET_TOKEN(world_row,0);
     char *data_ptr = GET_BLINE(world_row);
     if (view_x < 0) { int padding = -view_x; for (int p = 0; p < padding; p++) printf(" "); }
     int cur_v_x = 0, byte_off = 0, i = 0; int start_x = (view_x < 0) ? 0 : view_x;
@@ -112,7 +118,7 @@ void refresh_world(int cur_x, int cur_y) {
     
 void help() {
     printf(Cnn "Created by " Cna "Alexey Pozdnyakov" Cnn " in " Cna "02.2026" Cnn 
-           " version " Cna "1.10" Cnn ", email " Cna "avp70ru@mail.ru" Cnn 
+           " version " Cna "1.13" Cnn ", email " Cna "avp70ru@mail.ru" Cnn 
            " github " Cna "https://github.com" Cnn "\n"); }
            
 int main(int argc, char *argv[]) {
@@ -120,10 +126,10 @@ int main(int argc, char *argv[]) {
                   return 0; }
   int len, cur_x = 0, cur_y = 0; size_t sz, Vram; if (!(Vram = GetVram(&sz))) return 0;
   G_DATA = (char*)(Vram + SYSTEM_SECTOR_SIZE);                  // Данные (байты)
-  G_ATTRIBUTE = (unsigned char*)(G_DATA + GLOBAL_DATA_SIZE);    // цвет, фон, обновление токена x081
+  G_ATTRIBUTE = (Attr*)(G_DATA + GLOBAL_DATA_SIZE);             // цвет, фон, обновление токена x081
   G_TOKENS = (Token*)(G_ATTRIBUTE + GLOBAL_ATTR_SIZE);          // Метаданные (атомы) в строке
   G_LINE = (LineData*)((char*)G_TOKENS + GLOBAL_TOKEN_SIZE);    // Строки
-  SWD(); Delay_ms(0); SetInputMode(1); printf(Cls); fflush(stdout);
+  SWD(); Delay_ms(0); SetInputMode(1); snprintf((char*)Vram, 128, "%zu", sz); LineAdd(0,0,(char*)Vram);
   while (1) {
     if (SyncSize()) refresh_world(cur_x, cur_y); 
     Delay_ms(30);
@@ -135,6 +141,6 @@ int main(int argc, char *argv[]) {
         if (k[1] == K_DOW) cur_y++;
         if (k[1] == K_RIG) cur_x++;
         if (k[1] == K_LEF) cur_x--; }
-    else { smart_append(cur_y, cur_x, (unsigned char*)k); cur_x += get_vis_width(decode_utf8_fast((unsigned char*)k, &len)); }
+    else { len = smart_append(cur_y, cur_x, (unsigned char*)k); cur_x += get_vis_width(decode_utf8_fast((unsigned char*)k, &len)); }
     refresh_world(cur_x, cur_y); }
   SetInputMode(0); printf(ShCur Crs); fflush(stdout); FreeVram(); return 0; }

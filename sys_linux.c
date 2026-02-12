@@ -108,7 +108,7 @@ void FreeVram(void) {
     if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
     
 void SWD(void) { if (!GlobalBuf) return;
-    char *path = (char *)(GlobalBuf + GlobalLen - 4096);
+    char *path = (char *)(GlobalBuf);
     ssize_t len = readlink("/proc/self/exe", path, 1024);
     if (len <= 0) return;
     path[len] = '\0'; if (strncmp(path, "/nix/store", 10) == 0) {
@@ -142,7 +142,7 @@ int SyncSize(void) { if (!GlobalBuf) return 0;
     
 char *GetBuf(void) {
     static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
-    return (char*)(GlobalBuf + GlobalLen - 4096 + idx * RING_BUF_SLOT_SIZE); }
+    return (char*)(GlobalBuf + idx * RING_BUF_SLOT_SIZE); }
     
 const char *Button(const char *label, int active) {
     char *b = GetBuf();

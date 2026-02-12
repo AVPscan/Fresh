@@ -45,14 +45,15 @@
 typedef uintptr_t Cell;
 #define CELL_SIZE sizeof(Cell)
 
-#define SYSTEM_SECTOR_SIZE  0    // атрибуты 76543210 бит из них 70 обновить 321 цвет 654 фон
-#define GLOBAL_SIZE_STR     8192 // 2048 utf8 на 4 байта  X=4096 всё это масштабируется изменением размера шрифта терминала.
+#define SYSTEM_SECTOR_SIZE  8192 // атрибуты 76543210 бит из них 70 обновить 321 цвет 654 фон
+#define GLOBAL_TOKEN_STR    4096 // 4096 utf8 на 4 байта  X=8192 всё это масштабируется изменением размера шрифта терминала.
 #define GLOBAL_STRING       2048 // так хочется           Y=8192 это не перебор, в играх можно использовать как теневые экраны, причём много экранов.
+#define GLOBAL_SIZE_STR     (GLOBAL_TOKEN_STR * 4)
 #define GLOBAL_DATA_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
-#define GLOBAL_ATTR_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
-#define GLOBAL_TOKEN_SIZE   (GLOBAL_SIZE_STR * GLOBAL_STRING) * 4
-#define GLOBAL_LINE_SIZE    GLOBAL_SIZE_STR * 6
-#define GLOBAL_SIZE_VRAM    GLOBAL_DATA_SIZE * 6 + GLOBAL_LINE_SIZE + SYSTEM_SECTOR_SIZE
+#define GLOBAL_ATTR_SIZE    (GLOBAL_TOKEN_STR * GLOBAL_STRING)
+#define GLOBAL_TOKEN_SIZE   (GLOBAL_TOKEN_STR * GLOBAL_STRING) * 4
+#define GLOBAL_LINE_SIZE    (GLOBAL_TOKEN_STR * 6)
+#define GLOBAL_SIZE_VRAM    SYSTEM_SECTOR_SIZE + GLOBAL_DATA_SIZE + (GLOBAL_ATTR_SIZE * 5) + GLOBAL_LINE_SIZE
 
 #define HCur  "\033[?25l"
 #define ShCur "\033[?25h"
