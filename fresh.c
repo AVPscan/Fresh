@@ -14,8 +14,13 @@
 #include <unistd.h>
 #include "sys.h"
 
+const uint8_t Fresh = 0x80;
+const uint8_t  Mcol = 0x07;
+const uint8_t  Mbol = 0x08;
+const uint8_t  Minv = 0x10;
+const uint8_t  Mibc = 0x1F;
 const Cell UNIT = (Cell)-1 / 255; 
-const Cell DIRTY_MASK = UNIT * 0x80;
+const Cell DIRTY_MASK = UNIT * Fresh;
 const Cell CLEAN_MASK = ~DIRTY_MASK;
 
 size_t     G_RAM_BASE   = 0;
@@ -38,7 +43,6 @@ uint8_t   *G_LINE_DIRTY = NULL;
 #define SIZE_LINE_INF     ((size_t)GLOBAL_STR * 2)               // 4 KB (uint16)
 #define SIZE_LINE_DIRTY   ((size_t)GLOBAL_STR)                   // 8 MB (uint8)
 #define GLOBAL_VRAM       (SYSTEM_SECTOR + SIZE_DATA + SIZE_ATTR + (SIZE_TOK_LEN + SIZE_TOK_VIS) + (SIZE_LINE_INF * 3) + SIZE_LINE_DIRTY)
-
 #define GET_BLINE(r)      (G_DATA + ((r) << 14)) 
 #define GET_ATTR(r, c)    (G_ATTRIBUTE + ((r) << 12) + (c))
 #define GET_TOK_LEN(r, c) (G_TOK_LEN + ((r) << 12) + (c))
@@ -46,7 +50,26 @@ uint8_t   *G_LINE_DIRTY = NULL;
 #define GET_LIN_LEN(r)    (G_LIN_LEN + (r))
 #define GET_LIN_VIS(r)    (G_LIN_VIS + (r))
 #define GET_LIN_CNT(r)    (G_LIN_CNT + (r))
-
+static const char ESC_HOME[] = "\033[H";
+static const char ESC_INV[] = "\033[7m";
+static const char ESC_NOINV[] = "\033[27m";
+static const char ESC_BOLD[] = "\033[1m";
+static const char ESC_NOBOLD[] = "\033[22m";
+static const char ESC_INV53[] = "\033[7;53m";
+static const char ESC_NOINV55[] = "\033[27;55m";
+static const char ESC_CURSOR_ON[] = "\033[?25h";
+static struct {
+    uint8_t len;
+    char seq[32];
+} ESC_CACHE[32];
+static char* fast_itoa(int val, char *p) {
+    if (val < 0) { *p++ = '-'; val = -val; }
+    char *start = p;
+    do { *p++ = '0' + (val % 10); val /= 10; } while (val);
+    char *end = p - 1;
+    while (start < end) { char t = *start; *start++ = *end; *end-- = t; }
+    return p; }
+    
 uint32_t UTFlen(unsigned char *s, int *len) {
     unsigned char c = s[0];
     if (c < 0x80) { *len = 1; return c; }
@@ -108,7 +131,7 @@ int UTFadd(int row, int col, unsigned char *key) {
             memcpy(insert_ptr, key, len);
             *(GET_TOK_LEN(row, target)) += len;
             *l_len += len;
-            *GET_ATTR(row, cur_v - *GET_TOK_VIS(row, target)) |= 0x80; }
+            *GET_ATTR(row, cur_v - *GET_TOK_VIS(row, target)) |= Fresh; }
         return 0; }
     if (vw > 0) {
         if (*l_cnt < GLOBAL_CELL && *l_len + len < (GLOBAL_CELL * 4)) {
@@ -124,7 +147,7 @@ int UTFadd(int row, int col, unsigned char *key) {
             *l_len += len;
             *l_vis += vw;
             (*l_cnt)++;
-            *GET_ATTR(row, col) |= 0x80; } }
+            *GET_ATTR(row, col) |= Fresh; } }
     G_LINE_DIRTY[row] = 1; return vw; }
 void UTFdel(int row, int col) {
     if (row < 0 || col < 0) return;
@@ -150,89 +173,85 @@ void UTFdel(int row, int col) {
     *l_len -= del_len;
     *l_vis -= del_vis;
     (*l_cnt)--;
-    *GET_ATTR(row, col) |= 0x80; G_LINE_DIRTY[row] = 1; }
+    *GET_ATTR(row, col) |= Fresh; G_LINE_DIRTY[row] = 1; }
 
 int view_x = 0, view_y = 0;
 void ReFresh(int cur_x, int cur_y) {
     int w, h; w = GetCR(&h);
-    if (cur_x < view_x) view_x = cur_x; if (cur_y < view_y) view_y = cur_y;
-    if (cur_x >= view_x + w) view_x = cur_x - w + 1;
-    if (cur_y >= view_y + h) view_y = cur_y - h + 1;
+    int delta = cur_x - view_x;
+    if (delta < 0) view_x = cur_x;
+    else if (delta >= w) view_x = cur_x - w + 1; 
+    delta = cur_y - view_y;
+    if (delta < 0) view_y = cur_y;
+    else if (delta >= h) view_y = cur_y - h + 1;
     char *buf_start = (char*)G_RAM_BASE + 128; char *p = buf_start; uint8_t last_clr = 0xFF;
-    memcpy(p, "\033[H", 3); p += 3;
+    memcpy(p, ESC_HOME, sizeof(ESC_HOME)-1); p += sizeof(ESC_HOME)-1;
     for (int i = 0; i < h; i++) {
-        int world_row = view_y + i; int screen_col = 0; uint8_t inv_now = 0; 
-        if (world_row < 0 || world_row >= GLOBAL_STR) {
-            if (!inv_now) { memcpy(p, "\033[7m", 4); p += 4; inv_now = 1; }
-            if (last_clr != 0) { char *c=G_PALETTE+(0<<5); memcpy(p,c+1,*c); p+=*c; last_clr=0; }
-            MemSet(p, ' ', w); p += w; screen_col = w; } 
+        int world_row = view_y + i; int screen_col = 0; uint8_t inv_now = 0;
+        if ((unsigned)world_row >= (unsigned)GLOBAL_STR) {
+            if (!inv_now) { memcpy(p, ESC_INV, sizeof(ESC_INV)-1); p += sizeof(ESC_INV)-1; inv_now = 1; }
+            if (last_clr != 0) { 
+                char *c = G_PALETTE + (0<<5); memcpy(p, c+1, *c); p += *c; last_clr = 0; }
+            MemSet(p, ' ', w); p += w; } 
         else {
             int left_pad = (view_x < 0) ? -view_x : 0;
             if (left_pad > w) left_pad = w;
             if (left_pad > 0) {
-                if (!inv_now) { memcpy(p, "\033[7m", 4); p += 4; inv_now = 1; }
-                if (last_clr != 0) { char *c=G_PALETTE+(0<<5); memcpy(p,c+1,*c); p+=*c; last_clr=0; }
-                MemSet(p, ' ', left_pad); p += left_pad; screen_col += left_pad; }
-            if (inv_now) { memcpy(p, "\033[27m", 5); p += 5; inv_now = 0; }
-            uint16_t l_cnt = *GET_LIN_CNT(world_row);
-            uint16_t l_vis = *GET_LIN_VIS(world_row);
-            int start_x = (view_x < 0) ? 0 : view_x;
-            if (l_cnt > 0 && start_x < l_vis) {
+                if (!inv_now) { memcpy(p, ESC_INV, sizeof(ESC_INV)-1); p += sizeof(ESC_INV)-1; inv_now = 1; }
+                if (last_clr != 0) { 
+                    char *c = G_PALETTE + (0<<5); memcpy(p, c+1, *c); p += *c; last_clr = 0; }
+                MemSet(p, ' ', left_pad); p += left_pad; screen_col = left_pad; }
+            if (inv_now) { memcpy(p, ESC_NOINV, sizeof(ESC_NOINV)-1); p += sizeof(ESC_NOINV)-1; inv_now = 0; }
+            uint16_t l_cnt = *GET_LIN_CNT(world_row); uint16_t l_vis = *GET_LIN_VIS(world_row); int start_x = (view_x < 0) ? 0 : view_x;
+            if (l_cnt && start_x < l_vis && screen_col < w) {
                 int cur_v_x = 0, byte_off = 0, t_idx = 0;
                 while (t_idx < l_cnt && cur_v_x < start_x) {
-                    byte_off += *GET_TOK_LEN(world_row, t_idx);
-                    cur_v_x  += *GET_TOK_VIS(world_row, t_idx);
-                    t_idx++; }
+                    byte_off += *GET_TOK_LEN(world_row, t_idx); cur_v_x  += *GET_TOK_VIS(world_row, t_idx); t_idx++; }
                 char *data_ptr = GET_BLINE(world_row);
                 while (t_idx < l_cnt && screen_col < w) {
-                    uint8_t *a_ptr = GET_ATTR(world_row, cur_v_x);
-                    uint8_t clr = *a_ptr & 0x1F;
+                    uint8_t clr = *GET_ATTR(world_row, cur_v_x) & Mibc;
                     if (clr != last_clr) {
-                        if (clr & 0x08) { memcpy(p, "\033[1m", 4); p += 4; } // Жирный
-                        else { memcpy(p, "\033[22m", 5); p += 5; }
-                        if (clr & 0x10) { memcpy(p, "\033[7;53m", 7); p += 7; } // Инв + Над
-                        else { memcpy(p, "\033[27;55m", 8); p += 8; }
-                        char *s = G_PALETTE + ((clr & 0x07) << 5); memcpy(p, s+1, *s); p += *s;
-                        last_clr = clr; }
-                    int bv = 0, bb = 0;
-                    while (t_idx < l_cnt && screen_col + bv < w) {
-                        uint8_t *cur_a = GET_ATTR(world_row, cur_v_x + bv);
-                        if ((*cur_a & 0x1F) != clr) break;
-                        bb += *GET_TOK_LEN(world_row, t_idx);
-                        bv += *GET_TOK_VIS(world_row, t_idx);
-                        *cur_a &= CLEAN_MASK;
-                        t_idx++; }
-                    memcpy(p, data_ptr + byte_off, bb);
-                    p += bb; byte_off += bb; screen_col += bv; cur_v_x += bv; } }
+                        memcpy(p, ESC_CACHE[clr].seq, ESC_CACHE[clr].len); p += ESC_CACHE[clr].len; last_clr = clr; }
+                    int bv = 0, bb = 0; int max_width = w - screen_col;
+                    while (t_idx < l_cnt && bv < max_width) {
+                        if ((*GET_ATTR(world_row, cur_v_x + bv) & Mibc) != clr) break;
+                        bb += *GET_TOK_LEN(world_row, t_idx); bv += *GET_TOK_VIS(world_row, t_idx); t_idx++; }
+                    memcpy(p, data_ptr + byte_off, bb); p += bb; byte_off += bb; screen_col += bv; cur_v_x += bv; } }
             if (screen_col < w) {
-                int canvas_end = (GLOBAL_CELL - view_x);
-                if (canvas_end > w) canvas_end = w;
+                int canvas_end = GLOBAL_CELL - view_x; if (canvas_end > w) canvas_end = w;
                 if (screen_col < canvas_end) {
-                    if (last_clr != 7) { char *c=G_PALETTE+(7<<5); memcpy(p,c+1,*c); p+=*c; last_clr=7; }
-                    MemSet(p, ' ', canvas_end - screen_col);
-                    p += (canvas_end - screen_col);
-                    screen_col = canvas_end; }
+                    if (last_clr != 7) {
+                        memcpy(p, ESC_CACHE[7].seq, ESC_CACHE[7].len); p += ESC_CACHE[7].len; last_clr = 7; }
+                    MemSet(p, ' ', canvas_end - screen_col); p += canvas_end - screen_col; screen_col = canvas_end; }
                 if (screen_col < w) {
-                    if (!inv_now) { memcpy(p, "\033[7m", 4); p += 4; inv_now = 1; }
-                    if (last_clr != 0) { char *c=G_PALETTE+(0<<5); memcpy(p,c+1,*c); p+=*c; last_clr=0; }
-                    MemSet(p, ' ', w - screen_col); p += (w - screen_col); } } }
-        if (inv_now) { memcpy(p, "\033[27m", 5); p += 5; }
+                    if (!inv_now) { memcpy(p, ESC_INV, sizeof(ESC_INV)-1); p += sizeof(ESC_INV)-1; inv_now = 1; }
+                    if (last_clr != 0) {
+                        char *c = G_PALETTE + (0<<5); memcpy(p, c+1, *c); p += *c; last_clr = 0; }
+                    MemSet(p, ' ', w - screen_col); p += w - screen_col; } } }
+        if (inv_now) { memcpy(p, ESC_NOINV, sizeof(ESC_NOINV)-1); p += sizeof(ESC_NOINV)-1; }
         if (i < h - 1) { *p++ = '\r'; *p++ = '\n'; }
-        last_clr = 0xFF; 
-        if (world_row >= 0 && world_row < GLOBAL_STR) G_LINE_DIRTY[world_row] = 0; }
-    int sx = (cur_x - view_x) + 1; int sy = (cur_y - view_y) + 1;
-    write(1, buf_start, p - buf_start); p = buf_start;
+        last_clr = 0xFF;
+        if ((unsigned)world_row < (unsigned)GLOBAL_STR) G_LINE_DIRTY[world_row] = 0; }
+    write(1, buf_start, p - buf_start);
+    char cursor_buf[128]; p = cursor_buf;
+    int sx = cur_x - view_x + 1; int sy = cur_y - view_y + 1;
+    if (sx < 1) sx = 1; else if (sx > w) sx = w;
+    if (sy < 1) sy = 1; else if (sy > h) sy = h;
     if (cur_y < 0 || cur_x < 0 || cur_y >= GLOBAL_STR || cur_x >= GLOBAL_CELL) {
-        p += sprintf(p, "\033[%d;%dH X:%d Y:%d | RAM:%s ", h, w-38, cur_x, cur_y, (char*)G_RAM_BASE); }
-    if (cur_y >= 0 && cur_y < GLOBAL_STR && cur_x >= 0 && cur_x < GLOBAL_CELL) { memcpy(p, "\033[?25h", 6); p += 6; }
-    p += sprintf(p, "\033[%d;%dH", sy, sx); write(1, buf_start, p - buf_start); }
+        memcpy(p, "\033[", 2); p += 2; p = fast_itoa(h, p); *p++ = ';'; p = fast_itoa(w-38, p);
+        memcpy(p, "H X:", 4); p += 4; p = fast_itoa(cur_x, p); *p++ = ' '; *p++ = 'Y'; *p++ = ':';
+        p = fast_itoa(cur_y, p); memcpy(p, " | RAM:", 7); p += 7; p += sprintf(p, "%s ", (char*)G_RAM_BASE); }
+    if (cur_y >= 0 && cur_y < GLOBAL_STR && cur_x >= 0 && cur_x < GLOBAL_CELL) {
+        memcpy(p, ESC_CURSOR_ON, sizeof(ESC_CURSOR_ON)-1); p += sizeof(ESC_CURSOR_ON)-1; }
+    memcpy(p, "\033[", 2); p += 2; p = fast_itoa(sy, p); *p++ = ';'; p = fast_itoa(sx, p); *p++ = 'H'; 
+    write(1, cursor_buf, p - cursor_buf); }
 
 void LineAdd(int row, int col, char *str) { 
     while (*str) { int shift = UTFadd(row, col, (unsigned char*)str);
         int bytes; UTFlen((unsigned char*)str, &bytes); str += bytes;
         col += shift; } }
 
-void InitPalette() {
+void InitPalette(void) {
     for (int i = 0; i < 8; i++) {
         char *slot = G_PALETTE + (i << 5); uint8_t len = strlen(Crs);
         *slot = len; memcpy(slot + 1, Crs, len); }
@@ -240,7 +259,15 @@ void InitPalette() {
     for (int i = 0; i < 7; i++) {
         char *slot = G_PALETTE + (i << 5); uint8_t len = strlen(colors[i]);
         *slot = len; memcpy(slot + 1, colors[i], len); } 
-    memset(G_LINE_DIRTY, 1, GLOBAL_STR); }
+    memset(G_LINE_DIRTY, 1, GLOBAL_STR); 
+    for (int clr = 0; clr < 32; clr++) {
+        uint8_t col = clr & 7; uint8_t bold = (clr >> 3) & 1; uint8_t inv = (clr >> 4) & 1; char *p = ESC_CACHE[clr].seq;
+        if (bold) { memcpy(p, ESC_BOLD, sizeof(ESC_BOLD)-1); p += sizeof(ESC_BOLD)-1; }
+        else      { memcpy(p, ESC_NOBOLD, sizeof(ESC_NOBOLD)-1); p += sizeof(ESC_NOBOLD)-1; }
+        if (inv)  { memcpy(p, ESC_INV53, sizeof(ESC_INV53)-1); p += sizeof(ESC_INV53)-1; }
+        else      { memcpy(p, ESC_NOINV55, sizeof(ESC_NOINV55)-1); p += sizeof(ESC_NOINV55)-1; }
+        char *c = G_PALETTE + (col << 5); memcpy(p, c+1, *c); p += *c;
+        ESC_CACHE[clr].len = p - ESC_CACHE[clr].seq;} }
     
 void help() {
     printf(Cnn "Created by " Cna "Alexey Pozdnyakov" Cnn " in " Cna "02.2026" Cnn 
@@ -275,6 +302,7 @@ int main(int argc, char *argv[]) {
         if (k[1] == K_DOW) cur_y++;
         if (k[1] == K_RIG) cur_x++;
         if (k[1] == K_LEF) cur_x--;
+        if (k[1] == K_TAB) cur_x = (cur_x + 8) & ~7;
         if (k[1] == K_HOM) cur_x = 0;
         if (k[1] == K_END) { if (cur_y >= 0 && cur_y < GLOBAL_STR) cur_x = *GET_LIN_VIS(cur_y);
                              else cur_x = 0; }
