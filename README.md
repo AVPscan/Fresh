@@ -1,6 +1,7 @@
 [![Build on Linux](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml)
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
+почти релиз
 # 🌀 FreshVRAM (ex Balidan): Universal Terminal Monolith
 > **"Планетарный" терминальный движок на базе монолитной видеопамяти и Dirty-Bit рендеринга.**
 

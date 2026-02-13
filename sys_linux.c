@@ -21,9 +21,6 @@
 #include <sys/ioctl.h>
 #include "sys.h"
 
-#define RING_BUF_SLOTS 16
-#define RING_BUF_SLOT_SIZE 128
-
 void* os_open_file(const char* name) { return (void*)fopen(name, "rb"); }
 void* os_create_file(const char* name) { return (void*)fopen(name, "wb"); }
 void  os_close_file(void* handle) { if (handle) fclose((FILE*)handle); }
@@ -96,21 +93,16 @@ void Delay_ms(int ms) {
         if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
                                if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
                                safety = 0; } } }
-                               
-static size_t GlobalBuf = 0, GlobalLen = 0;
-size_t GetVram(size_t *size) {
-    GlobalLen = (GLOBAL_SIZE_VRAM + 4096 + 0xFFF) & ~0xFFF;
-     void *ptr = mmap(0, GlobalLen, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    if (ptr == MAP_FAILED) { GlobalBuf = 0; GlobalLen = 0; return 0; }
-    GlobalBuf = (size_t)ptr; *size = GlobalLen; return GlobalBuf; }
 
-void FreeVram(void) {
-    if (GlobalBuf) { munmap((void*)GlobalBuf, GlobalLen); GlobalBuf = 0; GlobalLen = 0; } }
+size_t GetRam(size_t *size) {
+    size_t l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (r == MAP_FAILED) { r = 0; l = 0; }
+    *size = l; return (size_t)r; }
+
+void FreeRam(size_t addr, size_t size) { if (addr) munmap((void*)addr, size); }
     
-void SWD(void) { if (!GlobalBuf) return;
-    char *path = (char *)(GlobalBuf);
-    ssize_t len = readlink("/proc/self/exe", path, 1024);
-    if (len <= 0) return;
+void SWD(size_t addr) { if (!addr) return;
+    char *path = (char *)(addr); ssize_t len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
     path[len] = '\0'; if (strncmp(path, "/nix/store", 10) == 0) {
                           const char *home = getenv("HOME"); if (home != NULL) chdir(home);
                           return; }
@@ -126,27 +118,17 @@ int GetCR(int *r) { *r = TS.row; return TS.col; }
 int GetSR(int *r) { *r = TS.ratio; return TS.Sos; }
 int GetBCR(int *r) { *r = TS.Brow; return TS.Bcol; }
 
-int GetSC(void) { if (!GlobalBuf || !TS.col) return 1;
-    struct timespec cs, ce; char *p = (char *)(GlobalBuf + GlobalLen - 4096); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
+int GetSC(size_t addr) { if (!addr || !TS.col) return 1;
+    struct timespec cs, ce; char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
     clock_gettime(CLOCK_MONOTONIC, &cs);
     for(int i = 0; i < 100; i++) write(1, p, TS.col);
     clock_gettime(CLOCK_MONOTONIC, &ce); 
     long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.col * 100)); }
     
-int SyncSize(void) { if (!GlobalBuf) return 0;
+int SyncSize(size_t addr) { if (!addr) return 0;
     struct winsize ws; TS.Sos = 0;
     if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
     TS.col = ws.ws_col; TS.row = ws.ws_row; TS.ratio = (TS.col > 0) ? (TS.row * 100) / TS.col : 0;
     TS.Bcol = TS.col * 2; TS.Brow = TS.row * 4; TS.Sos++; return 1; }
     
-char *GetBuf(void) {
-    static int idx = 0; idx = (idx + 1) & (RING_BUF_SLOTS - 1); 
-    return (char*)(GlobalBuf + idx * RING_BUF_SLOT_SIZE); }
-    
-const char *Button(const char *label, int active) {
-    char *b = GetBuf();
-    if (active) snprintf(b, 128, "\033[7;53m%s\033[27;55m", label);
-    else snprintf(b, 128, "\033[1m%s\033[22m", label);
-    return b; }
-

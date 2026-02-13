@@ -42,19 +42,6 @@
   #endif
 #endif
 
-typedef uintptr_t Cell;
-#define CELL_SIZE sizeof(Cell)
-
-#define SYSTEM_SECTOR_SIZE  8192 // атрибуты 76543210 бит из них 70 обновить 321 цвет 654 фон
-#define GLOBAL_TOKEN_STR    4096 // 4096 utf8 на 4 байта  X=10922 всё это масштабируется изменением размера шрифта терминала.
-#define GLOBAL_STRING       2048 // так хочется           Y=8192 это не перебор, в играх можно использовать как теневые экраны, причём много экранов.
-#define GLOBAL_SIZE_STR     (GLOBAL_TOKEN_STR * 4)
-#define GLOBAL_DATA_SIZE    (GLOBAL_SIZE_STR * GLOBAL_STRING)
-#define GLOBAL_ATTR_SIZE    (GLOBAL_TOKEN_STR * GLOBAL_STRING)
-#define GLOBAL_TOKEN_SIZE   (GLOBAL_TOKEN_STR * GLOBAL_STRING) * 4
-#define GLOBAL_LINE_SIZE    (GLOBAL_TOKEN_STR * 6)
-#define GLOBAL_SIZE_VRAM    SYSTEM_SECTOR_SIZE + GLOBAL_DATA_SIZE + (GLOBAL_ATTR_SIZE * 5) + GLOBAL_LINE_SIZE
-
 #define HCur  "\033[?25l"
 #define ShCur "\033[?25h"
 #define Cls   "\033[2J\033[H"
@@ -65,6 +52,9 @@ typedef uintptr_t Cell;
 #define LWOn  "\033[?7h"
 #define LWOff "\033[?7l"
 #define ELin  "\033[K"
+
+typedef uintptr_t Cell;
+#define CELL_SIZE sizeof(Cell)
 
 enum { K_NO, K_CRA, K_CRB, K_CRC, K_CRD, K_CRE, K_CRF, K_CRG,
     K_DEL, K_TAB, K_LF,  K_CRK, K_CRL, K_ENT, K_CRN, K_CRO, K_CRP, K_CRQ, K_CRR, K_CRS, K_CRT, K_CRU,
@@ -85,15 +75,13 @@ void SetInputMode(int raw);
 const char* GetKey(void);
 uint64_t GetCycles(void);
 void  Delay_ms(int ms);
-size_t GetVram(size_t *size);
-void FreeVram(void);
-void SWD(void);
+size_t GetRam(size_t *size);
+void FreeRam(size_t addr, size_t size);
+void SWD(size_t addr);
 int GetCR(int *r);
 int GetSR(int *r);
 int GetBCR(int *r);
-int GetSC(void);
-int SyncSize(void);
-char *GetBuf(void);
-const char *Button(const char *label, int active);
+int GetSC(size_t addr);
+int SyncSize(size_t addr);
 
 #endif /* SYS_H */
