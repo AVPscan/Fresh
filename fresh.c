@@ -67,6 +67,30 @@ static char* fast_itoa(int val, char *p) { if (val < 0) { *p++ = '-'; val = -val
     char *end = p - 1; while (start < end) { char t = *start; *start++ = *end; *end-- = t; }
     return p; }
 
+uint32_t UTFlen(unsigned char *s, int *len) {
+    unsigned char c = s[0];
+    if (c < 0x80) { *len = 1; return c; }
+    if ((c & 0xE0) == 0xC0) { *len = 2; return ((c & 0x1F) << 6) | (s[1] & 0x3F); }
+    if ((c & 0xE0) == 0xE0) { *len = 3; return ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F); }
+    if ((c & 0xF0) == 0xF0) { *len = 4; return ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) | ((s[2] & 0x3F) << 6) | (s[3] & 0x3F); }
+    *len = 1; return 0xFFFD; }
+int UTFcom(uint32_t cp) {
+    if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
+        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 1;
+    return 0; }
+int UTFvw(uint32_t cp) {
+    if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return 0;
+    if (cp < 256) return 1;
+    if (cp == 0x200B || cp == 0x200C || cp == 0x200D || cp == 0x200E || cp == 0x200F) return 0;
+    if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) || 
+        (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xFE20 && cp <= 0xFE2F) || (cp >= 0xE0100 && cp <= 0xE01EF)) return 0;
+    if (cp >= 0x1100 && ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) ||
+        (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || 
+        (cp >= 0xFE10 && cp <= 0xFE19) || (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) ||
+        (cp >= 0xFFE0 && cp <= 0xFFE6) || (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) ||
+        (cp >= 0x1F300))) return 2;
+    return 1; }
+    
 int UTFadd(int row, int col, unsigned char *key) {
     if (row >= GLOBAL_STR || row < 0) return 0;
     if (row < 0 || col < 0 || key[0] < 32) return 0;
@@ -215,7 +239,7 @@ void help() {
 int main(int argc, char *argv[]) {
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   return 0; }
-  int w, h, cur_x = 0, cur_y = 0; size_t size = GLOBAL_VRAM, ram; if (!(ram = GetRam(&size))) return 0;
+  int w, h = 0, cur_x = 0, cur_y = 0; size_t size = GLOBAL_VRAM, ram; if (!(ram = GetRam(&size))) return 0;
   int rp = 0, rc = 0;
   G_RAM_BASE   = ram;
   G_DATA       = (char*)(ram + SYSTEM_SECTOR);

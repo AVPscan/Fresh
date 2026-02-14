@@ -45,6 +45,37 @@ void MemSet(void* buf, int val, size_t len) {
         p = (uint8_t *)pW; }
     while (len--) *p++ = v; }
 
+void MemCpy(void* dst, const void* src, size_t len) {
+    uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
+    while (len && ((Cell)d & (CELL_SIZE - 1))) { *d++ = *s++; len--; }
+    if (len >= CELL_SIZE && ((Cell)s & (CELL_SIZE - 1)) == 0) {
+        Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / CELL_SIZE;
+        len &= (CELL_SIZE - 1); while (i--) *dW++ = *sW++;
+        d = (uint8_t *)dW; s = (uint8_t *)sW; }
+    while (len--) *d++ = *s++ ; }
+
+int8_t MemCmp(void* dst, const void* src, size_t len) {
+    uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
+    while (len && ((Cell)d & (CELL_SIZE - 1))) { if (*d != *s) return (int8_t)(*d - *s);
+                                                 d++; s++; len--; }
+    if (len >= CELL_SIZE && ((Cell)s & (CELL_SIZE - 1)) == 0) {
+        Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / CELL_SIZE;
+        len &= (CELL_SIZE - 1); while (i-- && (*dW == *sW)) { dW++; sW++; }
+        d = (uint8_t *)dW; s = (uint8_t *)sW;
+        if (i != (Cell)-1) len = CELL_SIZE; }
+    while (len--) { if (*d != *s) return (int8_t)(*d - *s);
+                    d++; s++ ; }
+    return 0; }
+
+void MemMove(void* dst, const void* src, size_t len) {
+    if (dst > src) { uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
+        d += len; s += len; while (len && ((Cell)d & (CELL_SIZE - 1))) { *--d = *--s; len--; }
+        if (len >= CELL_SIZE && ((Cell)s & (CELL_SIZE - 1)) == 0) {
+            Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / CELL_SIZE;
+            len &= (CELL_SIZE - 1); while (i--) *--dW = *--sW;
+            d = (uint8_t *)dW; s = (uint8_t *)sW; } }
+    else if (dst < src ) MemCpy(dst, src, len); }
+
 void SetInputMode(int raw) {
     static struct termios oldt;
     if (raw) {
@@ -60,7 +91,7 @@ KeyIDMap nameid[] = {
     {"[15~", K_F5}, {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8},
     {"[20~", K_F9}, {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12} };
 const char* GetKey(void) {
-    static unsigned char b[16]; unsigned char *p = b; int len = 0; while (len < 16) { b[len] = 0; len++; }
+    static unsigned char b[6]; unsigned char *p = b; int len = 0; while (len < 6) b[len++] = 0;
     if (read(0, p, 1) <= 0) { *p =27; return (char*)b; }
     unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
@@ -68,9 +99,10 @@ const char* GetKey(void) {
         return (char*)b; }
     if (c > 31 && c < 127) return (char*)b; 
     *p++ = 27; *p = c; if (c != 27) return (char*)b; 
-    const unsigned char *s1,*s2; if (read(0, p, 1) > 0) {
-        s1 = p; len = 14; while (--len > 0 && read(0, (unsigned char*)++s1, 1) > 0) if (*s1 >= 64) break; 
-        if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return (char*)b; }
+    unsigned char *s1; const unsigned char *s2; if (read(0, p, 1) > 0) {
+        s1 = p; len = 4; while (--len > 0 && read(0, (unsigned char*)++s1, 1) > 0);
+        s1++; while (read(0, (unsigned char*)s1, 1) > 0) if (*s1 >= 64) break; 
+        *s1 = 0; if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return (char*)b; }
         for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) { s1 = p; s2 = (const unsigned char*)nameid[j].name;
             while (*s1 && *s1 == *s2) { s1++; s2++; }
             if (*s1 == '\0' && *s2 == '\0') { *p++ = nameid[j].id; *p = 0; break; } }
@@ -131,27 +163,36 @@ int SyncSize(size_t addr) { if (!addr) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
     TS.col = ws.ws_col; TS.row = ws.ws_row; TS.ratio = (TS.col > 0) ? (TS.row * 100) / TS.col : 0;
     TS.Bcol = TS.col * 2; TS.Brow = TS.row * 4; TS.Sos++; return 1; }
-    
-uint32_t UTFlen(unsigned char *s, int *len) {
-    unsigned char c = s[0];
-    if (c < 0x80) { *len = 1; return c; }
-    if ((c & 0xE0) == 0xC0) { *len = 2; return ((c & 0x1F) << 6) | (s[1] & 0x3F); }
-    if ((c & 0xE0) == 0xE0) { *len = 3; return ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F); }
-    if ((c & 0xF0) == 0xF0) { *len = 4; return ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) | ((s[2] & 0x3F) << 6) | (s[3] & 0x3F); }
-    *len = 1; return 0xFFFD; }
-int UTFcom(uint32_t cp) {
+
+int8_t UTFinfo(unsigned char *s, uint8_t *len) {
+    unsigned char c = s[0]; uint32_t cp = 0xFFFD; *len = 1;
+    if (c < 0x80) cp = (uint32_t) c;
+    else if ((c & 0xE0) == 0xC0 && (s[1] & 0xC0) == 0x80)
+            { *len = 2; cp = ((c & 0x1F) << 6) | (s[1] & 0x3F); }
+    else if ((c & 0xF0) == 0xE0 && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80)
+            { *len = 3; cp = ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F); }
+    else if ((c & 0xF8) == 0xF0 && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) 
+            { *len = 4; cp = ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) | ((s[2] & 0x3F) << 6) | (s[3] & 0x3F); }
+    else return -2;
+    if ((*len == 2 && cp < 0x80) || (*len == 3 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
+        (*len == 4 && (cp < 0x10000 || cp > 0x10FFFF))) return -2;
     if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
-        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 1;
-    return 0; }
-int UTFvw(uint32_t cp) {
-    if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return 0;
+        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 0; // прилепало
+    if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return -1;   // управляющие
     if (cp < 256) return 1;
-    if (cp == 0x200B || cp == 0x200C || cp == 0x200D || cp == 0x200E || cp == 0x200F) return 0;
-    if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) || 
-        (cp >= 0xFE00 && cp <= 0xFE0F) || (cp >= 0xFE20 && cp <= 0xFE2F) || (cp >= 0xE0100 && cp <= 0xE01EF)) return 0;
-    if (cp >= 0x1100 && ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) ||
-        (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || 
+    if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) || (cp >= 0xE0100 && cp <= 0xE01EF)) return 0;
+    if ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) ||
+        (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) ||
         (cp >= 0xFE10 && cp <= 0xFE19) || (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) ||
         (cp >= 0xFFE0 && cp <= 0xFFE6) || (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) ||
-        (cp >= 0x1F300))) return 2;
+        (cp >= 0x1F300)) return 2;
     return 1; }
+
+int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem) {
+    if (len) *len = 0;
+    if (rem == 0) return -3;
+    *len = 1;
+    if ((*s & 0xE0) == 0xC0 && rem < 2) return -3;
+    else if ((*s & 0xF0) == 0xE0 && rem < 3) return -3;
+    else if ((*s & 0xF8) == 0xF0 && rem < 4) return -3;
+    return UTFinfo(s, len); }

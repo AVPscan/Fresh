@@ -71,6 +71,9 @@ void  os_printf(const char* format, ...);
 int   os_snprintf(char* buf, size_t size, const char* format, ...);
 
 void MemSet(void* buf, int val, size_t len);
+void MemCpy(void* dst, const void* src, size_t len);
+int8_t MemCmp(void* dst, const void* src, size_t len);
+void MemMove(void* dst, const void* src, size_t len);
 void SetInputMode(int raw);
 const char* GetKey(void);
 uint64_t GetCycles(void);
@@ -83,7 +86,7 @@ int GetSR(int *r);
 int GetBCR(int *r);
 int GetSC(size_t addr);
 int SyncSize(size_t addr);
-uint32_t UTFlen(unsigned char *s, int *len);
-int UTFcom(uint32_t cp);
-int UTFvw(uint32_t cp);
+int8_t UTFinfo(unsigned char *s, uint8_t *len);
+int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem);
+
 #endif /* SYS_H */
