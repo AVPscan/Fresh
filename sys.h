@@ -16,42 +16,59 @@
 //#define USE_BW
 //#define USE_RGB
 
-#define Crs   "\033[0m"
 #ifdef USE_BW
-  #define Cnn ""
-  #define Cna ""
-  #define Cpr ""
-  #define Cnu ""
-  #define Cap ""
-  #define Cam ""
+  #define Grey    ""
+  #define Green   ""
+  #define Red     ""
+  #define Blue    ""
+  #define Orange  ""
+  #define Gold    ""
 #else
   #ifdef USE_RGB
-    #define Cnn "\033[38;2;120;120;120m"
-    #define Cna "\033[38;2;210;105;30m"
-    #define Cpr "\033[38;2;184;134;11m"
-    #define Cnu "\033[38;2;30;144;255m"
-    #define Cap "\033[38;2;34;139;34m"
-    #define Cam "\033[38;2;220;20;60m"
+    #define Grey    "\033[38;2;120;120;120m" // Бледный нейтральный
+    #define Green   "\033[38;2;34;139;34m"   // Глубокий лесной
+    #define Red     "\033[38;2;220;20;60m"   // Насыщенный малиновый
+    #define Blue    "\033[38;2;30;144;255m"  // Яркий небесный
+    #define Orange  "\033[38;2;210;105;30m"  // Сочный оранжевый
+    #define Gold    "\033[38;2;184;134;11m"  // Светящийся золотой
   #else
-    #define Cnn "\033[38;5;244m" // Номер (Серый)
-    #define Cna "\033[38;5;166m" // Имя (Оранжевый)
-    #define Cpr "\033[38;5;178m" // Цена (Золотистый) — хорошо выделяется
-    #define Cnu "\033[38;5;27m"  // Число (Синий)
-    #define Cap "\033[38;5;28m"  // Рост/Плюс (Темно-зеленый)
-    #define Cam "\033[38;5;160m" // Падение/Минус (Красный)
+    #define Grey    "\033[38;5;244m"
+    #define Green   "\033[38;5;28m"
+    #define Red     "\033[38;5;160m"
+    #define Blue    "\033[38;5;27m"
+    #define Orange  "\033[38;5;166m"
+    #define Gold    "\033[38;5;178m"
   #endif
 #endif
 
-#define HCur  "\033[?25l"
-#define ShCur "\033[?25h"
-#define Cls   "\033[2J\033[H"
-#define SCur  "\033[s"
-#define LCur  "\033[u"
-#define Cha   "\033[G"
-#define ZCur  "\033[K"
-#define LWOn  "\033[?7h"
-#define LWOff "\033[?7l"
-#define ELin  "\033[K"
+#define Bold        "\033[1m"       // Жирный
+#define Dim         "\033[2m"       // Тусклый
+#define BoldOff     "\033[22m"      // Выключить Bold / Dim
+#define Italic      "\033[3m"       // Курсив
+#define ItalicOff   "\033[23m"      // Выключить курсив
+#define Underline   "\033[4m"       // Подчеркивание
+#define DoubleUnder "\033[21m"      // Двойное подчеркивание
+#define UnderOff    "\033[24m"      // Выключить подчеркивание (любое)
+#define Overline    "\033[53m"      // Надчеркивание
+#define OverlineOff "\033[55m"      // Выключить надчеркивание
+#define Blink       "\033[5m"       // Мигание
+#define BlinkOff    "\033[25m"      // Выключить мигание
+#define Invert      "\033[7m"       // Инверсия (реверс цветов)
+#define InvertOff   "\033[27m"      // Выключить инверсию
+#define Strike      "\033[9m"       // Зачеркивание
+#define StrikeOff   "\033[29m"      // Выключить зачеркивание
+#define ColorOff    "\033[39m"      // Сбросить только цвет
+#define Reset       "\033[0m"       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
+
+#define HideCur     "\033[?25l"     // Скрыть курсор
+#define ShowCur     "\033[?25h"     // Показать курсор
+#define Cls         "\033[2J\033[H" // Очистить экран и в начало
+#define SaveCur     "\033[s"        // Сохранить позицию курсора
+#define LoadCur     "\033[u"        // Вернуть курсор в сохраненную позицию
+#define HomeCur     "\033[G"        // Вернуть курсор в начало текущей строки
+#define ClearLine   "\033[K"        // Очистить строку от курсора до конца
+#define WrapOn      "\033[?7h"      // Включить перенос длинных строк
+#define WrapOff     "\033[?7l"      // Выключить перенос строк
 
 typedef uintptr_t Cell;
 #define CELL_SIZE sizeof(Cell)

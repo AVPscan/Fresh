@@ -142,9 +142,9 @@ void SWD(size_t addr) { if (!addr) return;
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
 typedef struct {
-    int col, row;   // Ширина и высота в символах (cols, rows)
-    int ratio, Sos; // Целочисленный коэффициент пропорций (H * 100 / W) и изменение
-    int Bcol, Brow; // Виртуальные пиксели (для Брайля: 2x4)
+    int col, row;
+    int ratio, Sos;
+    int Bcol, Brow;
 } TermState;
 static TermState TS = {0};
 int GetCR(int *r) { *r = TS.row; return TS.col; }
@@ -162,7 +162,7 @@ int SyncSize(size_t addr) { if (!addr) return 0;
     struct winsize ws; TS.Sos = 0;
     if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-    TS.col = ws.ws_col; TS.row = ws.ws_row; TS.ratio = (TS.col > 0) ? (TS.row * 100) / TS.col : 0;
+    TS.col = ws.ws_col; TS.row = ws.ws_row; TS.ratio = (TS.col > 0) ? (TS.row * 1000) / TS.col : 0;
     TS.Bcol = TS.col * 2; TS.Brow = TS.row * 4; TS.Sos++; return 1; }
 
 int8_t UTFinfo(unsigned char *s, uint8_t *len) {
