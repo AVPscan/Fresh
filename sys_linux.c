@@ -91,22 +91,23 @@ KeyIDMap nameid[] = {
     {"[15~", K_F5}, {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8},
     {"[20~", K_F9}, {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12} };
 const char* GetKey(void) {
-    static unsigned char b[6]; unsigned char *p = b; int len = 0; while (len < 6) b[len++] = 0;
-    if (read(0, p, 1) <= 0) { *p =27; return (char*)b; }
+    static unsigned char b[6]; unsigned char *p = b; int len = 6; while (len) b[--len] = 0;
+    if (read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
     unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
-        while (--len > 0) read(0, ++p, 1);
+        while (--len) read(0, ++p, 1);
         return (char*)b; }
     if (c > 31 && c < 127) return (char*)b; 
     *p++ = 27; *p = c; if (c != 27) return (char*)b; 
     unsigned char *s1; const unsigned char *s2; if (read(0, p, 1) > 0) {
-        s1 = p; len = 4; while (--len > 0 && read(0, (unsigned char*)++s1, 1) > 0);
-        s1++; while (read(0, (unsigned char*)s1, 1) > 0) if (*s1 >= 64) break; 
+        s1 = p; len = 3; while (len-- && read(0, ++s1, 1) > 0);
+        s1++; while (read(0, s1, 1) > 0) if (*s1 >= 64) break; 
         *s1 = 0; if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return (char*)b; }
-        for (int j = 0; j < (int)(sizeof(nameid)/sizeof(KeyIDMap)); j++) { s1 = p; s2 = (const unsigned char*)nameid[j].name;
+        int j = (int)(sizeof(nameid)/sizeof(KeyIDMap));
+        while(j--) { s1 = p; s2 = (const unsigned char*)nameid[j].name;
             while (*s1 && *s1 == *s2) { s1++; s2++; }
             if (*s1 == '\0' && *s2 == '\0') { *p++ = nameid[j].id; *p = 0; break; } }
-        if (*p != 0) b[1] = 0; }
+        if (j < 0) b[1] = 0; }
     return (char*)b; }
 
 uint64_t GetCycles(void) {
@@ -189,8 +190,7 @@ int8_t UTFinfo(unsigned char *s, uint8_t *len) {
     return 1; }
 
 int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem) {
-    if (len) *len = 0;
-    if (rem == 0) return -3;
+    *len = 0; if (rem == 0) return -3;
     *len = 1;
     if ((*s & 0xE0) == 0xC0 && rem < 2) return -3;
     else if ((*s & 0xF0) == 0xE0 && rem < 3) return -3;
