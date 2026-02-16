@@ -83,12 +83,12 @@ void help() {
 int main(int argc, char *argv[]) {
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   return 0; }
-  int w, h, cur_x = 0, cur_y = 0;
+  int16_t w, h, cur_x = 0, cur_y = 0;
   size_t size = SizeVram, ram, sc; if (!(ram = GetRam(&size))) return 0;
   SWD(ram); InitVram(ram,size); Delay_ms(0); SetInputMode(1); sc = ((size*10)/1048576);
   printf(Reset HideCur WrapOff "%zu", sc); fflush(stdout); snprintf((char*)Cdata, 128, "%zu", sc);
   while (1) {
-    sc = SyncSize(ram); w = GetCR(&h); Delay_ms(20); const char* k = GetKey();
+    sc = SyncSize(ram,0); w = TermCR(&h); Delay_ms(20); const char* k = GetKey();
     if (k[0] == 27) {
         if (k[1] == K_NO) continue;
         if (k[1] == K_ESC) break;

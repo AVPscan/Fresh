@@ -127,6 +127,26 @@ void Delay_ms(int ms) {
                                if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
                                safety = 0; } } }
 
+typedef struct { int16_t col, row; } TermState;
+static TermState TS = {0};
+int16_t TermCR(int16_t *r) { *r = TS.row; return TS.col; }
+    
+int SyncSize(size_t addr, uint8_t flag) { if (!addr) return 0;
+    struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
+    if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
+    if (flag) { uint8_t stable = 100;
+        while (stable) {
+            Delay_ms(10); stable -= 10;
+            if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 100; } } }
+    TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
+    
+int GetSC(size_t addr) { if (!addr || !TS.col) return 1;
+    struct timespec cs, ce; char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
+    clock_gettime(CLOCK_MONOTONIC, &cs);
+    for(int i = 0; i < 100; i++) write(1, p, TS.col);
+    clock_gettime(CLOCK_MONOTONIC, &ce); 
+    long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.col * 100)); }
+
 size_t GetRam(size_t *size) {
     size_t l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (r == MAP_FAILED) { r = 0; l = 0; }
@@ -140,31 +160,7 @@ void SWD(size_t addr) { if (!addr) return;
                           const char *home = getenv("HOME"); if (home != NULL) chdir(home);
                           return; }
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
-
-typedef struct {
-    int col, row;
-    int ratio, Sos;
-    int Bcol, Brow;
-} TermState;
-static TermState TS = {0};
-int GetCR(int *r) { *r = TS.row; return TS.col; }
-int GetSR(int *r) { *r = TS.ratio; return TS.Sos; }
-int GetBCR(int *r) { *r = TS.Brow; return TS.Bcol; }
-
-int GetSC(size_t addr) { if (!addr || !TS.col) return 1;
-    struct timespec cs, ce; char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-    clock_gettime(CLOCK_MONOTONIC, &cs);
-    for(int i = 0; i < 100; i++) write(1, p, TS.col);
-    clock_gettime(CLOCK_MONOTONIC, &ce); 
-    long long ns = (ce.tv_sec - cs.tv_sec) * 1000000000LL + (ce.tv_nsec - cs.tv_nsec); return (int)((ns * 1000) / (TS.col * 100)); }
     
-int SyncSize(size_t addr) { if (!addr) return 0;
-    struct winsize ws; TS.Sos = 0;
-    if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
-    if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-    TS.col = ws.ws_col; TS.row = ws.ws_row; TS.ratio = (TS.col > 0) ? (TS.row * 1000) / TS.col : 0;
-    TS.Bcol = TS.col * 2; TS.Brow = TS.row * 4; TS.Sos++; return 1; }
-
 int8_t UTFinfo(unsigned char *s, uint8_t *len) {
     unsigned char c = s[0]; uint32_t cp = 0xFFFD; *len = 1;
     if (c < 0x80) cp = (uint32_t) c;
