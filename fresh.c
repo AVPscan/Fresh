@@ -19,29 +19,33 @@ const uint8_t  Mcol = 0x07;
 const uint8_t  Mbol = 0x08;
 const uint8_t  Minv = 0x10;
 const uint8_t  Mibc = 0x1F;
-const Cell UNIT = (Cell)-1 / 255; 
+const Cell UNIT = (Cell)-1 / 255;
 const Cell DIRTY_MASK = UNIT * Fresh;
 const Cell CLEAN_MASK = ~DIRTY_MASK;
 char      *Cdata      = NULL;
+uint16_t  *Coffset    = NULL;
 uint8_t   *Cattr      = NULL;
 uint8_t   *Cvlen      = NULL;
-uint8_t   *Cblen      = NULL;
+uint8_t   *Clen       = NULL;
 char      *Asbuf      = NULL;
 char      *Avbuf      = NULL;
 #define CellLine      8192
 #define String        5062
-#define SizeSL        CellLine * 4
-#define SizeData      ((size_t)String * SizeSL)
+#define SizeCOL       CellLine * 2
+#define SizeCL        CellLine * 4
+#define SizeData      ((size_t)String * SizeCL)
+#define SizeOffset    ((size_t)String * SizeCOL)
 #define SizeAttr      ((size_t)String * CellLine)
 #define SizeVizLen    ((size_t)String * CellLine)
-#define SizeBlen      ((size_t)String * CellLine)
+#define SizeLen       ((size_t)String * CellLine)
 #define SizeSysBuff   4096
 #define SizeVBuff     65536
-#define SizeVram      (SizeData + SizeAttr + SizeVizLen + SizeBlen + SizeSysBuff + SizeVBuff)
+#define SizeVram      (SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizeSysBuff + SizeVBuff)
 #define Data(r)       (Cdata + ((r) << 15))
+#define Offset(r, c)  (Coffset + ((r) << 14) + (c))
 #define Attr(r, c)    (Cattr + ((r) << 13) + (c))  // 7 Dirty 65 Reserve 4 Bold 3 Inverse 210 Colour
 #define Visi(r, c)    (Cvlen + ((r) << 13) + (c))
-#define Len(r, c)     (Cblen + ((r) << 13) + (c))
+#define Len(r, c)     (Clen + ((r) << 13) + (c))
 #define Colour(col)   (Asbuf + ((col) << 5))       // 0 Current 1 Bw 2-7 Palette
 #define Parse(ibc)    (Asbuf + 256 + ((ibc) << 5)) // 0-31 All
 
@@ -54,15 +58,18 @@ void InitPD(uint8_t col) { col &= Mcol;
         dst = Parse(ibc); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } }
         
 void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return;
-  Cdata = (char*)(addr);
-  Cattr = (uint8_t*)((char*)Cdata + SizeData);
-  Cvlen = (uint8_t*)((uint8_t*)Cattr + SizeAttr);
-  Cblen = (uint8_t*)((uint8_t*)Cvlen + SizeVizLen);
-  Asbuf = (char*)((uint8_t*)Cblen + SizeBlen);
-  Avbuf = (char*)((char*)Asbuf + SizeSysBuff);
-  MemSet(Cdata,' ',SizeData); MemSet(Cattr,Fresh,SizeAttr); MemSet(Cvlen,1,(SizeVizLen + SizeBlen));
   const char* colors[] = { Green, ColorOff, Grey, Green, Red, Blue, Orange, Gold };
-  uint8_t len, lco = strlen(ColorOff), i = 8; char *slot, *rep;
+  uint8_t len, lco = strlen(ColorOff); char *slot, *rep; uint16_t *a1, *a2, i = 0;
+  Cdata   = (char*)(addr);
+  Coffset = (uint16_t*)(Cdata + SizeData);
+  Cattr   = (uint8_t*)((char*)Coffset + SizeOffset);
+  Cvlen   = (uint8_t*)((uint8_t*)Cattr + SizeAttr);
+  Clen    = (uint8_t*)((uint8_t*)Cvlen + SizeVizLen);
+  Asbuf   = (char*)((uint8_t*)Clen + SizeLen);
+  Avbuf   = (char*)((char*)Asbuf + SizeSysBuff);
+  a1 = Coffset; while(i < CellLine) *a1++ = i++;
+  a2 = a1; i = 0; while(++i < String) { MemCpy(a1,a2,SizeCOL); a1 = a2; a2 += SizeCOL; }
+  i = 8; MemSet(Cdata,' ',SizeData); MemSet(Cattr,Fresh,SizeAttr); MemSet(Cvlen,1,(SizeVizLen + SizeLen));
   while (i--) { slot = Colour(i); rep = slot;
       *rep++ = lco; MemCpy(rep, ColorOff, lco); len = strlen(colors[i]);
       *slot++ = len; MemCpy(slot, colors[i], len); } 
