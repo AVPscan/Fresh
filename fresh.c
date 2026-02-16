@@ -36,7 +36,7 @@ char      *Avbuf      = NULL;
 #define SizeVizLen    ((size_t)String * CellLine)
 #define SizeBlen      ((size_t)String * CellLine)
 #define SizeSysBuff   4096
-#define SizeVBuff     65536 
+#define SizeVBuff     65536
 #define SizeVram      (SizeData + SizeAttr + SizeVizLen + SizeBlen + SizeSysBuff + SizeVBuff)
 #define Data(r)       (Cdata + ((r) << 15))
 #define Attr(r, c)    (Cattr + ((r) << 13) + (c))  // 7 Dirty 65 Reserve 4 Bold 3 Inverse 210 Colour
@@ -51,7 +51,7 @@ void InitPD(uint8_t col) { col &= Mcol;
   if (col) { ac = Colour(col); dst = Colour(0); MemCpy(dst , (ac + 1), *ac); }
   while(m) { const char* mode = modes[--m]; lm = *mode++, c = 8; 
       while(c) { ac = Colour(--c); ibc = (m << 3) + c; ca = *ac - 4; ac += 4; 
-        dst = Parse(ibc); MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } }
+        dst = Parse(ibc); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } }
         
 void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)(addr);
@@ -76,24 +76,22 @@ void help() {
 int main(int argc, char *argv[]) {
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   return 0; }
-  int w = 0, h = 0, cur_x = 0, cur_y = 0;
+  int w, h, cur_x = 0, cur_y = 0;
   size_t size = SizeVram, ram, sc; if (!(ram = GetRam(&size))) return 0;
   SWD(ram); InitVram(ram,size); Delay_ms(0); SetInputMode(1); sc = ((size*10)/1048576);
   printf(Reset HideCur WrapOff "%zu", sc); fflush(stdout); snprintf((char*)Cdata, 128, "%zu", sc);
   while (1) {
-    sc = SyncSize(ram); Delay_ms(20);
-    const char* k = GetKey();
-    if (k[0] == 27 && k[1] == K_NO) continue;
-    if (k[0] == 27 && k[1] == K_ESC) break;
+    sc = SyncSize(ram); w = GetCR(&h); Delay_ms(20); const char* k = GetKey();
     if (k[0] == 27) {
+        if (k[1] == K_NO) continue;
+        if (k[1] == K_ESC) break;
         if (k[1] == K_UP)  cur_y--;
         if (k[1] == K_DOW) cur_y++;
         if (k[1] == K_RIG) cur_x++;
         if (k[1] == K_LEF) cur_x--;
         if (k[1] == K_TAB) cur_x = (cur_x + 8) & ~7;
         if (k[1] == K_HOM) cur_x = 0;
-        if (k[1] == K_END) { if (cur_y >= 0 && cur_y < String) cur_x = w;
-                             else cur_x = 0; }
+        if (k[1] == K_END) cur_x = w;
         if (k[1] == K_PUP) cur_y -= h;
         if (k[1] == K_PDN) cur_y += h; }
     }
