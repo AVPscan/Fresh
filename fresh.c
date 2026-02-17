@@ -41,7 +41,7 @@ char      *Avdat      = NULL;
 #define SizeLen       ((size_t)String * CellLine)
 #define SizePalBuff   1024
 #define SizeWinDat    1024
-#define SizeVBuff     65536
+#define SizeVBuff     (34 * 1024 * 1024)
 #define SizeVram      (SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeWinDat + SizeVBuff)
 #define Data(r)       (Cdata + ((r) << 15))
 #define Offset(r, c)  (Coffset + ((r) << 14) + (c))
@@ -65,7 +65,8 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
       ca = strlen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { const char* mode = modes[--i]; lm = *mode++, c = 8; 
             while(c) { ac = (Avdat + ((--c) << 5)); cbi = (c << 2) + i; ca = *ac - 2; ac += 2;
-                dst = Parse(cbi); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } }
+                dst = Parse(cbi); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } 
+  uint16_t *win = Awdat; *win++ = 0; *win++ = 0; *win++ = CellLine; *win++ = String; }
 
 void help() {
     printf(Grey "Created by " Green "Alexey Pozdnyakov" Grey " in " Green "02.2026" Grey 
