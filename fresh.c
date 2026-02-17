@@ -49,7 +49,7 @@ char      *Avdat      = NULL;
 #define Visi(r, c)    (Cvlen + ((r) << 13) + (c))
 #define Len(r, c)     (Clen + ((r) << 13) + (c))
 #define Parse(cbi)    (Apdat + ((cbi) << 5))        // 0-31 All
-#define WindowData    (Awdat)
+#define Window(n)     (Awdat + ((n) << 3))
 
 void SetColour(uint8_t col) { if (!(col &= Mcol)) col = 3;
   col <<= 2; MemCpy( Parse(0), Parse(col), 128); }
@@ -65,9 +65,28 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
       ca = strlen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { const char* mode = modes[--i]; lm = *mode++, c = 8; 
             while(c) { ac = (Avdat + ((--c) << 5)); cbi = (c << 2) + i; ca = *ac - 2; ac += 2;
-                dst = Parse(cbi); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } 
-  uint16_t *win = Awdat; *win++ = 0; *win++ = 0; *win++ = CellLine; *win++ = String; }
+                dst = Parse(cbi); *dst++ = lm + ca; MemCpy(dst, mode, lm); MemCpy(dst + lm, ac, ca); } } }
 
+typedef struct { int16_t X, Y, luX, luY, dX, dY, oX, oY; uint8_t on, flag, key, Lkey; uint16_t rk, rLk; } Cur_;
+Cur_ Cur = {0,0,0,0,1,1,0,0,0,0,0,0,0,0};
+void Cursor(void) {
+  Cur.rk++;
+  if (Cur.key != Cur.Lkey) { Cur.Lkey = Cur.key; Cur.rLk = Cur.rk; Cur.rk = 0; Cur.dX = 1; Cur.dY = 1; }
+  else if (Cur.key == K_UP || Cur.key == K_DOW || Cur.key == K_LEF || Cur.key == K_RIG) {
+          if (!(Cur.rk % 30)) {
+              if (Cur.dX < 64) Cur.dX <<= 1;
+              if (Cur.dY < 64) Cur.dY <<= 1; }
+          uint16_t r, c =TermCR(&r); Cur.flag = 0;
+          if (Cur.on) { Cur.oX = Cur.X; Cur.oY = Cur.Y; }
+          if (Cur.key == K_LEF) Cur.X -= Cur.dX;
+          else if (Cur.key == K_RIG) Cur.X += Cur.dX;
+          else if (Cur.key == K_UP) Cur.Y -= Cur.dY;
+          else Cur.Y += Cur.dY; 
+          if ((Cur.X + Cur.luX) < 0) { Cur.luX = 10 - Cur.X; Cur.flag++; }
+          if ((Cur.X + Cur.luX) > c) { Cur.luX = c - 10 - Cur.X; Cur.flag++; }
+          if ((Cur.Y + Cur.luY) < 0) { Cur.luY = 4 - Cur.Y; Cur.flag++; }
+          if ((Cur.Y + Cur.luY) > r) { Cur.luY = r - 4 - Cur.Y; Cur.flag++; } } }
+ 
 void help() {
     printf(Grey "Created by " Green "Alexey Pozdnyakov" Grey " in " Green "02.2026" Grey 
            " version " Green "2.13" Grey ", email " Green "avp70ru@mail.ru" Grey 
@@ -76,15 +95,18 @@ void help() {
 int main(int argc, char *argv[]) {
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   return 0; }
-  int16_t c, r, oc, or, ff; size_t size = SizeVram, ram, sc; if (!(ram = GetRam(&size))) return 0;
-  SWD(ram); InitVram(ram,size); SwitchRaw(); Delay_ms(0); ff = SyncSize(ram,0); c = TermCR(&r); sc = ((size*10)/1048576);
-  printf(Reset HideCur WrapOff "%zu", sc); fflush(stdout); snprintf((char*)Cdata, 128, "%zu", size);
+  uint16_t ff; size_t size = SizeVram, ram, sc; if (!(ram = GetRam(&size))) return 0;
+  SWD(ram); InitVram(ram,size); SwitchRaw(); Delay_ms(0); ff = SyncSize(ram,0); sc = ((size*10)/1048576);
+  printf(Reset HideCur WrapOn "%zu\n" SaveCur, sc); fflush(stdout); snprintf((char*)Cdata, 128, "%zu", size);
   while (1) {
-    if ((ff = SyncSize(ram,1))) { oc = c; or = c; c = TermCR(&r); }
-    ff = oc + or;
+    if ((ff = SyncSize(ram,1))) { ff = 1; }
+    printf( LoadCur ClearLine LoadCur "%d %d %d %d", Cur.X, Cur.Y, Cur.on, Cur.flag); fflush(stdout);
     Delay_ms(20); const char* k = GetKey();
+    if (k[0] == 27) Cur.key = k[1];
+    else Cur.key = 0;
+    Cursor();
     if (k[0] == 27) {
         if (k[1] == K_NO) continue;
-        if (k[1] == K_ESC) break; }
-    }
+        if (k[1] == K_ESC) break;
+         } }
   SwitchRaw(); printf(ShowCur WrapOn Reset); fflush(stdout); FreeRam(ram, size); return 0; }

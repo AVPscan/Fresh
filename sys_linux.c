@@ -114,7 +114,7 @@ uint64_t GetCycles(void) {
     __asm__ __volatile__ ("rdtsc" : "=a" (t.part.lo), "=d" (t.part.hi));
     return t.total; }
 
-void Delay_ms(int ms) {
+void Delay_ms(uint8_t ms) {
     static uint64_t cpu_hz = 0;
     if (cpu_hz == 0) { struct timespec ts = {0, 10000000L}; uint64_t start = GetCycles();
         nanosleep(&ts, NULL); cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
@@ -126,9 +126,9 @@ void Delay_ms(int ms) {
                                if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
                                safety = 0; } } }
 
-typedef struct { int16_t col , row; } TermState;
+typedef struct { uint16_t col , row; } TermState;
 TermState TS = {0};
-int16_t TermCR(int16_t *r) { *r = TS.row; return TS.col; }
+uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
 
 int SyncSize(size_t addr, uint8_t flag) { if (!addr) return 0;
     struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
