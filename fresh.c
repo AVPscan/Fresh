@@ -19,9 +19,6 @@ const uint8_t  Mcol = 0x1C;
 const uint8_t  Mbol = 0x02;
 const uint8_t  Minv = 0x01;
 const uint8_t  Mcbi = 0x1F;
-const Cell UNIT = (Cell)-1 / 255;
-const Cell DIRTY_MASK = UNIT * Fresh;
-const Cell CLEAN_MASK = ~DIRTY_MASK;
 char      *Cdata      = NULL;
 uint16_t  *Coffset    = NULL;
 uint8_t   *Cattr      = NULL;
@@ -51,9 +48,14 @@ char      *Avdat      = NULL;
 #define Parse(cbi)    (Apdat + ((cbi) << 5))        // 0-31 All
 #define Window(n)     (Awdat + ((n) << 3))
 
+void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
+  char *dst = Avdat + 256, *sav; uint16_t len;
+  sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
+  len = strlen(str); MemCpy(dst, str, len); dst += len;
+  sav = Parse(0); len = *sav++; MemCpy(dst, sav, len); dst += len; write(1, Avdat + 256, (dst - Avdat - 256)); }
+
 void SetColour(uint8_t col) { if (!(col &= Mcol)) col = 3;
   col <<= 2; MemCpy(Parse(0), Parse(col), 128); }
-
 void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return;
   const char* colors[] = { Green, ColorOff, Grey, Green, Red, Blue, Orange, Gold };
   const char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
@@ -69,23 +71,17 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
   
 typedef struct {int16_t X, Y, viewX, viewY, dX, dY; uint16_t oldRows, oldCols; uint8_t Vision, CodeKey, PenCK, Tic; } Cur_;
 Cur_ Cur = {30,0,0,0,1,1,0,0,0,0,0,0};
-
 void ShowC(void) {
-  char *src, *dst = Avdat, *sav; uint8_t i,c; int16_t x = Cur.X + Cur.viewX +1, y = Cur.Y + Cur.viewY + 1;
-  *dst++ = 27; *dst++ = '['; src = dst; do { *src++ = '0' + (y % 10); y /= 10; } while (y);
+  char *src, *dst = Avdat, *sav; uint8_t i,c;
+  int16_t x = Cur.X + Cur.viewX + 1, y = Cur.Y + Cur.viewY + 1;
+  *dst++ =  27;
+  *dst++ = '['; src = dst; do { *src++ = '0' + (y % 10); y /= 10; } while (y);
   sav = src; i = (uint8_t)(src - dst) / 2; while(i--) { c = *dst; *dst++ = *--src; *src = c; }
   *sav++ = ';'; dst = sav; do { *dst++ = '0' + (x % 10); x /= 10; } while (x);
   src = dst; i = (uint8_t)(dst - sav) / 2; while(i--) { c = *sav; *sav++ = *--dst; *dst = c; }
   *src++ = 'H'; if (Cur.Vision) { sav = Parse(1); MemCpy(src, (sav + 1), *sav); src += *sav; }
   *src++ = ' '; if (Cur.Vision) { sav = Parse(0); MemCpy(src, (sav + 1), *sav); src += *sav; }
   write (1, Avdat, (src - Avdat)); }
-
-void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
-  char *dst = Avdat + 256, *sav; uint16_t len;
-  sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
-  len = strlen(str); MemCpy(dst, str, len); dst += len;
-  sav = Parse(0); len = *sav++; MemCpy(dst, sav, len); dst += len; write(1, Avdat + 256, (dst - Avdat - 256)); }
-
 void Cursor(void) {
   uint16_t r, c = TermCR(&r);
   if (c != Cur.oldCols || r != Cur.oldRows) {
@@ -105,26 +101,24 @@ void Cursor(void) {
   if ((Cur.Y + Cur.viewY) < 0) { Cur.viewY = - Cur.Y; }
   else if ((Cur.Y + Cur.viewY) >= r) { Cur.viewY = r - 1 - Cur.Y; } 
   Cur.Vision = 1; ShowC(); }
- 
-void help() {
-    printf(Grey "Created by " Green "Alexey Pozdnyakov" Grey " in " Green "02.2026" Grey 
-           " version " Green "2.18" Grey ", email " Green "avp70ru@mail.ru" Grey 
-           " github " Green "https://github.com" Grey "\n"); }
+
+void help(void) { Print(26,"Created by Alexey Pozdnyakov in 02.2026 version 2.19\n");
+                  Print(28,"email: avp70ru@mail.ru https://github.com/AVPscan/Fresh"); }
 
 int main(int argc, char *argv[]) {
+  uint16_t col = 1; size_t size = SizeVram, ram; if (!(ram = GetRam(&size))) return 0;
+  SWD(ram); InitVram(ram,size); SwitchRaw(); Delay_ms(0); 
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
-                  return 0; }
-  uint16_t col; size_t size = SizeVram, ram; if (!(ram = GetRam(&size))) return 0;
-  SWD(ram); InitVram(ram,size); SwitchRaw(); Delay_ms(0); col = SyncSize(ram,0);
-  Print(0,Reset HideCur Cls WrapOn);
-  while (1) {
-    if ((col = SyncSize(ram,1))) { col = 1; }
-    Print(0,"\033[H"); snprintf(Avdat, 128, "%d %d %d %d   ", TermCR(&col), col, Cur.X, Cur.Y); Print(40, Avdat);
-    Delay_ms(20); const char* k = GetKey();
-    if (k[0] == 27) {
+                  col--; }
+  if (col) { col = SyncSize(ram,0); Print(0,Reset HideCur Cls WrapOn);
+    while (1) {
+      if ((col = SyncSize(ram,1))) { col = 1; }
+      Print(0,"\033[H"); snprintf(Avdat, 128, "%d %d %d %d   ", TermCR(&col), col, Cur.X, Cur.Y); Print(28, Avdat);
+      Delay_ms(20); const char* k = GetKey();
+      if (k[0] == 27) {
         if (k[1] == K_NO) continue;
         if (k[1] == K_ESC) break; }
-    if (k[0] == 27) Cur.CodeKey = k[1];
-    else Cur.CodeKey = 0;
-    Cursor(); }
+      if (k[0] == 27) Cur.CodeKey = k[1];
+      else Cur.CodeKey = 0;
+      Cursor(); } }
   SwitchRaw(); Print(0,ShowCur WrapOn Reset); FreeRam(ram, size); return 0; }
