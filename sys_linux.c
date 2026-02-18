@@ -96,7 +96,7 @@ const char* GetKey(void) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
         while (--len) read(0, ++p, 1);
         return (char*)b; }
-    if (c > 31 && c < 127) return (char*)b; 
+    if (c > 31 && c < 127) return (char*)b;
     *p++ = 27; *p = c; if (c != 27) return (char*)b; 
     unsigned char *s1; const unsigned char *s2; if (read(0, p, 1) > 0) {
         s1 = p; len = 3; while (len-- && read(0, ++s1, 1) > 0);
