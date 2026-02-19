@@ -72,6 +72,12 @@ int8_t MemCmp(void* dst, const void* src, size_t len) {
                     d++; s++ ; }
     return 0; }
 
+void SwitchRaw(void) {
+    static struct termios oldt; static uint8_t flag = 1;
+    if (flag) {
+        tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG);
+        tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); flag = 0; } 
+    else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); flag = 1; } }
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF},
@@ -79,12 +85,6 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
     {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
-void SwitchRaw(void) {
-    static struct termios oldt; static uint8_t flag = 1;
-    if (flag) {
-        tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG);
-        tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); flag = 0; } 
-    else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); flag = 1; } }
 const char* GetKey(void) {
     static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
     if (read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
@@ -95,10 +95,11 @@ const char* GetKey(void) {
     if (c > 31 && c < 127) return (char*)b;
     *p++ = 27; *p = c; if (c != 27) return (char*)b; 
     unsigned char *s1; const unsigned char *s2; int8_t j = (int)(sizeof(NameId)/sizeof(KeyIdMap));
-    if (read(0, p, 1) > 0) { s1 = p; while (s1 - p < 5 && read(0, ++s1, 1) > 0) if (*s1 >= 64) break; 
-        if (*p < 32 || (*p != '[' && *p != 'O')) { *p = 0; return (char*)b; }
-        while(j--) { s1 = p; s2 = (const unsigned char*)NameId[j].name;
-            while (*s2 && *s1 == *s2) { s1++; s2++; }
+    if (read(0, p, 1) > 0) { s1 = p; while (((s1 - p) < 5) && (read(0, ++s1, 1) > 0)) if (*s1 > 63) break;
+        if (*s1 < 64) while((read(0,&c,1) > 0) && (c < 64));
+        while(j--) { s2 = (const unsigned char*)NameId[j].name;
+            if (*p != *s2) continue;
+            s1 = p; while (*++s1 == *++s2 && *s2);
             if (*s1 == '\0' && *s2 == '\0') { *p++ = NameId[j].id; *p = 0; break; } }
         if (j < 0) b[1] = 0; 
         if (b[1] == K_Mouse) { len = 4; while(--len) read(0, p++, 1); } }

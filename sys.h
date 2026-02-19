@@ -72,6 +72,9 @@
 #define WrapOff     "\033[?7l"      // Выключить перенос строк
 #define MouseX10on  "\033[?1000h"   // Включаем мышь
 #define MouseX10off "\033[?1000l"
+#define AltBufOn    "\033[?1049h"
+#define AltBufOff   "\033[?1049l"
+
 
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)

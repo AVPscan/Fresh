@@ -69,9 +69,9 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
             while(c) { ac = (Avdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
                 dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } }
   
-typedef struct {int16_t X, Y, viewX, viewY, dX, dY; uint16_t oldRows, oldCols;
-                uint8_t Vision, CodeKey, PenCK, Tic, Free, Mkey, MX, MY; } Cur_;
-Cur_ Cur = {30,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0};
+typedef struct {int16_t X, Y, viewX, viewY, dX, dY, LkX, LkY, RkX, RkY;
+                uint16_t oldRows, oldCols; uint8_t Vision, CodeKey, PenCK, Tic, Free, Mkey, MX, MY; } Cur_;
+Cur_ Cur = {30,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0};
 void ShowC(void) {
   char *src, *dst = Avdat, *sav; uint8_t i,c;
   int16_t x = Cur.X + Cur.viewX + 1, y = Cur.Y + Cur.viewY + 1;
@@ -116,10 +116,14 @@ void Cursor(void) {
       else if (Cur.X + Cur.viewX >= c) Cur.X = c - 1 - Cur.viewX;
       if (Cur.Y + Cur.viewY < 0) Cur.Y = -Cur.viewY;
       else if (Cur.Y + Cur.viewY >= r) Cur.Y = r - 1 - Cur.viewY; }
-  if (Cur.CodeKey == K_Mouse && Cur.Mkey == 32) { Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; }
+  if (Cur.CodeKey == K_Mouse) { if (Cur.Mkey == 32) { Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.LkX = Cur.X; Cur.LkY = Cur.Y; }
+                                else if (Cur.Mkey == 96) Cur.viewY--;
+                                else if (Cur.Mkey == 97) Cur.viewY++;
+                                else if (Cur.Mkey == 34) { Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.RkX = Cur.X; Cur.RkY = Cur.Y; }
+                                else if (Cur.Mkey == 33) Cur.Free ^= 1; }
   Cur.Vision = 1; ShowC(); }
 
-void help(void) { Print(26,"Created by Alexey Pozdnyakov in 02.2026 version 2.19\n");
+void help(void) { Print(26,"Created by Alexey Pozdnyakov in 02.2026 version 2.21\n");
                   Print(28,"email: avp70ru@mail.ru https://github.com/AVPscan/Fresh"); }
 
 int main(int argc, char *argv[]) {
@@ -127,7 +131,7 @@ int main(int argc, char *argv[]) {
   SWD(ram); InitVram(ram,size); SwitchRaw(); Delay_ms(0); 
   if (argc > 1) { if (strcmp(argv[1], "-?") == 0 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) help();
                   col--; }
-  if (col) { col = SyncSize(ram,0); Print(0,Reset HideCur WrapOff Cls MouseX10on);
+  if (col) { col = SyncSize(ram,0); Print(0,AltBufOn Reset HideCur WrapOn Cls MouseX10on);
     while (1) {
       if ((col = SyncSize(ram,1))) { col = 1; }
       Delay_ms(20); const char* k = GetKey();
@@ -139,5 +143,5 @@ int main(int argc, char *argv[]) {
       else Cur.CodeKey = 0;
       Cursor();
       Print(0,Home); snprintf(Avdat, 128, "%d %d %d %d %d %d         \n", TermCR(&col), col, Cur.X + Cur.viewX, Cur.Y + Cur.viewY, Cur.MX, Cur.MY);
-      Print(20, Avdat); snprintf(Avdat, 128, "%d %d %d %d         ", Cur.X, Cur.viewX, Cur.Y, Cur.viewY); Print(28, Avdat); } }
-  SwitchRaw(); Print(0,MouseX10off WrapOn ShowCur Reset); FreeRam(ram, size); return 0; }
+      Print(20, Avdat); snprintf(Avdat, 128, "%d %d %d %d %d        ", Cur.X, Cur.viewX, Cur.Y, Cur.viewY, Cur.Mkey); Print(28, Avdat); } }
+  SwitchRaw(); Print(0,MouseX10off AltBufOff WrapOn ShowCur Reset); FreeRam(ram, size); return 0; }
