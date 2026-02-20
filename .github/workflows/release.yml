@@ -47,14 +47,36 @@ jobs:
           name: linux-executable
           path: fresh
 
-  # Задача 4: Создание релиза и прикрепление артефактов
-  create-release:
-    needs: [build-linux]
-    runs-on: ubuntu-latest
-    outputs:
-      release_version: ${{ steps.get_version.outputs.version }}
+  # --- Сборка WINDOWS ---
+  build-windows:
+    runs-on: windows-latest
     steps:
-      - name: Get the release version from tag or input
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make OS=Windows_NT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-bin
+          path: fresh.exe
+
+  # --- Сборка MACOS ---
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-bin
+          path: fresh
+
+  # --- СОЗДАНИЕ РЕЛИЗА И ЗАГРУЗКА ВСЕХ ФАЙЛОВ ---
+  create-release:
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
@@ -62,35 +84,22 @@ jobs:
           else
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
-      
-      - name: Download Linux Executable
+
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: linux-executable
-          path: ./artefacts/linux # Скачиваем в уникальную поддиректорию
+          path: ./dist
 
-      - name: Create Release
-        id: create_release
+      - name: Create Release and Upload Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VER: ${{ steps.get_version.outputs.version }}
         run: |
-          TAG_NAME="v${{ steps.get_version.outputs.version }}"
-          RELEASE_NAME="Release v${{ steps.get_version.outputs.version }}"
-          
-          gh release create "$TAG_NAME" \
-            --repo="$GITHUB_REPOSITORY" \
-            --title="$RELEASE_NAME" \
+          TAG="v$VER"
+          gh release create "$TAG" \
+            ./dist/linux-bin/fresh#Fresh-linux-musl-$TAG \
+            ./dist/windows-bin/fresh.exe#Fresh-windows-$TAG.exe \
+            ./dist/macos-bin/fresh#Fresh-macos-$TAG \
+            --title "Release $TAG" \
             --generate-notes \
             --latest
-            
-          echo "UPLOAD_URL=$(gh release view "$TAG_NAME" --repo="$GITHUB_REPOSITORY" --json uploadUrl -q .uploadUrl)" >> $GITHUB_ENV
-
-      - name: Upload Linux Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./artefacts/linux/fresh # Указываем путь к файлу в поддиректории
-          asset_name: Fresh-v${{ steps.get_version.outputs.version }}
-          asset_content_type: application/octet-stream
