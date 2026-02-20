@@ -51,22 +51,33 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Build
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run make OS=Windows_NT
+        shell: bash
+        # Использует ваш Makefile с фиксацией флагов для Windows
         run: make OS=Windows_NT
-      - uses: actions/upload-artifact@v4
+        
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: windows-executable
           path: fresh.exe
 
   # --- Сборка MACOS ---
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-latest 
     steps:
-      - uses: actions/checkout@v4
-      - name: Build
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Run make mac
+        # Использует make mac цель из вашего Makefile
         run: make mac
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
         with:
           name: macos-executable
           path: fresh
