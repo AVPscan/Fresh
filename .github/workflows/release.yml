@@ -44,7 +44,7 @@ jobs:
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-bin
+          name: linux-executable
           path: fresh
 
   # --- Сборка WINDOWS ---
@@ -56,7 +56,7 @@ jobs:
         run: make OS=Windows_NT
       - uses: actions/upload-artifact@v4
         with:
-          name: windows-bin
+          name: windows-executable
           path: fresh.exe
 
   # --- Сборка MACOS ---
@@ -68,18 +68,17 @@ jobs:
         run: make
       - uses: actions/upload-artifact@v4
         with:
-          name: macos-bin
+          name: macos-executable
           path: fresh
 
   # Задача 4: Создание релиза и прикрепление артефактов
   create-release:
-    needs: [build-linux, build-windows, build-macos] # Теперь ждем всех троих
+    needs: [build-linux, build-windows, build-macos] # Ждем всех
     runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.get_version.outputs.version }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4 # Нужно для работы команды gh
-
-      - name: Get the release version
+      - name: Get the release version from tag or input
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
@@ -88,24 +87,72 @@ jobs:
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
       
-      - name: Download all artifacts
+      # Скачиваем все три артефакта
+      - name: Download Linux Executable
         uses: actions/download-artifact@v4
         with:
-          path: ./artefacts # Скачиваем всё в одну общую папку
+          name: linux-executable
+          path: ./artefacts/linux
 
-      - name: Create Release with All Assets
+      - name: Download Windows Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-executable
+          path: ./artefacts/windows
+
+      - name: Download MacOS Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-executable
+          path: ./artefacts/macos
+
+      - name: Create Release
+        id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME="v${{ steps.get_version.outputs.version }}"
           RELEASE_NAME="Release v${{ steps.get_version.outputs.version }}"
           
-          # Твоя рабочая команда 'gh', в которую мы просто добавили файлы через пробел
+          # Твоя проверенная команда с генерацией логов
           gh release create "$TAG_NAME" \
-            "./artefacts/linux-bin/fresh#Fresh-linux-musl-$TAG_NAME" \
-            "./artefacts/windows-bin/fresh.exe#Fresh-windows-$TAG_NAME.exe" \
-            "./artefacts/macos-bin/fresh#Fresh-macos-$TAG_NAME" \
             --repo="$GITHUB_REPOSITORY" \
             --title="$RELEASE_NAME" \
             --generate-notes \
             --latest
+            
+          echo "UPLOAD_URL=$(gh release view "$TAG_NAME" --repo="$GITHUB_REPOSITORY" --json uploadUrl -q .uploadUrl)" >> $GITHUB_ENV
+
+      # 1. Загрузка Linux (твой оригинал)
+      - name: Upload Linux Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./artefacts/linux/fresh
+          asset_name: Fresh-linux-musl-v${{ steps.get_version.outputs.version }}
+          asset_content_type: application/octet-stream
+
+      # 2. Загрузка Windows
+      - name: Upload Windows Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./artefacts/windows/fresh.exe
+          asset_name: Fresh-windows-v${{ steps.get_version.outputs.version }}.exe
+          asset_content_type: application/octet-stream
+
+      # 3. Загрузка MacOS
+      - name: Upload MacOS Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ env.UPLOAD_URL }}
+          asset_path: ./artefacts/macos/fresh
+          asset_name: Fresh-macos-v${{ steps.get_version.outputs.version }}
+          asset_content_type: application/octet-stream
+
