@@ -52,7 +52,7 @@ void SwitchRaw(void) {
         SetConsoleMode(hIn, newModeIn);
         SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; } 
     else {
-        printf( Crs ); fflush(stdout);
+        printf( Reset ); fflush(stdout);
         FlushConsoleInputBuffer(hIn);
         SetConsoleMode(hIn, oldModeIn);
         SetConsoleMode(hOut, oldModeOut);
