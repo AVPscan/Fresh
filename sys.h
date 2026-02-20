@@ -85,7 +85,11 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US, K_UP, K_Ctrl_UP, K_DOW, K_Ctrl_DOW,
     K_RIG, K_Ctrl_RIG, K_LEF, K_Ctrl_LEF, K_Mouse, K_HOM, K_END, K_PUP, K_PDN, K_INS,
     K_F1, K_F2, K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10, K_F11, K_F12, K_F13, K_F14, K_F15, K_BAC = 127 };
-
+enum { Ccurrent = 0, CcurrentI, CcurrentB, CcurrentIB, Cdef, CdefI, CdefB,
+    CdefIB, Cgrey, CgreyI, CgreyB, CgreyIB, Cgreen, CgreenI, CgreenB,
+    CgreenIB, Cred, CredI, CredB, CredIB, Cblue, CblueI, CblueB, CblueIB,
+    Corange, CorangeI, CorangeB, CorangeIB, Cgold, CgoldI, CgoldB, CgoldIB };
+    
 void* os_open_file(const char* name);
 void* os_create_file(const char* name);
 void  os_close_file(void* handle);
@@ -99,17 +103,26 @@ void MemSet(void* buf, uint8_t val, size_t len);
 void MemCpy(void* dst, const void* src, size_t len);
 int8_t MemCmp(void* dst, const void* src, size_t len);
 void MemMove(void* dst, const void* src, size_t len);
+int8_t UTFinfo(unsigned char *s, uint8_t *len);
+int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem);
+
+int SystemSwitch(void);
+void SetColour(uint8_t col);
+void ViewPort(const char* key);
+
 void SwitchRaw(void);
 const char* GetKey(void);
 uint64_t GetCycles(void);
 void Delay_ms(uint8_t ms);
 uint16_t TermCR(uint16_t *r);
-int SyncSize(size_t addr, uint8_t flag);
+int16_t SyncSize(size_t addr, uint8_t flag);
 int GetSC(size_t addr);
 size_t GetRam(size_t *size);
 void FreeRam(size_t addr, size_t size);
 void SWD(size_t addr);
-int8_t UTFinfo(unsigned char *s, uint8_t *len);
-int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem);
+
+char* TakeTb(size_t *size);
+void Getlib(int16_t *x1, int16_t *x2, int16_t *x3, int16_t *x4, int16_t *x5, int16_t *x6, int16_t *x7, int16_t *x8, int16_t *x9);
+void Print(uint8_t n, char *str);
 
 #endif /* SYS_H */

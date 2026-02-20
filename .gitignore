@@ -5,13 +5,12 @@
 !DONATIONS.md
 !sys_linux.c
 !sys.h
-!fresh.c
+!main.c
+!engine.c
 !makefile
 !README.md
 !LICENSE
 !NOTICE
-!situation.pdf
-!concept and more.pdf
 !.gitignore
 !.github/
 !.github/workflows/

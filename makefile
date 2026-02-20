@@ -29,7 +29,7 @@ else
 	GET_SIZE = stat -c%s $(TARGET)$(EXT)
 endif
 
-SOURCES = fresh.c $(SYS_SRC)
+SOURCES = main.c engine.c $(SYS_SRC)
 
 BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra
 

@@ -36,42 +36,6 @@ int   os_snprintf(char* buf, size_t size, const char* format, ...) {
 void   os_printf(const char* format, ...) {
     va_list args; va_start(args, format); vprintf(format, args); va_end(args); }
 
-void MemSet(void* buf, uint8_t val, size_t len) {
-    uint8_t *p = (uint8_t *)buf; while (len && ((Cell)p & (SizeCell - 1))) { *p++ = val; len--; }
-    if (len >= SizeCell) {
-        Cell vW = val * ((Cell)-1 / 255); Cell *pW = (Cell *)p;
-        size_t i = len / SizeCell; len &= (SizeCell - 1); while (i--) *pW++ = vW;
-        p = (uint8_t *)pW; }
-    while (len--) *p++ = val; }
-void MemCpy(void* dst, const void* src, size_t len) {
-    uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
-    while (len && ((Cell)d & (SizeCell - 1))) { *d++ = *s++; len--; }
-    if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-        Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / SizeCell;
-        len &= (SizeCell - 1); while (i--) *dW++ = *sW++;
-        d = (uint8_t *)dW; s = (uint8_t *)sW; }
-    while (len--) *d++ = *s++ ; }
-void MemMove(void* dst, const void* src, size_t len) {
-    if (dst > src) { uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
-        d += len; s += len; while (len && ((Cell)d & (SizeCell - 1))) { *--d = *--s; len--; }
-        if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-            Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / SizeCell;
-            len &= (SizeCell - 1); while (i--) *--dW = *--sW;
-            d = (uint8_t *)dW; s = (uint8_t *)sW; } }
-    else if (dst < src ) MemCpy(dst, src, len); }
-int8_t MemCmp(void* dst, const void* src, size_t len) {
-    uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
-    while (len && ((Cell)d & (SizeCell - 1))) { if (*d != *s) return (int8_t)(*d - *s);
-                                                d++; s++; len--; }
-    if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-        Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / SizeCell;
-        len &= (SizeCell - 1); while (i-- && (*dW == *sW)) { dW++; sW++; }
-        d = (uint8_t *)dW; s = (uint8_t *)sW;
-        if (i != (Cell)-1) len = SizeCell; }
-    while (len--) { if (*d != *s) return (int8_t)(*d - *s);
-                    d++; s++ ; }
-    return 0; }
-
 void SwitchRaw(void) {
     static struct termios oldt; static uint8_t flag = 1;
     if (flag) {
@@ -124,7 +88,7 @@ void Delay_ms(uint8_t ms) {
 typedef struct { uint16_t col , row; } TermState;
 TermState TS = {0};
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
-int SyncSize(size_t addr, uint8_t flag) { if (!addr) return 0;
+int16_t SyncSize(size_t addr, uint8_t flag) { if (!addr) return 0;
     struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
     if (flag) { uint8_t stable = 100;
@@ -152,33 +116,4 @@ void SWD(size_t addr) { if (!addr) return;
                           if (home != NULL) chdir(home);
                           return; }
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
-    
-int8_t UTFinfo(unsigned char *s, uint8_t *len) {
-    unsigned char c = s[0]; uint32_t cp = 0xFFFD; *len = 1;
-    if (c < 0x80) cp = (uint32_t) c;
-    else if ((c & 0xE0) == 0xC0 && (s[1] & 0xC0) == 0x80)
-            { *len = 2; cp = ((c & 0x1F) << 6) | (s[1] & 0x3F); }
-    else if ((c & 0xF0) == 0xE0 && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80)
-            { *len = 3; cp = ((c & 0x0F) << 12) | ((s[1] & 0x3F) << 6) | (s[2] & 0x3F); }
-    else if ((c & 0xF8) == 0xF0 && (s[1] & 0xC0) == 0x80 && (s[2] & 0xC0) == 0x80 && (s[3] & 0xC0) == 0x80) 
-            { *len = 4; cp = ((c & 0x07) << 18) | ((s[1] & 0x3F) << 12) | ((s[2] & 0x3F) << 6) | (s[3] & 0x3F); }
-    else return -2;
-    if ((*len == 2 && cp < 0x80) || (*len == 3 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
-        (*len == 4 && (cp < 0x10000 || cp > 0x10FFFF))) return -2;  // битый
-    if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
-        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 0; // прилепало
-    if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return -1; // управляющие
-    if (cp < 0x100) return 1;
-    if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) || (cp >= 0xE0100 && cp <= 0xE01EF)) return 0;
-    if ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) || (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || 
-        (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE10 && cp <= 0xFE19) || 
-        (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
-        (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) return 2;
-    return 1; }
-int8_t UTFinfoTile(unsigned char *s, uint8_t *len, size_t rem) {
-    *len = 0; if (rem == 0) return -3;
-    *len = 1;
-    if ((*s & 0xE0) == 0xC0 && rem < 2) return -3;
-    else if ((*s & 0xF0) == 0xE0 && rem < 3) return -3; // не влез
-    else if ((*s & 0xF8) == 0xF0 && rem < 4) return -3;
-    return UTFinfo(s, len); }
+
