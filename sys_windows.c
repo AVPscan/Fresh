@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-#include <direct.h> // Для _chdir
+#include <direct.h>
 
 #include "sys.h"
 
@@ -36,76 +36,68 @@ void os_printf(const char* format, ...) {
     va_end(args); }
 
 void SwitchRaw(void) {
-    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     static DWORD oldModeIn, oldModeOut; static uint8_t flag = 1;
     if (flag) {
-        setvbuf(stdout, NULL, _IONBF, 0); 
-        SetConsoleCP(65001);
-        SetConsoleOutputCP(65001);
-        GetConsoleMode(hIn, &oldModeIn);
-        GetConsoleMode(hOut, &oldModeOut);
-        DWORD newModeIn = oldModeIn; 
-        newModeIn &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_WINDOW_INPUT); 
-        // 2. ЯВНО ВКЛЮЧАЕМ ввод мыши и расширенные флаги (чтобы QuickEdit реально сдох)
-        newModeIn |= (ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
-        SetConsoleMode(hIn, newModeIn);
-        SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; } 
+        setvbuf(stdout, NULL, _IONBF, 0); SetConsoleCP(CP_UTF8); SetConsoleOutputCP(CP_UTF8); GetConsoleMode(hIn, &oldModeIn);
+        GetConsoleMode(hOut, &oldModeOut); DWORD newModeIn = oldModeIn;
+        newModeIn &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_WINDOW_INPUT | ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
+        newModeIn |= ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_VIRTUAL_TERMINAL_INPUT;
+        SetConsoleMode(hIn, newModeIn); SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; }
     else {
-        printf( Reset ); fflush(stdout);
-        FlushConsoleInputBuffer(hIn);
-        SetConsoleMode(hIn, oldModeIn);
-        SetConsoleMode(hOut, oldModeOut);
+        FlushConsoleInputBuffer(hIn); SetConsoleMode(hIn, oldModeIn); SetConsoleMode(hOut, oldModeOut);
         setvbuf(stdout, NULL, _IOLBF, BUFSIZ); flag = 1; } }
+
+typedef struct { WORD vk; DWORD ctrlState; unsigned char id; } WinKeyIdMap;
+static WinKeyIdMap WinKeyMap[] = {
+    {VK_UP, 0, K_UP}, {VK_UP, LEFT_CTRL_PRESSED, K_Ctrl_UP}, {VK_UP, RIGHT_CTRL_PRESSED, K_Ctrl_UP},
+    {VK_DOWN, 0, K_DOW}, {VK_DOWN, LEFT_CTRL_PRESSED, K_Ctrl_DOW}, {VK_DOWN, RIGHT_CTRL_PRESSED, K_Ctrl_DOW},
+    {VK_LEFT, 0, K_LEF}, {VK_LEFT, LEFT_CTRL_PRESSED, K_Ctrl_LEF}, {VK_LEFT, RIGHT_CTRL_PRESSED, K_Ctrl_LEF},
+    {VK_RIGHT, 0, K_RIG}, {VK_RIGHT, LEFT_CTRL_PRESSED, K_Ctrl_RIG}, {VK_RIGHT, RIGHT_CTRL_PRESSED, K_Ctrl_RIG},
+    {VK_F1, 0, K_F1}, {VK_F2, 0, K_F2}, {VK_F3, 0, K_F3}, {VK_F4, 0, K_F4},
+    {VK_F5, 0, K_F5}, {VK_F6, 0, K_F6}, {VK_F7, 0, K_F7}, {VK_F8, 0, K_F8},
+    {VK_F9, 0, K_F9}, {VK_F10, 0, K_F10}, {VK_F11, 0, K_F11}, {VK_F12, 0, K_F12},
+    {VK_F13, 0, K_F13}, {VK_F14, 0, K_F14}, {VK_F15, 0, K_F15},
+    {VK_HOME, 0, K_HOM}, {VK_END, 0, K_END}, {VK_PRIOR, 0, K_PUP}, {VK_NEXT, 0, K_PDN},
+    {VK_INSERT, 0, K_INS}, {VK_DELETE, 0, K_DEL}, {VK_RETURN, 0, K_ENT},
+    {VK_BACK, 0, K_BAC}, {VK_TAB, 0, K_TAB}, {VK_ESCAPE, 0, K_ESC} };
 const char* GetKey(void) {
-    static unsigned char b[6]; 
-    MemSet(b, 0, 6);
-    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD events = 0;
-    INPUT_RECORD ir;
-    DWORD read_count;
+    static unsigned char b[6]; unsigned char *p = b; int len = 6; while (len) b[--len] = 0;
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD events = 0; INPUT_RECORD ir; DWORD read_count; *p = 27;
     if (!PeekConsoleInputW(hIn, &ir, 1, &events) || events == 0) return (char*)b;
     if (!ReadConsoleInputW(hIn, &ir, 1, &read_count) || read_count == 0) return (char*)b;
     if (ir.EventType == MOUSE_EVENT) {
-      DWORD flags = ir.Event.MouseEvent.dwEventFlags;
-      DWORD btn = ir.Event.MouseEvent.dwButtonState; 
-      if (flags == 0 || flags == DOUBLE_CLICK || flags == MOUSE_WHEELED) {
-        b[0] = 27;
-        b[1] = K_Mouse;
-        b[3] = 32 + (unsigned char)ir.Event.MouseEvent.dwMousePosition.X + 1;
-        b[4] = 32 + (unsigned char)ir.Event.MouseEvent.dwMousePosition.Y + 1;
-        if (flags == MOUSE_WHEELED) { b[2] = ( (int32_t)btn > 0 ) ? 96 : 97; } 
-        else { if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) b[2] = 32;
-               else if (btn & RIGHTMOST_BUTTON_PRESSED) b[2] = 34;
-               else if (btn & FROM_LEFT_2ND_BUTTON_PRESSED) b[2] = 33; }
+        MOUSE_EVENT_RECORD *m = &ir.Event.MouseEvent; DWORD flags = m->dwEventFlags; DWORD btn = m->dwButtonState;
+        if (flags == 0 || flags == DOUBLE_CLICK || flags == MOUSE_WHEELED) {
+            b[1] = K_Mouse;
+            b[3] = 32 + (unsigned char)m->dwMousePosition.X + 1;
+            b[4] = 32 + (unsigned char)m->dwMousePosition.Y + 1;
+            if (flags == MOUSE_WHEELED) { b[2] = ((int32_t)btn > 0) ? 96 : 97; } 
+            else {
+                if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) b[2] = 32;
+                else if (btn & RIGHTMOST_BUTTON_PRESSED) b[2] = 34;
+                else if (btn & FROM_LEFT_2ND_BUTTON_PRESSED) b[2] = 33; }
+            return (char*)b; }
         return (char*)b; }
-    return (char*)b; }
     if (ir.EventType != KEY_EVENT || !ir.Event.KeyEvent.bKeyDown) return (char*)b;
-    WORD vk = ir.Event.KeyEvent.wVirtualKeyCode;
-    WCHAR wc = ir.Event.KeyEvent.uChar.UnicodeChar;
-    DWORD controlKeyState = ir.Event.KeyEvent.dwControlKeyState;
-    if (wc == 3 || (vk == 'C' && (controlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))) {
-        b[0] = 27; b[1] = K_Ctrl_C; return (char*)b; }
-    int cmd = 0;
-    if (vk >= VK_F1 && vk <= VK_F12) cmd = K_F1 + (vk - VK_F1);
-    else {
-        switch (vk) {
-            case VK_UP:     cmd = (controlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) ? K_Ctrl_UP : K_UP; break;
-            case VK_DOWN:   cmd = (controlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) ? K_Ctrl_DOW : K_DOW; break;
-            case VK_LEFT:   cmd = (controlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) ? K_Ctrl_LEF : K_LEF; break;
-            case VK_RIGHT:  cmd = (controlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) ? K_Ctrl_RIG : K_RIG; break;
-            case VK_ESCAPE: cmd = K_ESC; break;
-            case VK_PRIOR:  cmd = K_PUP; break;
-            case VK_NEXT:   cmd = K_PDN; break;
-            case VK_HOME:   cmd = K_HOM; break;
-            case VK_END:    cmd = K_END; break;
-            case VK_INSERT: cmd = K_INS; break;
-            case VK_DELETE: cmd = K_DEL; break;
-            case VK_RETURN: cmd = K_ENT; break;
-            case VK_BACK:   cmd = K_BAC; break;
-            case VK_TAB:    cmd = K_TAB; break; } }
-    if (cmd > 0) { b[0] = 27; b[1] = (unsigned char)cmd; return (char*)b; }
-    if (wc >= 32) { int len = WideCharToMultiByte(CP_UTF8, 0, &wc, 1, (char*)b, 5, NULL, NULL); return (char*)b; }
+    KEY_EVENT_RECORD *k = &ir.Event.KeyEvent; WORD vk = k->wVirtualKeyCode; WCHAR wc = k->uChar.UnicodeChar; DWORD ctrl = k->dwControlKeyState;
+    if (wc == 3 || (vk == 'C' && (ctrl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))) { b[1] = K_Ctrl_C; return (char*)b; }
+    if (wc >= 128) {
+        len = WideCharToMultiByte(CP_UTF8, 0, &wc, 1, NULL, 0, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, &wc, 1, (char*)p, len, NULL, NULL);
+        return (char*)b; }
+    if (wc > 31 && wc < 127) { *p = (unsigned char)wc;
+        return (char*)b; }
+    int j = sizeof(WinKeyMap) / sizeof(WinKeyIdMap);
+    while (j--) {
+        if (vk == WinKeyMap[j].vk) {
+            if (WinKeyMap[j].ctrlState == 0 || (ctrl & WinKeyMap[j].ctrlState)) {
+                b[1] = WinKeyMap[j].id; return (char*)b; } } }
+    if (ctrl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
+        if (wc >= L'a' && wc <= L'z') { b[1] = K_Ctrl_A + (wc - L'a');
+            return (char*)b; }
+        if (wc >= L'A' && wc <= L'Z') { b[1] = K_Ctrl_A + (wc - L'A');
+            return (char*)b; } }
     return (char*)b; }
 
 size_t GetRam(size_t *size) { if (!*size) return 0;
