@@ -9,14 +9,24 @@
  
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 #include <direct.h>
+#include <io.h>
+
+#include <stdio.h>    / vfprintf, vsnprintf и setvbuf
+#include <stdarg.h>   / va_list
+
+#include <stdlib.h> / malloc/free))
+#include <string.h>   / strlen)
 
 #include "sys.h"
 
+#define read win_read
+ssize_t win_read(int fd, void* buf, size_t count) {
+    if (fd != 0) return _read(fd, buf, (unsigned int)count);
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD events = 0;
+    if (!GetNumberOfConsoleInputEvents(hIn, &events) || events == 0) return -1;
+    return _read(fd, buf, (unsigned int)count); }
+    
 void* os_open_file(const char* name) { return (void*)fopen(name, "rb"); }
 void* os_create_file(const char* name) { return (void*)fopen(name, "wb"); }
 void  os_close_file(void* handle) { if (handle) fclose((FILE*)handle); }
@@ -48,56 +58,31 @@ void SwitchRaw(void) {
         FlushConsoleInputBuffer(hIn); SetConsoleMode(hIn, oldModeIn); SetConsoleMode(hOut, oldModeOut);
         setvbuf(stdout, NULL, _IOLBF, BUFSIZ); flag = 1; } }
 
-typedef struct { WORD vk; DWORD ctrlState; unsigned char id; } WinKeyIdMap;
-static WinKeyIdMap WinKeyMap[] = {
-    {VK_UP, 0, K_UP}, {VK_UP, LEFT_CTRL_PRESSED, K_Ctrl_UP}, {VK_UP, RIGHT_CTRL_PRESSED, K_Ctrl_UP},
-    {VK_DOWN, 0, K_DOW}, {VK_DOWN, LEFT_CTRL_PRESSED, K_Ctrl_DOW}, {VK_DOWN, RIGHT_CTRL_PRESSED, K_Ctrl_DOW},
-    {VK_LEFT, 0, K_LEF}, {VK_LEFT, LEFT_CTRL_PRESSED, K_Ctrl_LEF}, {VK_LEFT, RIGHT_CTRL_PRESSED, K_Ctrl_LEF},
-    {VK_RIGHT, 0, K_RIG}, {VK_RIGHT, LEFT_CTRL_PRESSED, K_Ctrl_RIG}, {VK_RIGHT, RIGHT_CTRL_PRESSED, K_Ctrl_RIG},
-    {VK_F1, 0, K_F1}, {VK_F2, 0, K_F2}, {VK_F3, 0, K_F3}, {VK_F4, 0, K_F4},
-    {VK_F5, 0, K_F5}, {VK_F6, 0, K_F6}, {VK_F7, 0, K_F7}, {VK_F8, 0, K_F8},
-    {VK_F9, 0, K_F9}, {VK_F10, 0, K_F10}, {VK_F11, 0, K_F11}, {VK_F12, 0, K_F12},
-    {VK_F13, 0, K_F13}, {VK_F14, 0, K_F14}, {VK_F15, 0, K_F15},
-    {VK_HOME, 0, K_HOM}, {VK_END, 0, K_END}, {VK_PRIOR, 0, K_PUP}, {VK_NEXT, 0, K_PDN},
-    {VK_INSERT, 0, K_INS}, {VK_DELETE, 0, K_DEL}, {VK_RETURN, 0, K_ENT},
-    {VK_BACK, 0, K_BAC}, {VK_TAB, 0, K_TAB}, {VK_ESCAPE, 0, K_ESC} };
+typedef struct { const char *name; unsigned char id; } KeyIdMap;
+KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
+    {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF},
+    {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, {"[17~", K_F6},
+    {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
+    {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
+    {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 const char* GetKey(void) {
-    static unsigned char b[6]; unsigned char *p = b; int len = 6; while (len) b[--len] = 0;
-    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD events = 0; INPUT_RECORD ir; DWORD read_count; *p = 27;
-    if (!PeekConsoleInputW(hIn, &ir, 1, &events) || events == 0) return (char*)b;
-    if (!ReadConsoleInputW(hIn, &ir, 1, &read_count) || read_count == 0) return (char*)b;
-    if (ir.EventType == MOUSE_EVENT) {
-        MOUSE_EVENT_RECORD *m = &ir.Event.MouseEvent; DWORD flags = m->dwEventFlags; DWORD btn = m->dwButtonState;
-        if (flags == 0 || flags == DOUBLE_CLICK || flags == MOUSE_WHEELED) {
-            b[1] = K_Mouse;
-            b[3] = 32 + (unsigned char)m->dwMousePosition.X + 1;
-            b[4] = 32 + (unsigned char)m->dwMousePosition.Y + 1;
-            if (flags == MOUSE_WHEELED) { b[2] = ((int32_t)btn > 0) ? 96 : 97; } 
-            else {
-                if (btn & FROM_LEFT_1ST_BUTTON_PRESSED) b[2] = 32;
-                else if (btn & RIGHTMOST_BUTTON_PRESSED) b[2] = 34;
-                else if (btn & FROM_LEFT_2ND_BUTTON_PRESSED) b[2] = 33; }
-            return (char*)b; }
+    static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
+    if (read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
+    unsigned char c = *p; if (c > 127) {
+        len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
+        while (--len) read(0, ++p, 1);
         return (char*)b; }
-    if (ir.EventType != KEY_EVENT || !ir.Event.KeyEvent.bKeyDown) return (char*)b;
-    KEY_EVENT_RECORD *k = &ir.Event.KeyEvent; WORD vk = k->wVirtualKeyCode; WCHAR wc = k->uChar.UnicodeChar; DWORD ctrl = k->dwControlKeyState;
-    if (wc == 3 || (vk == 'C' && (ctrl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))) { b[1] = K_Ctrl_C; return (char*)b; }
-    if (wc >= 128) {
-        len = WideCharToMultiByte(CP_UTF8, 0, &wc, 1, NULL, 0, NULL, NULL);
-        WideCharToMultiByte(CP_UTF8, 0, &wc, 1, (char*)p, len, NULL, NULL);
-        return (char*)b; }
-    if (wc > 31 && wc < 127) { *p = (unsigned char)wc;
-        return (char*)b; }
-    int j = sizeof(WinKeyMap) / sizeof(WinKeyIdMap);
-    while (j--) {
-        if (vk == WinKeyMap[j].vk) {
-            if (WinKeyMap[j].ctrlState == 0 || (ctrl & WinKeyMap[j].ctrlState)) {
-                b[1] = WinKeyMap[j].id; return (char*)b; } } }
-    if (ctrl & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-        if (wc >= L'a' && wc <= L'z') { b[1] = K_Ctrl_A + (wc - L'a');
-            return (char*)b; }
-        if (wc >= L'A' && wc <= L'Z') { b[1] = K_Ctrl_A + (wc - L'A');
-            return (char*)b; } }
+    if (c > 31 && c < 127) return (char*)b;
+    *p++ = 27; *p = c; if (c != 27) return (char*)b; 
+    unsigned char *s1; const unsigned char *s2; int8_t j = (int)(sizeof(NameId)/sizeof(KeyIdMap));
+    if (read(0, p, 1) > 0) { s1 = p; while (((s1 - p) < 5) && (read(0, ++s1, 1) > 0)) if (*s1 > 63) break;
+        if (*s1 < 64) while((read(0,&c,1) > 0) && (c < 64));
+        while(j--) { s2 = (const unsigned char*)NameId[j].name;
+            if (*p != *s2) continue;
+            s1 = p; while (*++s1 == *++s2 && *s2);
+            if (!*s2) { *p++ = NameId[j].id; *p = 0; break; } }
+        if (j < 0) b[1] = 0; 
+        if (b[1] == K_Mouse) { len = 4; while(--len) read(0, p++, 1); } }
     return (char*)b; }
 
 size_t GetRam(size_t *size) { if (!*size) return 0;
@@ -115,7 +100,8 @@ TermState TS = {0};
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
 int16_t SyncSize(size_t addr, uint8_t flag) { 
     if (!addr) return 0;
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    static HANDLE hOut = NULL; 
+    if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return 0;
     uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
@@ -135,7 +121,12 @@ uint64_t GetCycles(void) {
     unsigned int lo, hi;
     __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     return ((uint64_t)hi << 32) | lo; }
-void Delay_ms(uint8_t ms) { if (ms > 0) Sleep((DWORD)ms); }
+void Delay_ms(uint8_t ms) {
+    static LARGE_INTEGER freq; static int init = 0;
+    if (!init) { QueryPerformanceFrequency(&freq); init = 1; }
+    LARGE_INTEGER start, end; QueryPerformanceCounter(&start);
+    int64_t target = start.QuadPart + (ms * freq.QuadPart / 1000); if (ms > 1) Sleep(ms - 1);
+    do { __asm__ volatile("pause"); QueryPerformanceCounter(&end); } while (end.QuadPart < target); }
 
 int GetSC(size_t addr) { 
     if (!addr || !TS.col) return 1;
