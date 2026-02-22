@@ -113,8 +113,7 @@ uint64_t GetCycles(void);
 void Delay_ms(uint8_t ms);
 int GetSC(size_t addr);
 
-char* TakeTb(size_t *size);
-void Getlib(int16_t *x1, int16_t *x2, int16_t *x3, int16_t *x4, int16_t *x5, int16_t *x6, int16_t *x7, int16_t *x8, int16_t *x9);
 void Print(uint8_t n, char *str);
-
+void Show(void);
+int Help(int argc, char *argv[], int flag);
 #endif /* SYS_H */

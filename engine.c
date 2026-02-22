@@ -7,6 +7,7 @@
  * лицензии GNU (GPLv3).
  */
 
+#include <stdio.h>
 #include <unistd.h>
 #include "sys.h"
 
@@ -73,15 +74,13 @@ void MemMove(void* dst, const void* src, size_t len) {
     else if (dst < src ) MemCpy(dst, src, len); }
 int8_t MemCmp(void* dst, const void* src, size_t len) {
     uint8_t *d = (uint8_t *)dst; const uint8_t *s = (const uint8_t *)src;
-    while (len && ((Cell)d & (SizeCell - 1))) { if (*d != *s) return (int8_t)(*d - *s);
-                                                d++; s++; len--; }
+    while (len && ((Cell)d & (SizeCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
     if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
         Cell *dW = (Cell *)d; const Cell *sW = (const Cell *)s; size_t i = len / SizeCell;
-        len &= (SizeCell - 1); while (i-- && (*dW == *sW)) { dW++; sW++; }
-        d = (uint8_t *)dW; s = (uint8_t *)sW;
-        if (i != (Cell)-1) len = SizeCell; }
-    while (len--) { if (*d != *s) return (int8_t)(*d - *s);
-                    d++; s++ ; }
+        len %= SizeCell; while (i-- && (*dW++ == *sW++));
+        if (i + 1) { --dW; --sW; len += SizeCell; }
+        d = (uint8_t *)dW; s = (uint8_t *)sW; }
+    while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
     return 0; }
     
 int8_t UTFinfo(unsigned char *s, uint8_t *len, uint8_t *Mrtl) {
@@ -215,7 +214,15 @@ char* TakeTb(size_t *size) {
   if (!*size) return NULL;
   if (*size > 1024) *size = 1024;
   return Avdat; }
-void Getlib(int16_t *x1, int16_t *x2, int16_t *x3, int16_t *x4, int16_t *x5, int16_t *x6, int16_t *x7, int16_t *x8, int16_t *x9) {
-  uint16_t r, c = TermCR(&r);
-  *x1 = (int16_t)c; *x2 = (int16_t)r; *x3 = Cur.X; *x4 = Cur.Y; *x5 = Cur.viewX; *x6 = Cur.viewY;
-  *x7 = (int16_t)Cur.Mkey; *x8 = (int16_t)Cur.MX; *x9 = (int16_t)Cur.MY; }
+
+void Show(void) { uint16_t r = 0;  size_t size = 256; char *buf = TakeTb(&size);
+    Print(Ccurrent,Home); snprintf(buf, size, "%d %d %d %d %d %d         \n", TermCR(&r), r, Cur.X + Cur.viewX, Cur.Y + Cur.viewY, Cur.MX, Cur.MY);
+    Print(Cblue,buf); snprintf(buf, size, "%d %d %d %d %d        ", Cur.X, Cur.viewX, Cur.Y, Cur.viewY, Cur.Mkey); Print(Cgreen,buf); }
+
+int Help(int argc, char *argv[], int flag) {
+  if (argc > 1 && flag) { 
+    if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
+      Print(CorangeB,"Created by Alexey Pozdnyakov in 02.2026 version 2.30\n");
+      Print(Cgold,"email: avp70ru@mail.ru https://github.com/AVPscan/Fresh"); }
+    flag = 0; }
+  return flag; }
