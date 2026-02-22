@@ -18,7 +18,7 @@ void SwitchRaw(void) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     static DWORD oldModeIn, oldModeOut; static uint8_t flag = 1;
     if (flag) {
-        setvbuf(stdout, NULL, _IONBF, 0); SetConsoleCP(CP_UTF8); SetConsoleOutputCP(CP_UTF8); GetConsoleMode(hIn, &oldModeIn);
+        SetConsoleCP(CP_UTF8); SetConsoleOutputCP(CP_UTF8); GetConsoleMode(hIn, &oldModeIn);
         GetConsoleMode(hOut, &oldModeOut); DWORD newModeIn = oldModeIn;
         newModeIn &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_WINDOW_INPUT | ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT);
         newModeIn |= ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_VIRTUAL_TERMINAL_INPUT;
