@@ -15,6 +15,6 @@ int main(int argc, char *argv[]) {
     Delay_ms(20); const char* k = GetKey();
     if (k[0] == 27) {
       if (k[1] == K_NO) continue;
-      if (k[1] == K_ESC) break; }
+      if (k[1] == K_Ctrl_C) break; }
     ViewPort(k); Show(); } 
    return SystemSwitch(); }

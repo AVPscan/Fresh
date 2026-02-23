@@ -10,26 +10,27 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <direct.h>
+#include <conio.h>
 #include <io.h>
-#include <stdio.h>        // Для setvbuf, BUFSIZ
 #include <stdint.h>       // Для uint8_t, uint16_t, uint64_t и т.д.
-#include <profileapi.h>
+
 
 #include "sys.h"
 
 void SwitchRaw(void) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    static DWORD oldModeIn, oldModeOut; static uint8_t flag = 1;   
+    static DWORD oldModeIn, oldModeOut; static UINT oldCP, oldOutCP; static uint8_t flag = 1;   
     if (flag) {
-        setvbuf(stdout, NULL, _IONBF, 0);
+        oldCP = GetConsoleCP(); oldOutCP = GetConsoleOutputCP();
         GetConsoleMode(hIn, &oldModeIn); GetConsoleMode(hOut, &oldModeOut);
         SetConsoleCP(65001); SetConsoleOutputCP(65001);
         DWORD newModeIn = oldModeIn & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT);
+        newModeIn |= ENABLE_VIRTUAL_TERMINAL_INPUT;
         SetConsoleMode(hIn, newModeIn);
         SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; }
     else { 
-        FlushConsoleInputBuffer(hIn); SetConsoleMode(hIn, oldModeIn); SetConsoleMode(hOut, oldModeOut);
-        setvbuf(stdout, NULL, _IOLBF, BUFSIZ); flag = 1; } }
+        FlushConsoleInputBuffer(hIn); SetConsoleCP(oldCP); SetConsoleOutputCP(oldOutCP); SetConsoleMode(hIn, oldModeIn);
+        SetConsoleMode(hOut, oldModeOut); flag = 1; } }
 
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
@@ -40,7 +41,7 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 const char* GetKey(void) {
     static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
-    if (_read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
+    if (!_kbhit()) { *p = 27; return (char*)b; }
     _read(0, p, 1); unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
         while (--len) _read(0, ++p, 1);
@@ -72,29 +73,7 @@ uint64_t GetCycles(void) {
     unsigned int lo, hi;
     __asm__ __volatile__ ( "rdtsc\n" : "=a" (lo), "=d" (hi) : : "memory" );
     return ((uint64_t)hi << 32) | lo; }
-void Delay_ms(uint8_t ms) {
-    static uint64_t cpu_hz = 0; static uint64_t last_cycles = 0; static uint64_t correction = 0;
-    if (cpu_hz == 0) {
-        uint64_t start = GetCycles();
-        LARGE_INTEGER freq, start_qpc, end_qpc;
-        QueryPerformanceFrequency(&freq);
-        QueryPerformanceCounter(&start_qpc);
-        uint64_t target = start_qpc.QuadPart + (freq.QuadPart / 100);
-        do {
-            QueryPerformanceCounter(&end_qpc);
-            __asm__ volatile ("pause" : : : "memory");
-        } while (end_qpc.QuadPart < target);
-        uint64_t end = GetCycles();
-        if (end_qpc.QuadPart != start_qpc.QuadPart) {
-            cpu_hz = (uint64_t)((double)(end - start) * (double)freq.QuadPart / 
-                               (double)(end_qpc.QuadPart - start_qpc.QuadPart)); }
-        if (cpu_hz < 500000000) cpu_hz = 2000000000ULL;
-        cpu_hz = (cpu_hz / 1000000) * 1000000; last_cycles = GetCycles(); }
-    uint64_t now = GetCycles(); if (last_cycles == 0) last_cycles = now;
-    uint64_t target = last_cycles + (uint64_t)ms * (cpu_hz / 1000) + correction;
-    if (now >= target) { correction = (now - target) / 2; last_cycles = now; return; }
-    while (GetCycles() < target) { __asm__ volatile ("pause" : : : "memory"); }
-    last_cycles = target; correction = 0; }
+void Delay_ms(uint8_t ms) { if (ms > 19) Sleep(ms - 15); }
     
 typedef struct { uint16_t col , row; } TermState;
 TermState TS = {0};
