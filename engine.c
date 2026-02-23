@@ -172,7 +172,7 @@ void ViewPort(const char* key) {
       if (Cur.Y + Cur.viewY >= r) Cur.viewY = r - 1 - Cur.Y;
       else if (Cur.Y + Cur.viewY < 0)  Cur.viewY = -Cur.Y;
       Cur.oldCols = c; Cur.oldRows = r; control =0;
-      Print(Ccurrent, Cls); }
+      Print(Ccurrent,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
   if (Cur.CodeKey == K_Ctrl_W) Cur.Vision ^= 4;
   if (Cur.CodeKey != Cur.PenCK) { Cur.PenCK = Cur.CodeKey; Cur.Tic = 0; Cur.dXY = 1; }
   if ((Cur.CodeKey & 0xF8) == 0x20) { Cur.Tic++; control++;
