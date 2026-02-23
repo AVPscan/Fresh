@@ -9,6 +9,7 @@
  
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mmsystem.h> //
 #include <direct.h>
 #include <conio.h>
 #include <io.h>
