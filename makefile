@@ -15,7 +15,7 @@ UNAME_S := $(shell uname -s)
 ifeq ($(OS),Windows_NT)
 	SYS_SRC = sys_windows.c
 	EXT = .exe
-	LIBS = -lkernel32 -luser32 -lwinmm
+	LIBS = -lkernel32 -luser32
 	GET_SIZE = wc -c < $(TARGET)$(EXT)
 else ifeq ($(UNAME_S),Darwin)
 	SYS_SRC = sys_macos.c

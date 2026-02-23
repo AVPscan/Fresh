@@ -9,7 +9,6 @@
  
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <mmsystem.h> //
 #include <direct.h>
 #include <conio.h>
 #include <io.h>
@@ -38,7 +37,7 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 const char* GetKey(void) {
     static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
-    if (!_kbhit()) { *p = 27; return (char*)b; }
+    if (_read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
     _read(0, p, 1); unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
         while (--len) _read(0, ++p, 1);
@@ -94,7 +93,7 @@ uint64_t GetCycles(void) {
     return ((uint64_t)hi << 32) | lo; }
 void Delay_ms(uint8_t ms) {
     static LARGE_INTEGER freq; static uint64_t cpu_hz = 0; static int init = 0;
-    if (!init) { timeBeginPeriod(1); QueryPerformanceFrequency(&freq); init = 1; }
+    if (!init) { QueryPerformanceFrequency(&freq); init = 1; }
     if (cpu_hz == 0) { LARGE_INTEGER start, end, qpc_start, qpc_end; QueryPerformanceCounter(&qpc_start);
         start = qpc_start; Sleep(10); QueryPerformanceCounter(&qpc_end);
         uint64_t ns = (uint64_t)((qpc_end.QuadPart - qpc_start.QuadPart) * 1000000000ULL / freq.QuadPart);
