@@ -10,10 +10,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <direct.h>
+#include <conio.h>
 #include <io.h>
-#include <stdio.h>        // Для setvbuf, BUFSIZ
 #include <stdint.h>       // Для uint8_t, uint16_t, uint64_t и т.д.
-#include <profileapi.h>
 
 #include "sys.h"
 
@@ -21,7 +20,6 @@ void SwitchRaw(void) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     static DWORD oldModeIn, oldModeOut; static UINT oldCP, oldOutCP; static uint8_t flag = 1;   
     if (flag) {
-        setvbuf(stdout, NULL, _IONBF, 0);
         oldCP = GetConsoleCP(); oldOutCP = GetConsoleOutputCP();
         GetConsoleMode(hIn, &oldModeIn); GetConsoleMode(hOut, &oldModeOut);
         SetConsoleCP(65001); SetConsoleOutputCP(65001);
@@ -31,7 +29,7 @@ void SwitchRaw(void) {
         SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; }
     else { 
         FlushConsoleInputBuffer(hIn); SetConsoleCP(oldCP); SetConsoleOutputCP(oldOutCP); SetConsoleMode(hIn, oldModeIn);
-        SetConsoleMode(hOut, oldModeOut); setvbuf(stdout, NULL, _IOLBF, BUFSIZ); flag = 1; } }
+        SetConsoleMode(hOut, oldModeOut); flag = 1; } }
 
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
@@ -42,7 +40,7 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 const char* GetKey(void) {
     static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
-    if (_read(0, p, 1) <= 0) { *p = 27; return (char*)b; }
+    if (!_kbhit()) { *p = 27; return (char*)b; }
     _read(0, p, 1); unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
         while (--len) _read(0, ++p, 1);
