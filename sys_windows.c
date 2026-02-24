@@ -21,12 +21,10 @@ void SwitchRaw(void) {
         GetConsoleMode(hIn, &oldModeIn); GetConsoleMode(hOut, &oldModeOut);
         SetConsoleCP(65001); SetConsoleOutputCP(65001);
         DWORD newModeIn = oldModeIn & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_QUICK_EDIT_MODE);
-        newModeIn |= (ENABLE_VIRTUAL_TERMINAL_INPUT | ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT);
+        newModeIn |= (ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT);
         SetConsoleMode(hIn, newModeIn);
-        SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); GetConsoleCursorInfo(hOut, &ci);
-        ci.bVisible = FALSE; SetConsoleCursorInfo(hOut, &ci); flag = 0; }
+        SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); flag = 0; }
     else {
-        GetConsoleCursorInfo(hOut, &ci); ci.bVisible = TRUE; SetConsoleCursorInfo(hOut, &ci);
         FlushConsoleInputBuffer(hIn); SetConsoleCP(oldCP); SetConsoleOutputCP(oldOutCP); SetConsoleMode(hIn, oldModeIn);
         SetConsoleMode(hOut, oldModeOut); flag = 1; } }
 
@@ -39,28 +37,19 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 void GetKey(char *b) {
     unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len) b[--len] = 0;
-    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0, rd = 0;
-    GetNumberOfConsoleInputEvents(hIn, &ev); if (!ev) { *p++ = 27;
-        INPUT_RECORD ir; PeekConsoleInput(hIn, &ir, 1, &rd); 
-        if (rd > 0 && ir.EventType == MOUSE_EVENT) {
-            ReadConsoleInput(hIn, &ir, 1, &rd);
-            MOUSE_EVENT_RECORD mer = ir.Event.MouseEvent;
-           *p++ = K_Mouse;
-           *p++ = 32 + (mer.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED ? 0 : 
-                        mer.dwButtonState & RIGHTMOST_BUTTON_PRESSED ? 2 : 
-                        mer.dwEventFlags & MOUSE_WHEELED ? (mer.dwButtonState & 0xFF000000 ? 97 : 96) : 1);
-            *p++ = (unsigned char)(33 + mer.dwMousePosition.X);
-            *p = (unsigned char)(33 + mer.dwMousePosition.Y); }
-      return; }
-    ReadFile(hIn, p, 1, &rd, NULL); unsigned char c = *p;
-    if (c > 127) {
+    HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0, rd = 0; *p = 27;
+    GetNumberOfConsoleInputEvents(hIn, &ev); if (ev == 0) return;
+    INPUT_RECORD ir; PeekConsoleInput(hIn, &ir, 1, &rd); if (rd == 0) return;
+    if (ir.EventType == KEY_EVENT) {
+      ReadFile(hIn, p, 1, &rd, NULL); unsigned char c = *p;
+      if (c > 127) {
         len = (c >= 0xF0) ? 3 : (c >= 0xE0) ? 2 : (c >= 0xC0) ? 1 : 0;
         while (len--) { ReadFile(hIn, ++p, 1, &rd, NULL); }
         return; }
-    if (c > 31 && c < 127) return;
-    *p++ = 27; *p = c; if (c != 27) return;
-    GetNumberOfConsoleInputEvents(hIn, &ev);
-    if (ev > 0) {
+      if (c > 31 && c < 127) return;
+      *p++ = 27; *p = c; if (c != 27) return;
+      GetNumberOfConsoleInputEvents(hIn, &ev);
+      if (ev > 0) {
         if (ReadFile(hIn, p, 1, &rd, NULL) > 0) {
             unsigned char *s1 = p, *t1;
             while (((s1 - p) < 5) && (ReadFile(hIn, ++s1, 1, &rd, NULL) > 0)) if (*s1 > 63) break;
@@ -70,8 +59,16 @@ void GetKey(char *b) {
                 const unsigned char *s2 = (const unsigned char*)NameId[j].name; if (*p != *s2) continue;
                 t1 = p; while (*++t1 == *++s2 && *s2);
                 if (!*s2) { *p++ = NameId[j].id; *p = 0; break; } }
-            if (j < 0) *p = 0;
-            if (*p++ == K_Mouse) { len = 3; while(len--) ReadFile(hIn, p++, 1, &rd, NULL); } } } }
+            if (*p++ == K_Mouse) { len = 3; while(len--) ReadFile(hIn, p++, 1, &rd, NULL); }
+            if (j < 0) *--p = 0; } }
+      return; }
+    if (ir.EventType == MOUSE_EVENT) {
+      ReadConsoleInput(hIn, &ir, 1, &rd); MOUSE_EVENT_RECORD mer = ir.Event.MouseEvent;
+      *++p = K_Mouse;
+      *++p = 32 + (mer.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED ? 0 : 
+                   mer.dwButtonState & RIGHTMOST_BUTTON_PRESSED ? 2 : 
+                   mer.dwEventFlags & MOUSE_WHEELED ? (mer.dwButtonState & 0xFF000000 ? 97 : 96) : 1);
+      *++p = (unsigned char)(33 + mer.dwMousePosition.X); *++p = (unsigned char)(33 + mer.dwMousePosition.Y); return; } }
 
 size_t GetRam(size_t *size) { if (!*size) return 0;
     size_t l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
@@ -114,8 +111,7 @@ int16_t SyncSize(size_t addr, uint8_t flag) {
                 uint16_t cur_w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
                 uint16_t cur_h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
                 if (cur_w != w || cur_h != h) { w = cur_w; h = cur_h; stable = 100; } } } }
-    TS.col = w; TS.row = h; CONSOLE_CURSOR_INFO ci_fix; ci_fix.dwSize = 100; ci_fix.bVisible = FALSE; SetConsoleCursorInfo(hOut, &ci_fix);
-    return 1; }
+    TS.col = w; TS.row = h; Print(Ccurrent,HideCur); return 1; }
 
 int GetSC(size_t addr) { 
     if (!addr || !TS.col) return 1;
