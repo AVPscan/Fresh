@@ -68,7 +68,8 @@ void GetKey(char *b) {
       *++p = 32 + (mer.dwButtonState & FROM_LEFT_1ST_BUTTON_PRESSED ? 0 : 
                    mer.dwButtonState & RIGHTMOST_BUTTON_PRESSED ? 2 : 
                    mer.dwEventFlags & MOUSE_WHEELED ? (mer.dwButtonState & 0xFF000000 ? 97 : 96) : 1);
-      *++p = (unsigned char)(33 + mer.dwMousePosition.X); *++p = (unsigned char)(33 + mer.dwMousePosition.Y); return; } }
+      *++p = (unsigned char)(33 + mer.dwMousePosition.X); *++p = (unsigned char)(33 + mer.dwMousePosition.Y); return; } 
+    ReadConsoleInput(hIn, &ir, 1, &rd); }
 
 size_t GetRam(size_t *size) { if (!*size) return 0;
     size_t l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
