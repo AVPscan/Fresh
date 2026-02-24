@@ -139,8 +139,9 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
                 dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } }
 
 typedef struct {int16_t X, Y, viewX, viewY, dXY, LkX, LkY, RkX, RkY;
-                uint16_t oldRows, oldCols; uint8_t Vision, CodeKey, PenCK, Tic, Mkey, MX, MY; } Cur_;
-Cur_ Cur = {30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+                uint16_t oldRows, oldCols; uint8_t Vision, CodeKey, PenCK, Tic, Mkey, MX, MY;
+                char key[6]; } Cur_;
+Cur_ Cur = { 30,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0} };
 void ShowC(uint8_t on) {
   char *src, *dst = Avdat, *sav; uint8_t i, c, p = CcurrentI; on &= 1; Cur.Vision &= 0xFE; Cur.Vision += on; if (Cur.Vision & 4) p = CredI;
   int16_t x = Cur.X + Cur.viewX + 1, y = Cur.Y + Cur.viewY + 1;
@@ -152,11 +153,14 @@ void ShowC(uint8_t on) {
   *src++ = 'H'; if (on) { sav = Parse(p); MemCpy(src, (sav + 1), *sav); src += *sav; }
   *src++ = ' '; if (on) { sav = Parse(Ccurrent); MemCpy(src, (sav + 1), *sav); src += *sav; }
   write (1, Avdat, (src - Avdat)); }
-void ViewPort(const char* key) {
-  uint16_t control = 0, r, c; if (Cur.Vision & 1) ShowC(Off);
-  if (key[0] != 27) Cur.CodeKey = 0;
-  else { Cur.CodeKey = (uint8_t)key[1];
-      if (key[1] == K_Mouse) { Cur.Mkey = (uint8_t)key[2]; Cur.MX = (uint8_t)key[3] - 33; Cur.MY = (uint8_t)key[4] - 33;
+uint8_t ViewPort(void) {
+  uint16_t control = 0, r, c; GetKey(Cur.key);
+  if (Cur.key[0] == 27 && Cur.key[1] == K_ESC) return 0;
+  if (Cur.key[0] == 27 && Cur.key[1] == K_NO) return 1;
+  if (Cur.Vision & 1) ShowC(Off);
+  if (Cur.key[0] != 27) Cur.CodeKey = 0;
+  else { Cur.CodeKey = (uint8_t)Cur.key[1];
+      if (Cur.key[1] == K_Mouse) { Cur.Mkey = (uint8_t)Cur.key[2]; Cur.MX = (uint8_t)Cur.key[3] - 33; Cur.MY = (uint8_t)Cur.key[4] - 33;
                                 if (Cur.Mkey == 32) { Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.LkX = Cur.X; Cur.LkY = Cur.Y; }
                                 else if (Cur.Mkey == 33) Cur.Vision ^= 2;
                                 else if (Cur.Mkey == 34) { Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.RkX = Cur.X; Cur.RkY = Cur.Y; }
@@ -196,7 +200,7 @@ void ViewPort(const char* key) {
       else if (Cur.X + Cur.viewX >= c) Cur.X = c - 1 - Cur.viewX;
       if (Cur.Y + Cur.viewY < 0) Cur.Y = -Cur.viewY;
       else if (Cur.Y + Cur.viewY >= r) Cur.Y = r - 1 - Cur.viewY; }
-  ShowC(On); }
+  ShowC(On); return 1; }
     
 int SystemSwitch(void) {
   static uint8_t flag = 1;
@@ -219,7 +223,7 @@ int Help(int argc, char *argv[], int flag) {
   if (argc > 1 && flag) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       Print(Ccurrent,AltBufOff);
-      Print(CorangeB,"Created by Alexey Pozdnyakov in 02.2026 version 2.30\n");
+      Print(CorangeB,"Created by Alexey Pozdnyakov in 07.02.2026 version 2.34\n");
       Print(Cgold,"email: avp70ru@mail.ru https://github.com/AVPscan/Fresh"); }
     flag = 0; }
   return flag; }

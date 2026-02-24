@@ -11,10 +11,8 @@
 
 int main(int argc, char *argv[]) {
   int flag = SystemSwitch(); flag = Help(argc, argv, flag);
-  while (flag) {
-    Delay_ms(20); const char* k = GetKey();
-    if (k[0] == 27) {
-      if (k[1] == K_NO) continue;
-      if (k[1] == K_ESC) break; }
-    ViewPort(k); Show(); } 
+  if (flag) {
+    while (ViewPort()) {
+      Show();
+      Delay_ms(20); } }
    return SystemSwitch(); }

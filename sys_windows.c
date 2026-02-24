@@ -37,17 +37,17 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
     {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
-const char* GetKey(void) {
-    static unsigned char b[6]; unsigned char *p = b; uint8_t len = 6; while (len) b[--len] = 0;
+void GetKey(char *b) {
+    unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len) b[--len] = 0;
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0, rd = 0;
-    GetNumberOfConsoleInputEvents(hIn, &ev); if (!ev) { *p = 27; return (char*)b; }
+    GetNumberOfConsoleInputEvents(hIn, &ev); if (!ev) { *p = 27; return; }
     ReadFile(hIn, p, 1, &rd, NULL); unsigned char c = *p;
     if (c > 127) {
         len = (c >= 0xF0) ? 3 : (c >= 0xE0) ? 2 : (c >= 0xC0) ? 1 : 0;
         while (len--) { ReadFile(hIn, ++p, 1, &rd, NULL); }
-        return (char*)b; }
-    if (c > 31 && c < 127) return (char*)b;
-    *p++ = 27; if (c != 27) { *p = c; return (char*)b; }
+        return; }
+    if (c > 31 && c < 127) return;
+    *p++ = 27; if (c != 27) { *p = c; return; }
     GetNumberOfConsoleInputEvents(hIn, &ev);
     if (ev > 0) {
         if (ReadFile(hIn, p, 1, &rd, NULL) > 0) {
@@ -60,8 +60,7 @@ const char* GetKey(void) {
                 t1 = p; while (*++t1 == *++s2 && *s2);
                 if (!*s2) { *p++ = NameId[j].id; *p = 0; break; } }
             if (j < 0) *p = 0;
-            if (*p++ == K_Mouse) { len = 3; while(len--) ReadFile(hIn, p++, 1, &rd, NULL); } } } 
-    return (char*)b; }
+            if (*p++ == K_Mouse) { len = 3; while(len--) ReadFile(hIn, p++, 1, &rd, NULL); } } } }
 
 size_t GetRam(size_t *size) { if (!*size) return 0;
     size_t l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);

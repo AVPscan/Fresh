@@ -101,10 +101,10 @@ int8_t UTFinfoTile(unsigned char *s, uint8_t *len, uint8_t *Mrtl, size_t rem);
 
 int SystemSwitch(void);
 void SetColour(uint8_t col);
-void ViewPort(const char* key);
+uint8_t ViewPort(void);
 
 void SwitchRaw(void);
-const char* GetKey(void);
+void GetKey(char *b);
 size_t GetRam(size_t *size);
 void FreeRam(size_t addr, size_t size);
 void SWD(size_t addr);
