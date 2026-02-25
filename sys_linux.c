@@ -76,7 +76,7 @@ int16_t SyncSize(size_t addr, uint8_t flag) { if (!addr) return 0;
             Delay_ms(10); stable -= 10;
             if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 100; } } }
     TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
-  
+
 uint64_t GetCycles(void) {
     union { uint64_t total; struct { uint32_t lo, hi; } part; } t;
     __asm__ __volatile__ ("rdtsc" : "=a" (t.part.lo), "=d" (t.part.hi));

@@ -200,9 +200,9 @@ uint8_t ViewPort(void) {
       else if (Cur.X + Cur.viewX < 0)  Cur.X = -Cur.viewX;
       if (Cur.Y + Cur.viewY >= r) Cur.Y = r - 1 - Cur.viewY;
       else if (Cur.Y + Cur.viewY < 0)  Cur.Y = -Cur.viewY;
-      Cur.oldCols = c; Cur.oldRows = r; control--; }  
+      Cur.oldCols = c; Cur.oldRows = r; Print(Ccurrent,Home); MemSet(Avdat,' ',c * r);  write(1, Avdat, (c * r)); }  
   ShowC(On); return 1; }
-    
+
 int SystemSwitch(void) {
   static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
@@ -216,15 +216,19 @@ uint32_t Bin( uint8_t x) {
                                     x <<= 1; }
   return c + 100000000; }
   
-void Show(void) { uint16_t r = 0;
-  Print(Ccurrent,Home); snprintf(Avdat, 256, "v%d %d %d mx%d my%d mb%d         \n", Bin(Cur.Vision), Cur.X + Cur.viewX, Cur.Y + Cur.viewY, Cur.MX, Cur.MY, Cur.Mkey);
-  Print(Cblue,Avdat); snprintf(Avdat, 256, "c%d r%d x%d y%d wx%d wy%d xy%d     ", TermCR(&r), r, Cur.X, Cur.Y, Cur.viewX, Cur.viewY, Cur.dXY); Print(Cgreen,Avdat); }
+void Show(void) { uint16_t r, c = TermCR(&r);
+  Print(Ccurrent,Home);
+  snprintf(Avdat, 100, "%d c%d r%d b%d x%d y%d         \n", Bin(Cur.Vision), c, r, Cur.Mkey, Cur.MX, Cur.MY);
+  *Avdat = 'v'; if (StrLen(Avdat) > c) return;
+  snprintf(Avdat + 100, 100, "x%d y%d wx%d wy%d xy%d     ", Cur.X, Cur.Y, Cur.viewX, Cur.viewY, Cur.dXY);
+  if (StrLen(Avdat + 100) > c) return;
+  Print(Cblue,Avdat); Print(Cgreen,Avdat + 100); }
 
 int Help(int argc, char *argv[], int flag) {
   if (argc > 1 && flag) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       Print(Ccurrent,AltBufOff);
-      Print(CorangeB,"Created by Alexey Pozdnyakov in 07.02.2026 version 2.34\n");
+      Print(CorangeB,"Created by Alexey Pozdnyakov in 07.02.2026 version 2.40\n");
       Print(Cgold,"email: avp70ru@mail.ru https://github.com/AVPscan/Fresh"); }
     flag = 0; }
   return flag; }
