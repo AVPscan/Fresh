@@ -22,28 +22,40 @@ uint8_t   *Cattr      = NULL;
 uint8_t   *Cvlen      = NULL;
 uint8_t   *Clen       = NULL;
 char      *Apdat      = NULL;
-uint16_t  *Awdat      = NULL;
+char      *Akbuf      = NULL;
+uint8_t   *Ckmrtl     = NULL;
+uint8_t   *Ckvlen     = NULL;
+uint8_t   *Cklen      = NULL;
+uint8_t   *Cktic      = NULL;
+uint8_t   *Cktover    = NULL;
 char      *Avdat      = NULL;
 #define CellLine      8192
 #define String        5062
+#define SKey          256
 #define SizeCOL       CellLine * 2
 #define SizeCL        CellLine * 4
+#define SizeBKey      SKey * 4
 #define SizeData      ((size_t)String * SizeCL)
 #define SizeOffset    ((size_t)String * SizeCOL)
 #define SizeAttr      ((size_t)String * CellLine)
 #define SizeVizLen    ((size_t)String * CellLine)
 #define SizeLen       ((size_t)String * CellLine)
-#define SizePalBuff   1024
-#define SizeWinDat    1024
+#define SizePalBuff   32 * 32
+#define SizeKeyBuf    SKey * 12
 #define SizeVBuff     (34 * 1024 * 1024)
-#define SizeVram      (SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeWinDat + SizeVBuff)
+#define SizeVram      (SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeKeyBuf + SizeVBuff)
 #define Data(r)       (Cdata + ((r) << 15))
 #define Offset(r, c)  (Coffset + ((r) << 14) + (c))
 #define Attr(r, c)    (Cattr + ((r) << 13) + (c))   // 7 Dirty 65 Reserve 432 Colour 1 Bold 0 Inverse
 #define Visi(r, c)    (Cvlen + ((r) << 13) + (c))
 #define Len(r, c)     (Clen + ((r) << 13) + (c))
 #define Parse(cbi)    (Apdat + ((cbi) << 5))        // 0-31 All
-#define Window(n)     (Awdat + ((n) << 3))
+#define Key(n)        (Akbuf + ((n) << 2))
+#define KeyMrtl(n)    (Ckmrtl + (n))
+#define KeyVlen(n)    (Ckvlen + (n))
+#define KeyLen(n)     (Cklen + (n))
+#define KeyTic(n)     (Cktic + (n))
+#define KeytOver(n)   (Cktover + (n))
 
 size_t StrLen(char *s) { if (!s) return 0;
     char *f = s; while (*f++);
@@ -131,7 +143,9 @@ void InitVram(size_t addr, size_t size) { if (!addr || (size < SizeVram)) return
   uint8_t lm, cbi, ca, c = StrLen(ColorOff), i = 8; char *ac, *dst;
   Cdata = (char*)(addr); Coffset = (uint16_t*)(Cdata + SizeData); Cattr = (uint8_t*)((uint8_t*)Coffset + SizeOffset);
   Cvlen = (uint8_t*)(Cattr + SizeAttr); Clen = (uint8_t*)(Cvlen + SizeVizLen);
-  Apdat = (char*)(Clen + SizeLen); Awdat = (uint16_t*)(Apdat + SizePalBuff); Avdat = (char*)((uint8_t*)Awdat + SizeWinDat);
+  Apdat = (char*)(Clen + SizeLen); Akbuf = (char*)(Apdat + SizePalBuff); Avdat = (char*)(Akbuf + SizeKeyBuf);
+  Ckmrtl = (uint8_t*)(Akbuf + SizeBKey); Ckvlen = (uint8_t*)(Ckmrtl + SKey); Cklen = (uint8_t*)(Ckvlen + SKey);
+  Cktic = (uint8_t*)(Cklen + SKey); Cktover = (uint8_t*)(Cktic + SKey);
   while (i--) { ac = (Avdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, ColorOff, c);
       ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
@@ -160,12 +174,12 @@ uint8_t ViewPort(void) {
   if (Cur.Vision & 1) ShowC(Off);
   if (Cur.key[0] != 27) Cur.CodeKey = 0;
   else { Cur.CodeKey = (uint8_t)Cur.key[1];
-      if (Cur.CodeKey == K_Ctrl_W) Cur.Vision ^= 4;
-      if (Cur.CodeKey == K_Ctrl_C) Cur.Vision ^= 8;
+      if (Cur.CodeKey == K_F4) Cur.Vision ^= 2;
+      if (Cur.CodeKey == K_F3) Cur.Vision ^= 4;
+      if (Cur.CodeKey == K_F2) Cur.Vision ^= 8;
       if (Cur.key[1] == K_Mouse) { Cur.Mkey = (uint8_t)Cur.key[2]; Cur.Tic = 0; Cur.dXY = 1;
                                 if (Cur.Mkey == 32) { Cur.MX = (uint8_t)Cur.key[3] - 33; Cur.MY = (uint8_t)Cur.key[4] - 33; 
                                     Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.LkX = Cur.X; Cur.LkY = Cur.Y; }
-                                else if (Cur.Mkey == 33) Cur.Vision ^= 2;
                                 else if (Cur.Mkey == 34) { Cur.MX = (uint8_t)Cur.key[3] - 33; Cur.MY = (uint8_t)Cur.key[4] - 33; 
                                     Cur.X = Cur.MX - Cur.viewX; Cur.Y = Cur.MY - Cur.viewY; Cur.RkX = Cur.X; Cur.RkY = Cur.Y; }
                                 else if (Cur.Mkey == 96) control--;
@@ -217,10 +231,11 @@ uint32_t Bin( uint8_t x) {
                                     x <<= 1; }
   return c + 100000000; }
   
-void Show(void) { uint16_t r, c = TermCR(&r);
-  Print(Ccurrent,Home); if (34 > c) return;
-  Print(Cgrey," Esc cwms ctrl+w,ctrl+c,mouse+mkey\n");
-  snprintf(Avdat, 100, "%d c%d r%d b%d x%d y%d         \n", Bin(Cur.Vision), c, r, Cur.Mkey, Cur.MX, Cur.MY);
+void Show(void) { uint16_t r, c = TermCR(&r); size_t o, m = VRam.size;
+  Print(Ccurrent,Home); if (18 > c) return;
+  Print(Cgrey," esc 842  F2 F3 F4\n");
+  o = m % (1024 * 1024); m /= (1024 * 1024); if (o) m++;
+  snprintf(Avdat, 100, "%d %luMb c%d r%d b%d x%d y%d         \n", Bin(Cur.Vision), m, c, r, Cur.Mkey, Cur.MX, Cur.MY);
   *Avdat = 'v'; if (StrLen(Avdat) > c) return;
   snprintf(Avdat + 100, 100, "x%d y%d wx%d wy%d xy%d     ", Cur.X, Cur.Y, Cur.viewX, Cur.viewY, Cur.dXY);
   if (StrLen(Avdat + 100) > c) return;
@@ -229,7 +244,7 @@ void Show(void) { uint16_t r, c = TermCR(&r);
 int Help(int argc, char *argv[], int flag) {
   if (argc > 1 && flag) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
-      Print(Ccurrent,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov");
-      Print(Corange," in 07.02.2026 version 2.41 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+      Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
+      Print(Corange," in 07.02.2026 version 2.42 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
     flag = 0; }
   return flag; }
