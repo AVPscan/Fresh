@@ -17,4 +17,6 @@
 !.github/
 !.github/workflows/
 !.github/workflows/*
+!.github/GoogleIIabout/
+!.github/GoogleIIabout/*
 # Игнорировать
