@@ -15,8 +15,7 @@
 #include "sys.h"
 
 Cell SysWrite(void *buf, Cell len) {
-    DWORD written; HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    WriteFile(h, buf, (DWORD)len, &written, NULL);
+    DWORD written; WriteConsoleA(GetStdHandle(STD_OUTPUT_HANDLE), buf, (DWORD)len, &written, NULL);
     return (Cell)written; }
 
 void SwitchRaw(void) {
