@@ -17,6 +17,8 @@
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
 #include "sys.h"
 
+Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, (Cell)len); }
+
 void SwitchRaw(void) {
     static struct termios oldt; static uint8_t flag = 1;
     if (flag) {
@@ -100,5 +102,5 @@ void Delay_ms(uint8_t ms) {
 Cell GetSC(Cell addr) { 
     if (!addr || !TS.col) return 1;
     char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) write(1, p, TS.col);
+    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     Cell end = GetCycles(); return (end - start) / (TS.col * 10); }

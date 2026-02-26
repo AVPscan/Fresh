@@ -144,7 +144,7 @@ void ShowC(uint8_t on) {
     src = dst; i = (uint8_t)(dst - sav) / 2; while(i--) { c = *sav; *sav++ = *--dst; *dst = c; }
     *src++ = 'H'; if (on) { sav = Parse(p); MemCpy(src, (sav + 1), *sav); src += *sav; }
     *src++ = ' '; if (on) { sav = Parse(Ccurrent); MemCpy(src, (sav + 1), *sav); src += *sav; }
-    write (1, Cvdat, (src - Cvdat)); } }
+    SysWrite (Cvdat, (src - Cvdat)); } }
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r), control = 0; uint8_t len, mrt, vlen = Cur.Kpop + 1; char *dst, *src; int16_t mdxy = 0; Cur.Kon = 0;
   if (Cur.Vision & 1) ShowC(Off);
@@ -210,7 +210,7 @@ void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
   char *dst = Cvdat + 1024, *sav; uint16_t len;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
   len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  sav = Parse(Ccurrent); len = *sav++; MemCpy(dst, sav, len); dst += len; write(1, Cvdat + 1024, (dst - Cvdat - 1024)); }
+  sav = Parse(Ccurrent); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
 Cell SystemSwitch(void) {
   static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
@@ -222,7 +222,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.44 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+                  Print(Corange," in 07.02.2026 version 2.50 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }

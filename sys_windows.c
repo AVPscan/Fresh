@@ -14,6 +14,11 @@
 
 #include "sys.h"
 
+Cell SysWrite(void *buf, Cell len) {
+    DWORD written; HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+    WriteFile(h, buf, (DWORD)len, &written, NULL);
+    return (Cell)written; }
+
 void SwitchRaw(void) {
     HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_CURSOR_INFO ci;
     static DWORD oldModeIn, oldModeOut; static UINT oldCP, oldOutCP; static uint8_t flag = 1;   
@@ -113,7 +118,10 @@ void Delay_ms(uint8_t ms) {
         cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
     Cell total = (Cell)ms * (cpu_hz / 1000);
     Cell start_time = GetCycles();
-    if (ms > 15) Sleep(ms - 10); 
+    if (ms > 2) { static HANDLE hTimer = NULL;
+      if (!hTimer) hTimer = CreateWaitableTimer(NULL, TRUE, NULL);
+      LARGE_INTEGER li; li.QuadPart = -((LONGLONG)(ms - 1) * 10000);
+      SetWaitableTimer(hTimer, &li, 0, NULL, NULL, FALSE); WaitForSingleObject(hTimer, INFINITE); }
     LARGE_INTEGER f, q1, q2; QueryPerformanceFrequency(&f); QueryPerformanceCounter(&q1); Cell safety = 0;
     while ((GetCycles() - start_time) < total) { __asm__ volatile ("pause");
         if (++safety > 2000) { QueryPerformanceCounter(&q2);
@@ -121,7 +129,6 @@ void Delay_ms(uint8_t ms) {
             safety = 0; q1 = q2; } } }
 Cell GetSC(Cell addr) { 
     if (!addr || !TS.col) return 1;
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); DWORD written;
     char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) WriteFile(hOut, p, TS.col, &written, NULL);
+    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     Cell end = GetCycles(); return (end - start) / (TS.col * 10); }

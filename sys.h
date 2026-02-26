@@ -91,6 +91,8 @@ enum { Ccurrent, CcurrentI, CcurrentB, CcurrentIB, Cdef, CdefI, CdefB, CdefIB,
       Cred, CredI, CredB, CredIB, Cblue, CblueI, CblueB, CblueIB,
       Corange, CorangeI, CorangeB, CorangeIB, Cgold, CgoldI, CgoldB, CgoldIB };
 
+Cell SysWrite(void *buf, Cell len);
+
 Cell StrLen(char *s);
 void MemSet(void* buf, uint8_t val, Cell len);
 void MemCpy(void* dst, void* src, Cell len);
