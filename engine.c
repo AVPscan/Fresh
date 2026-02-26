@@ -214,9 +214,9 @@ uint8_t ViewPort(void) {
 int SystemSwitch(void) {
   static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
-              SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0); flag--;
+              flag--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
               SyncSize(VRam.addr,0); Print(Ccurrent,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
-  else { SwitchRaw(); Print(Ccurrent,MouseX10off AltBufOff WrapOn ShowCur Reset); FreeRam(VRam.addr, VRam.size); flag++; }
+  else {  flag++; if (VRam.size) { SwitchRaw(); Print(Ccurrent,MouseX10off AltBufOff WrapOn ShowCur Reset); FreeRam(VRam.addr, VRam.size); } }
   return 1; }
   
 uint32_t Bin( uint8_t x) {
@@ -238,6 +238,6 @@ int Help(int argc, char *argv[], int flag) {
   if (argc > 1 && flag) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
-      Print(Corange," in 07.02.2026 version 2.42 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+      Print(Corange," in 07.02.2026 version 2.44 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
     flag = 0; }
   return flag; }
