@@ -56,7 +56,6 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
     if (r == MAP_FAILED) { r = 0; l = 0; }
     *size = l; return (Cell)r; }
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
-
 extern char **environ;
 void SWD(Cell addr) { if (!addr) return;
     char *path = (char *)(addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
@@ -78,18 +77,18 @@ int16_t SyncSize(Cell addr, uint8_t flag) { if (!addr) return 0;
             Delay_ms(10); stable -= 10;
             if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 100; } } }
     TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
-
 Cell GetCycles(void) {
-    Cell lo, hi;
-    __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
+    Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     #if __SIZEOF_POINTER__ > 4
-      return (lo + (hi << 32));
+      return (lo + (hi << 32)); }
     #else
-      return lo;
+      return lo; }
     #endif
-    }
-void Delay_ms(uint8_t ms) {
-    static Cell cpu_hz = 0;
+Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
+    char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
+    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
+    Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
+void Delay_ms(uint8_t ms) { static Cell cpu_hz = 0;
     if (cpu_hz == 0) { struct timespec ts = {0, 10000000L}; Cell start = GetCycles();
         nanosleep(&ts, NULL); cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
     Cell total_cycles = (Cell)ms * (cpu_hz / 1000); Cell start_time = GetCycles();
@@ -99,8 +98,3 @@ void Delay_ms(uint8_t ms) {
         if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
                                if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
                                safety = 0; } } }
-Cell GetSC(Cell addr) { 
-    if (!addr || !TS.col) return 1;
-    char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-    Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
-    Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
