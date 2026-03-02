@@ -140,6 +140,16 @@ typedef struct { uint8_t pop, push, mode, tic; char key[6]; uint8_t Mkey, MX, MY
 		 int16_t LkX, LkY, MkX, MkY, RkX, RkY; } Buf_;
 Buf_ Buf = {0,0,2,0,{0,0,0,0,0,0},0,0,0,0,0,0,0,0,0};
 
+uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *d, char *key) {
+    uint8_t i; char *src, *dst; uint16_t b;
+    if (Buf.pop == Buf.push) return 0;
+    src = KeyBuf(++Buf.pop); dst = key; i = *src++; *len = i; while(i--) *dst++ = *src++; 
+    src += 4 - *len; *vlen = *src++; *mrtl = *src++; *d = *src;
+    if (Buf.pop == Buf.push) { --Buf.pop; b = (*d << 8) + Buf.tic;
+      if (b < 25) return 0;
+      Buf.tic = b % 25; b /= 25; *d = (uint8_t)(b); *src = (uint8_t)(b >> 8); }
+    return 1; }
+
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   char *dst; uint8_t vlen, len, mrtl, t = 0, c = 0; int16_t d = 0; uint16_t r;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
@@ -254,7 +264,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.70 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+                  Print(Corange," in 07.02.2026 version 2.71 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }
