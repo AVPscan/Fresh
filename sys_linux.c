@@ -33,7 +33,7 @@ KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 void GetKey(char *b) {
-    unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len) b[--len] = 0;
+    unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len--) b[len] = 0;
     if (read(0, p, 1) <= 0) { *p = 27; return; }
     unsigned char c = *p; if (c > 127) {
         len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
@@ -41,15 +41,15 @@ void GetKey(char *b) {
         return; }
     if (c > 31 && c < 127) return;
     *p++ = 27; *p = c; if (c != 27) return; 
-    unsigned char *s1; const unsigned char *s2; int8_t j = (int)(sizeof(NameId)/sizeof(KeyIdMap));
+    unsigned char *s1; const unsigned char *s2; int8_t j = (uint8_t)(sizeof(NameId)/sizeof(KeyIdMap));
     if (read(0, p, 1) > 0) { s1 = p; while (((s1 - p) < 5) && (read(0, ++s1, 1) > 0)) if (*s1 > 63) break;
         if (*s1 < 64) while((read(0,&c,1) > 0) && (c < 64));
         while(j--) { s2 = (const unsigned char*)NameId[j].name;
             if (*p != *s2) continue;
             s1 = p; while (*++s1 == *++s2 && *s2);
             if (!*s2) { *p++ = NameId[j].id; *p = 0; break; } }
-        if (j < 0) b[1] = 0; 
-        if (b[1] == K_Mouse) { len = 4; while(--len) read(0, p++, 1); } } }
+        if (j < 0) *--p = 0; 
+        if (b[1] == K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
 
 Cell GetRam(Cell *size) { if (!*size) return 0;
     Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
