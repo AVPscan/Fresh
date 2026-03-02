@@ -196,20 +196,18 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
              else c = 0xFF; }
   *tic = ++Buf.tic; *control = t; return c; }
 
-void ShowC(uint8_t on) {
-  char *src, *dst = Cvdat, *sav; uint8_t i, c, p = CcurrentI; Cur.Vision &= 0xFE;
-  if (!(Cur.Vision & 8)) { Cur.Vision += (on & 1); if (Cur.Vision & 4) p = CredI;
-    int16_t x = Cur.X + Cur.viewX + 1, y = Cur.Y + Cur.viewY + 1; *dst++ =  27;
-    *dst++ = '['; src = dst; do { *src++ = '0' + (y % 10); y /= 10; } while (y);
-    sav = src; i = (uint8_t)(src - dst) / 2; while(i--) { c = *dst; *dst++ = *--src; *src = c; }
-    *sav++ = ';'; dst = sav; do { *dst++ = '0' + (x % 10); x /= 10; } while (x);
-    src = dst; i = (uint8_t)(dst - sav) / 2; while(i--) { c = *sav; *sav++ = *--dst; *dst = c; }
-    *src++ = 'H'; if (on) { sav = Parse(p); MemCpy(src, (sav + 1), *sav); src += *sav; }
-    *src++ = ' '; if (on) { sav = Parse(Ccurrent); MemCpy(src, (sav + 1), *sav); src += *sav; }
-    SysWrite (Cvdat, (src - Cvdat)); } }
+void ShowC(uint8_t on, uint8_t c, uint8_t r) {
+  uint8_t; int16_t x, y;
+  if (!(Cur.Vision & 8)) { Cur.Vision = (Cur.Vision & 0xFE) | (on & 1);
+    if ((uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) {
+      x = Cur.X + Cur.viewX; y = Cur.Y + Cur.viewY;
+      if ((uint16_t)x < c && (uint16_t)y < r) {
+        
+        } } } }
+        
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control; int16_t dr, dc;
-  if (Cur.Vision & 1) ShowC(Off);
+  if (Cur.Vision & 1) ShowC(Off,c,r);
   Cur.Cod = Key(&Cur.Key, &Cur.Tic, &control);
   if (control) {
     if (Cur.Cod == Cur.es) return 0;
@@ -247,7 +245,7 @@ uint8_t ViewPort(void) {
       else if (Cur.Y + Cur.viewY < 0)  Cur.Y = -Cur.viewY;
       if (control) { 
         if (dr < 0 || dc < 0) control--; } }
-  ShowC(On); return 1; }
+  ShowC(On,c,r); return 1; }
 
 void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
   char *dst = Cvdat + 1024, *sav; uint16_t len;
@@ -264,7 +262,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.71 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+                  Print(Corange," in 07.02.2026 version 2.72 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }
