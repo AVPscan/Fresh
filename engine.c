@@ -95,9 +95,9 @@ uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl) {
     else return 4;
     if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return 3;                                              // управляющие
     if (cp < 0x100) return 1;                                                                                   // обычный
+    if (cp >= 0x0590 && cp <= 0x08FF) *Mrtl = 1;
     if ((*len == 2 && cp < 0x80) || (*len == 3 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
         (*len == 4 && (cp < 0x10000 || cp > 0x10FFFF))) return 4;                                               // битый
-    if (cp >= 0x0590 && cp <= 0x08FF) *Mrtl = 1;
     if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
         (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 0;                                             // прилепало
     if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) ||
@@ -134,46 +134,45 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     
 typedef struct { int16_t X, Y, viewX, viewY;
                  uint8_t Vision, dXY, Tic, Cod, oCod,
-                         Key, F1, F2, F3, F4, mu, es; } Cur_;
-Cur_ Cur = {0,0,0,0,0,1,0,0,0,6,K_F5,K_F2,K_F3,K_F4,K_Mouse,K_ESC};               
+                         Key, up, ud, le, ri, cup, cdo, cle, cri, F1, F2, F3, F4, es; } Cur_;
+Cur_ Cur = {0,0,0,0,0,1,0,0,0,13,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F5,K_F2,K_F3,K_F4,K_ESC};
+
 typedef struct { uint8_t pop, push, mode, tic; char key[6]; uint8_t Mkey, MX, MY; 
 		 int16_t LkX, LkY, MkX, MkY, RkX, RkY; } Buf_;
 Buf_ Buf = {0,0,2,0,{0,0,0,0,0,0},0,0,0,0,0,0,0,0,0};
-
 uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *d, char *key) {
-    uint8_t i; char *src, *dst; uint16_t b;
-    if (Buf.pop == Buf.push) return 0;
-    src = KeyBuf(++Buf.pop); dst = key; i = *src++; *len = i; while(i--) *dst++ = *src++; 
-    src += 4 - *len; *vlen = *src++; *mrtl = *src++; *d = *src;
-    if (Buf.pop == Buf.push) { --Buf.pop; b = (*d << 8) + Buf.tic;
-      if (b < 25) return 0;
-      Buf.tic = b % 25; b /= 25; *d = (uint8_t)(b); *src = (uint8_t)(b >> 8); }
-    return 1; }
-
+  uint8_t i; char *src, *dst; uint16_t b;
+  if (Buf.pop == Buf.push) return 0;
+  src = KeyBuf(++Buf.pop); dst = key; i = *src++; *len = i; while(i--) *dst++ = *src++; 
+  src += 4 - *len; *vlen = *src++; *mrtl = *src++; *d = *src;
+  if (Buf.pop == Buf.push) { --Buf.pop; b = (*d << 8) + Buf.tic;
+    if (b < 25) return 0;
+    Buf.tic = b % 25; b /= 25; *d = (uint8_t)(b); *src = (uint8_t)(b >> 8); }
+  return 1; }
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
-  char *dst; uint8_t vlen, len, mrtl, t = 0, c = 0; int16_t d;
+  uint8_t vlen, len, mrtl, t = 0, c = 0; int16_t d; *control = 0;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
-  if ((vlen ==3 && c == K_NO) || vlen ==4) { *tic = Buf.tic; *control = 0; return 0; }
-  if (c == K_Mouse) { Buf.Mkey = (uint8_t)Buf.key[2]; t++;
+  if ((vlen ==3 && c == K_NO) || vlen ==4) { *tic = Buf.tic; return 0; }
+  if (c == K_Mouse) { Buf.Mkey = (uint8_t)Buf.key[2];
     Buf.MX = (uint8_t)Buf.key[3] - 33; Buf.MY = (uint8_t)Buf.key[4] - 33;
-    if ((Buf.Mkey & 0xFC) == 32) {
+    if ((Buf.Mkey & 0xFC) == 0x20) {
       Cur.X = Buf.MX - Cur.viewX; Cur.Y = Buf.MY - Cur.viewY;
-      if (Buf.Mkey == 32) { Buf.LkX = Cur.X; Buf.LkY = Cur.Y; }
-      else if (Buf.Mkey == 33) { Buf.MkX = Cur.X; Buf.MkY = Cur.Y; }
-      else if (Buf.Mkey == 34) { Buf.RkX = Cur.X; Buf.RkY = Cur.Y; } }
+      if (Buf.Mkey == 0x20) { Buf.LkX = Cur.X; Buf.LkY = Cur.Y; t++; }
+      else if (Buf.Mkey == 0x21) { Buf.MkX = Cur.X; Buf.MkY = Cur.Y; t++; }
+      else if (Buf.Mkey == 0x22) { Buf.RkX = Cur.X; Buf.RkY = Cur.Y; t++; } }
     if (Buf.Mkey > 0x5F) { int16_t dx = 0, dy = 0; uint16_t y, x = TermCR(&y);
       if (Buf.Mkey == 0x60) dy--;
       else if (Buf.Mkey == 0x61) dy++;
       else if (Buf.Mkey == 0x64) dx++;
       else if (Buf.Mkey == 0x65) dx--;
-      if (dy) { Cur.Y += dy * Cur.dXY;
+      if (dy) { Cur.Y += dy * Cur.dXY; t++;
         if (!(Cur.Vision & 6)) { Cur.viewY += dy * Cur.dXY;
           if ((Cur.Y + Cur.viewY) < 0) { Cur.viewY = - Cur.Y; t++; }
           else if ((Cur.Y + Cur.viewY) >= y) { Cur.viewY = y - 1 - Cur.Y; t++; } }
         else {
           if (Cur.Y + Cur.viewY < 0) Cur.Y = -Cur.viewY;
           else if (Cur.Y + Cur.viewY >= y) Cur.Y = y - 1 - Cur.viewY; } } 
-      if (dx) { Cur.X += dx * Cur.dXY;
+      else if (dx) { Cur.X += dx * Cur.dXY; t++;
         if (!(Cur.Vision & 6)) { Cur.viewX += dx * Cur.dXY;
           if ((Cur.X + Cur.viewX) < 0) { Cur.viewX = - Cur.X; t++; }
           else if ((Cur.X + Cur.viewX) >= x) { Cur.viewX = x - 1 - Cur.X; t++; } }
@@ -181,9 +180,8 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
           if (Cur.X + Cur.viewX < 0) Cur.X = -Cur.viewX;
           else if (Cur.X + Cur.viewX >= x) Cur.X = x - 1 - Cur.viewX; } } }
     *tic = Buf.tic; *control = t; return c; }
-  if (c) { d = *num++; dst = (char*)num; while (d--) if (*dst++ == c) { t = 1; break; }
-           if (--num == &Cur.Key && (c & 0xF8) == 0x20) t = 1; }
-  if (!(t && (Buf.mode & 2))) { t = len;
+  if (c && *num < K_Max) { d = *num++; while (d--) if (*num++ == c) { *control = 1; break; } }
+  if (!(*control && (Buf.mode & 2))) { char *dst; t = len;
       if (Buf.push == Buf.pop) { Buf.push++; dst = KeyBuf(Buf.push); *dst++ = t;
         if (c) *dst = c;
         else { while(t--) *(dst + t) = Buf.key[t]; }
@@ -200,34 +198,18 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
           else { while(len--) *(dst + len) = Buf.key[len]; }
           dst += 4; *dst++ = vlen; *dst++ = mrtl; *dst = 0; }
         else { if (!Buf.tic) *(dst + 6) += 1; } } 
-      t = 0; if (c) {
-              d = *num++; dst = (char*)num; while (d--) if (*dst++ == c) { t = 1; break; }
-              if (--num == &Cur.Key && (c & 0xF8) == 0x20) t = 1; }
-             else c = 0xFF; }
-  *tic = ++Buf.tic; *control = t; return c; }
-/*
+      if (!c) c = 0xFF; }
+  *tic = ++Buf.tic; return c; }
+
 void ShowC(uint8_t on, uint8_t c, uint8_t r) {
-  int16_t x, y;
-  if (!(Cur.Vision & 8)) { Cur.Vision = (Cur.Vision & 0xFE) | (on & 1);
+  if (!(Cur.Vision & 8)) {
     if ((uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) {
-      x = Cur.X + Cur.viewX; y = Cur.Y + Cur.viewY;
-      if ((uint16_t)x < c && (uint16_t)y < r) {
-        
-        } } } }
-*/
-
-void ShowC(uint8_t on, uint8_t r1, uint8_t r2) { (void)r1; (void)r2;
-  char *src, *dst = Cvdat, *sav; uint8_t i, c, p = CcurrentI; Cur.Vision &= 0xFE;
-  if (!(Cur.Vision & 8)) { Cur.Vision += (on & 1); if (Cur.Vision & 4) p = CredI;
-    int16_t x = Cur.X + Cur.viewX + 1, y = Cur.Y + Cur.viewY + 1; *dst++ =  27;
-    *dst++ = '['; src = dst; do { *src++ = '0' + (y % 10); y /= 10; } while (y);
-    sav = src; i = (uint8_t)(src - dst) / 2; while(i--) { c = *dst; *dst++ = *--src; *src = c; }
-    *sav++ = ';'; dst = sav; do { *dst++ = '0' + (x % 10); x /= 10; } while (x);
-    src = dst; i = (uint8_t)(dst - sav) / 2; while(i--) { c = *sav; *sav++ = *--dst; *dst = c; }
-    *src++ = 'H'; if (on) { sav = Parse(p); MemCpy(src, (sav + 1), *sav); src += *sav; }
-    *src++ = ' '; if (on) { sav = Parse(Ccurrent); MemCpy(src, (sav + 1), *sav); src += *sav; }
-    write (1, Cvdat, (src - Cvdat)); } }
-
+      int16_t x = Cur.X + Cur.viewX, y = Cur.Y + Cur.viewY;
+      if ((uint16_t)x < c && (uint16_t)y < r) { uint8_t v = *Visi(y, x);
+        if ( v < 2 || Cur.X != CellLine - 1 || x != c - 1) {
+          Cur.Vision = (Cur.Vision & 0xFE) | (on & 1);
+          uint8_t *a = Attr(y,x); *a ^= 1; *a |= 0x80; 
+          if (v == 2) { *++a ^= 1; *a |= 0x80; } } } } } }
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control; int16_t dr, dc;
   if (Cur.Vision & 1) ShowC(Off,c,r);
@@ -241,16 +223,15 @@ uint8_t ViewPort(void) {
     if (Cur.Cod != Cur.oCod) { Cur.dXY = 1; Cur.oCod = Cur.Cod; }
     if ((Cur.Cod & 0xF8) == 0x20) {
       if ((Cur.Tic > 7) && !(Cur.Tic & 3) && (Cur.dXY < 64)) Cur.dXY <<= 1;
-      if (!(Cur.Vision & 4)) {
-        if (Cur.Cod == K_Ctrl_LEF) Cur.viewX -= Cur.dXY;
-        else if (Cur.Cod == K_Ctrl_RIG) Cur.viewX += Cur.dXY;
-        else if (Cur.Cod == K_Ctrl_UP) Cur.viewY -= Cur.dXY;
-        else if (Cur.Cod == K_Ctrl_DOW) Cur.viewY += Cur.dXY; }
-      Cur.Cod &= 0xFE;
-      if (Cur.Cod == K_LEF) Cur.X -= Cur.dXY;
-      else if (Cur.Cod == K_RIG) Cur.X += Cur.dXY;
-      else if (Cur.Cod == K_UP) Cur.Y -= Cur.dXY;
-      else if (Cur.Cod == K_DOW) Cur.Y += Cur.dXY; }
+      if (!(Cur.Vision & 6)) {
+        if (Cur.Cod == Cur.cle) { Cur.viewX -= Cur.dXY; Cur.Cod = Cur.le; }
+        else if (Cur.Cod == Cur.cri) { Cur.viewX += Cur.dXY; Cur.Cod = Cur.ri; }
+        else if (Cur.Cod == Cur.cup) { Cur.viewY -= Cur.dXY; Cur.Cod = Cur.up; }
+        else if (Cur.Cod == Cur.cdo) { Cur.viewY += Cur.dXY; Cur.Cod = Cur.ud; } }
+      if (Cur.Cod == Cur.le) Cur.X -= Cur.dXY;
+      else if (Cur.Cod == Cur.ri) Cur.X += Cur.dXY;
+      else if (Cur.Cod == Cur.up) Cur.Y -= Cur.dXY;
+      else if (Cur.Cod == Cur.ud) Cur.Y += Cur.dXY; }
     if (Cur.Vision & 6) {
       if (Cur.X + Cur.viewX < 0) Cur.X = -Cur.viewX;
       else if (Cur.X + Cur.viewX >= c) Cur.X = c - 1 - Cur.viewX;
@@ -285,7 +266,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.80 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+                  Print(Corange," in 07.02.2026 version 2.81 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }
