@@ -66,13 +66,19 @@ jobs:
           name: macos-executable
           path: fresh
 
-  # --- Создание релиза (Исправлено для удаления предупреждений) ---
+  # Создание релиза и прикрепление артефактов
   create-release:
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     outputs:
       release_version: ${{ steps.get_version.outputs.version }}
     steps:
+      # --- ВОТ ЭТОТ ВАЖНЫЙ ШАГ МЫ ДОБАВИЛИ ---
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Подгружаем все теги и историю
+
       - name: Get the release version from tag or input
         id: get_version
         run: |
@@ -109,7 +115,6 @@ jobs:
           TAG_NAME="v$VERSION"
           RELEASE_NAME="Release v$VERSION"
           
-          # Создаем релиз без файлов (генерация заметок включена)
           gh release create "$TAG_NAME" \
             --repo="$GITHUB_REPOSITORY" \
             --title="$RELEASE_NAME" \
@@ -123,7 +128,6 @@ jobs:
           VERSION="${{ steps.get_version.outputs.version }}"
           TAG_NAME="v$VERSION"
           
-          # Загружаем файлы по одному, явно указывая имя для каждого
           gh release upload "$TAG_NAME" "./artefacts/linux/fresh#Fresh-linux-musl-v$VERSION"
           gh release upload "$TAG_NAME" "./artefacts/windows/fresh.exe#Fresh-windows-v$VERSION.exe"
           gh release upload "$TAG_NAME" "./artefacts/macos/fresh#Fresh-macos-v$VERSION"
