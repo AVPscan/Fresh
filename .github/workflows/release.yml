@@ -66,20 +66,19 @@ jobs:
           name: macos-executable
           path: fresh
 
-  # Создание релиза и прикрепление артефактов
+  # --- Создание релиза ---
   create-release:
     needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
-    outputs:
-      release_version: ${{ steps.get_version.outputs.version }}
     steps:
-      # --- ВОТ ЭТОТ ВАЖНЫЙ ШАГ МЫ ДОБАВИЛИ ---
+      # 1. Обязательный шаг для работы утилиты gh
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Подгружаем все теги и историю
+          fetch-depth: 0
 
-      - name: Get the release version from tag or input
+      # 2. Определяем версию
+      - name: Get the release version
         id: get_version
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
@@ -88,46 +87,31 @@ jobs:
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
       
-      - name: Download Linux Executable
+      # 3. Скачиваем собранное
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: linux-executable
-          path: ./artefacts/linux
+          path: ./artefacts
 
-      - name: Download Windows Executable
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-executable
-          path: ./artefacts/windows
-
-      - name: Download MacOS Executable
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-executable
-          path: ./artefacts/macos
-
+      # 4. Создаем релиз
       - name: Create Release
-        id: create_new_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          TAG_NAME="v$VERSION"
-          RELEASE_NAME="Release v$VERSION"
-          
-          gh release create "$TAG_NAME" \
+          gh release create "v$VERSION" \
             --repo="$GITHUB_REPOSITORY" \
-            --title="$RELEASE_NAME" \
+            --title="Release v$VERSION" \
             --generate-notes \
             --latest
 
+      # 5. Загружаем файлы (с переименованием)
       - name: Upload Assets
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="${{ steps.get_version.outputs.version }}"
-          TAG_NAME="v$VERSION"
-          
-          gh release upload "$TAG_NAME" "./artefacts/linux/fresh#Fresh-linux-musl-v$VERSION"
-          gh release upload "$TAG_NAME" "./artefacts/windows/fresh.exe#Fresh-windows-v$VERSION.exe"
-          gh release upload "$TAG_NAME" "./artefacts/macos/fresh#Fresh-macos-v$VERSION"
+          TAG="v$VERSION"
+          gh release upload "$TAG" "./artefacts/linux-executable/fresh#Fresh-linux-musl-$TAG"
+          gh release upload "$TAG" "./artefacts/windows-executable/fresh.exe#Fresh-windows-$TAG.exe"
+          gh release upload "$TAG" "./artefacts/macos-executable/fresh#Fresh-macos-$TAG"
