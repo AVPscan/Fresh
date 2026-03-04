@@ -3,6 +3,25 @@
 [![Build on Windows](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20windows.yml/badge.svg)](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20windows.yml)
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
+## Немного о созданном
+
+Не зависит от процессора — `engine.c` соберётся даже на 16-разрядной машине. Соберётся для любого процессора. Не зависим от времени.
+
+Предназначен для любой страны (utf8 в базе без библиотек, это и проклятье иначе создал бы слой без осей) - в любой стране понятен и адекватен.
+
+Собирается для Linux,MacOs,Windows (WinAPI такое себе на самом то деле) написал просто, чтоб было.
+
+уже это даёт программисту - пишете один раз и сразу для всех, нет слоя просто добавьте [sys_bsd.c].
+
+Клава и мышь — полный RealTime.
+
+Клавиатура абсолютно адекватна теперь. Не важно, как ОС шлёт автоповторы. Можете реально проверить свои оси. Пример: NixOS — идеально, хоть и systemd (мне он не по душе, но NixOS выбран осознанно). Нажал влево — круг без зависаний пролетел. Жена забрала комп, пришлось на бук поставить Devuan — нравился, но там нажал — и счётчик положения курсора в какой-то момент подвис.
+
+Мышь: использую X10, потому что это единственная реализация мыши, которая уважает стандарт. И да — с этого момента любая мышь обретает горизонтальный скролл, если у неё есть колесо.
+
+Компьютер не шумит: `Delay_ms(20)` — это реально 20 мс теперь.
+
+Самое смешное: вам больше не нужно знать ничего о GTK, Qt и прочем, чтобы творить.
 # Fresh
 
 **Fresh** — A high-performance, self-contained terminal engine designed for low-latency system software and embedded applications. Distributed under the **GPLv3** license.

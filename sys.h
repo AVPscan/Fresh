@@ -9,13 +9,10 @@
  
 #ifndef SYS_H
 #define SYS_H
-
 #include <stddef.h>
 #include <stdint.h>
-
 //#define USE_BW
 #define USE_RGB
-
 #ifdef USE_BW
   #define Grey    ""
   #define Green   ""
@@ -40,47 +37,55 @@
     #define Gold    "\033[38;5;178m"
   #endif
 #endif
-
-#define Bold        "\033[1m"       // Жирный
-#define Dim         "\033[2m"       // Тусклый
-#define BoldOff     "\033[22m"      // Выключить Bold / Dim
-#define Italic      "\033[3m"       // Курсив
-#define ItalicOff   "\033[23m"      // Выключить курсив
-#define Underline   "\033[4m"       // Подчеркивание
-#define DoubleUnder "\033[21m"      // Двойное подчеркивание
-#define UnderOff    "\033[24m"      // Выключить подчеркивание (любое)
-#define Overline    "\033[53m"      // Надчеркивание
-#define OverlineOff "\033[55m"      // Выключить надчеркивание
-#define Blink       "\033[5m"       // Мигание
-#define BlinkOff    "\033[25m"      // Выключить мигание
-#define Invert      "\033[7m"       // Инверсия (реверс цветов)
-#define InvertOff   "\033[27m"      // Выключить инверсию
-#define Strike      "\033[9m"       // Зачеркивание
-#define StrikeOff   "\033[29m"      // Выключить зачеркивание
+typedef uintptr_t Cell;
+#define SizeCell sizeof(Cell)
+enum { 
+    CellPow = 13,
+    Utf8 = 4,
+    CellLine = 1 << CellPow,
+    String = CellLine * 987 / 1597,
+    SKey = 256,                     // [256] Ring buffer keys
+    SizePal = 32,                   // [32] colour anci
+    SizeKey = Utf8 + 4,             // [8]( len UTF8[4 byte] vlen mrtl tic )
+    
+    SizeData = String * CellLine * 4,
+    SizeOffset = String * CellLine * 2,
+    SizeAttr = String * CellLine,
+    SizeVizLen = String * CellLine,
+    SizeLen = String * CellLine,
+    SizePalBuff = SizePal * SizePal,
+    SizeKeyBuf = SKey * SizeKey,
+    SizeVBuff = CellLine * CellLine / 2,
+    SizeVram = SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeKeyBuf + SizeVBuff,
+    
+    Data_shift = CellPow + 2,
+    Offset_row_shift = CellPow + 1,
+    Parse_shift = Utf8 + 1,
+    KeyBuf_shift = Utf8 - 1 };
 #define ColorOff    "\033[39m"      // Сбросить только цвет
 #define Reset       "\033[0m"       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
-
 #define Home        "\033[H"        // В начало экрана
 #define HideCur     "\033[?25l"     // Скрыть курсор
 #define ShowCur     "\033[?25h"     // Показать курсор
 #define Cls         "\033[2J\033[H" // Очистить экран и в начало
-#define SaveCur     "\033[s"        // Сохранить позицию курсора
-#define LoadCur     "\033[u"        // Вернуть курсор в сохраненную позицию
-#define HomeCur     "\033[G"        // Вернуть курсор в начало текущей строки
-#define ClearLine   "\033[K"        // Очистить строку от курсора до конца
 #define WrapOn      "\033[?7h"      // Включить перенос длинных строк
 #define WrapOff     "\033[?7l"      // Выключить перенос строк
 #define MouseX10on  "\033[?1000h"   // Включаем мышь
 #define MouseX10off "\033[?1000l"
 #define AltBufOn    "\033[?1049h"
 #define AltBufOff   "\033[?1049l"
-
-#define On          1
-#define Off         0
-#define Free        0x14            // pause in main [Delay(Free)]
-typedef uintptr_t Cell;
-#define SizeCell sizeof(Cell)
-  
+enum {
+    Minv = 0x01,                    // invers
+    Mbol = 0x02,                    // bold
+    Mcol = 0x1C,                    // color 0-7
+    Mcbi = 0x1F,     
+    Mdub = 0x20,                    // dubble vision
+    Mdata = 0x40,                   // bata
+    Fresh = 0x80,                   // degree
+    Free = 0x14,                    // pause in main [Delay(Free)]
+    AutoR = 0x19,                   // auto repeat key
+    On = 1,
+    Off = 0 };
 enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O, K_Ctrl_P,
     K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W, K_Ctrl_X,
@@ -89,9 +94,9 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_F1, K_F2, K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10, K_F11, K_F12, K_F13, K_F14,
     K_F15, K_BAC = 127, K_Max = K_F15 + 1 };
 enum { Ccurrent, CcurrentI, CcurrentB, CcurrentIB, Cdef, CdefI, CdefB, CdefIB,
-      Cgrey, CgreyI, CgreyB, CgreyIB, Cgreen, CgreenI, CgreenB, CgreenIB,
-      Cred, CredI, CredB, CredIB, Cblue, CblueI, CblueB, CblueIB,
-      Corange, CorangeI, CorangeB, CorangeIB, Cgold, CgoldI, CgoldB, CgoldIB };
+    Cgrey, CgreyI, CgreyB, CgreyIB, Cgreen, CgreenI, CgreenB, CgreenIB,
+    Cred, CredI, CredB, CredIB, Cblue, CblueI, CblueB, CblueIB,
+    Corange, CorangeI, CorangeB, CorangeIB, Cgold, CgoldI, CgoldB, CgoldIB };
 
 Cell SysWrite(void *buf, Cell len);
 

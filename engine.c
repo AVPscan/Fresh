@@ -11,16 +11,6 @@
 #include <unistd.h>
 #include "sys.h"
 
-const uint8_t  Minv = 0x01;     // invers
-const uint8_t  Mbol = 0x02;     // bold
-const uint8_t  Mcol = 0x1C;     // color 0-7
-const uint8_t  Mcbi = 0x1F;     
-const uint8_t  Mdub = 0x20;     // dubble vision
-const uint8_t Mdata = 0x40;     // bata
-const uint8_t Fresh = 0x80;     // degree
-
-const uint8_t AutoR = 0x19;     // auto repeat key
-
 char      *Cdata      = NULL;
 uint16_t  *Coffset    = NULL;
 uint8_t   *Cattr      = NULL;
@@ -29,28 +19,13 @@ uint8_t   *Clen       = NULL;
 char      *Cpdat      = NULL;
 char      *Ckbuf      = NULL;
 char      *Cvdat      = NULL;
-#define CellLine      8192
-#define String        5062
-#define SKey          256
-#define SizeCOL       CellLine * 2
-#define SizeCL        CellLine * 4
-#define SizeBKey      SKey * 4
-#define SizeData      ((Cell)String * SizeCL)
-#define SizeOffset    ((Cell)String * SizeCOL)
-#define SizeAttr      ((Cell)String * CellLine)
-#define SizeVizLen    ((Cell)String * CellLine)
-#define SizeLen       ((Cell)String * CellLine)
-#define SizePalBuff   32 * 32
-#define SizeKeyBuf    SKey * 12
-#define SizeVBuff     (34 * 1024 * 1024)
-#define SizeVram      (SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeKeyBuf + SizeVBuff)
-#define Data(r)       (Cdata + ((r) << 15))
-#define Offset(r, c)  (Coffset + ((r) << 14) + (c))
-#define Attr(r, c)    (Cattr + ((r) << 13) + (c))
-#define Visi(r, c)    (Cvlen + ((r) << 13) + (c))
-#define Len(r, c)     (Clen + ((r) << 13) + (c))
-#define Parse(cbi)    (Cpdat + ((cbi) << 5))        // 0-31 All
-#define KeyBuf(n)     (Ckbuf + ((n) << 3))          // ( len UTF8[4 byte] vlen mrtl tic )[8 bytes]
+#define Data(r)       (Cdata + ((r) << Data_shift))
+#define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))
+#define Attr(r, c)    (Cattr + ((r) << CellPow) + (c))
+#define Visi(r, c)    (Cvlen + ((r) << CellPow) + (c))
+#define Len(r, c)     (Clen + ((r) << CellPow) + (c))
+#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))
+#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))
 
 Cell StrLen(char *s) { if (!s) return 0;
     char *f = s; while (*f++);
@@ -259,7 +234,7 @@ Cell SystemSwitch(void) { static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
               flag--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
               SyncSize(VRam.addr,Off); Print(Ccurrent,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
-  else { flag++; if (VRam.size) { SwitchRaw(); Print(Ccurrent,MouseX10off AltBufOff WrapOn ShowCur Reset); FreeRam(VRam.addr, VRam.size); } }
+  else { flag++; if (VRam.size) { SwitchRaw(); Print(Ccurrent,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
   return 1; }
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
