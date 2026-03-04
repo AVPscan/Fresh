@@ -100,7 +100,8 @@ jobs:
           name: macos-executable
           path: ./artefacts/macos
 
-      - name: Create and Upload Release
+      - name: Create Release
+        id: create_new_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -108,12 +109,21 @@ jobs:
           TAG_NAME="v$VERSION"
           RELEASE_NAME="Release v$VERSION"
           
-          # Создаем релиз и сразу загружаем файлы
+          # Создаем релиз без файлов (генерация заметок включена)
           gh release create "$TAG_NAME" \
-            "./artefacts/linux/fresh#Fresh-linux-musl-v$VERSION" \
-            "./artefacts/windows/fresh.exe#Fresh-windows-v$VERSION.exe" \
-            "./artefacts/macos/fresh#Fresh-macos-v$VERSION" \
             --repo="$GITHUB_REPOSITORY" \
             --title="$RELEASE_NAME" \
             --generate-notes \
             --latest
+
+      - name: Upload Assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="v$VERSION"
+          
+          # Загружаем файлы по одному, явно указывая имя для каждого
+          gh release upload "$TAG_NAME" "./artefacts/linux/fresh#Fresh-linux-musl-v$VERSION"
+          gh release upload "$TAG_NAME" "./artefacts/windows/fresh.exe#Fresh-windows-v$VERSION.exe"
+          gh release upload "$TAG_NAME" "./artefacts/macos/fresh#Fresh-macos-v$VERSION"
