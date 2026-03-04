@@ -16,75 +16,59 @@ on:
         type: string
 
 jobs:
-
-  # Задача 1: Сборка исполняемого файла для Linux (статический MUSL)
+  # --- Сборка LINUX (без изменений) ---
   build-linux:
-    # Используем чистый контейнер Alpine Linux, где по умолчанию только MUSL
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
       - name: Checkout repository
-        # Используем специальный action для работы в контейнере
         uses: actions/checkout@v4
-      
-      # Используем пакет 'build-base' (включает gcc, libc-dev) и 'make'
       - name: Install build tools (GCC, make, and musl in Alpine)
         run: apk add --no-cache build-base make musl binutils
-
       - name: Run make musl
-        # Просто вызываем вашу цель make musl, которая теперь умная
         run: make musl
-        
       - name: Check binary status
         run: |
-          # 'file' покажет "statically linked", 'ldd' покажет "not a dynamic executable"
           file fresh
           ldd fresh || echo "✅ Статус: Statically linked"
-          
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-executable
           path: fresh
 
-  # --- Сборка WINDOWS ---
+  # --- Сборка WINDOWS (без изменений) ---
   build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
       - name: Run make OS=Windows_NT
         shell: bash
-        # Использует ваш Makefile с фиксацией флагов для Windows
         run: make OS=Windows_NT
-        
       - name: Upload Windows Artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-executable
           path: fresh.exe
 
-  # --- Сборка MACOS ---
+  # --- Сборка MACOS (без изменений) ---
   build-macos:
     runs-on: macos-latest 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
       - name: Run make mac
-        # Использует make mac цель из вашего Makefile
         run: make mac
-
       - name: Upload macOS Artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-executable
           path: fresh
 
-  # Задача 4: Создание релиза и прикрепление артефактов
+  # --- Создание релиза (Исправлено для удаления предупреждений) ---
   create-release:
-    needs: [build-linux, build-windows, build-macos] # Ждем всех
+    needs: [build-linux, build-windows, build-macos]
     runs-on: ubuntu-latest
     outputs:
       release_version: ${{ steps.get_version.outputs.version }}
@@ -98,7 +82,6 @@ jobs:
             echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
       
-      # Скачиваем все три артефакта
       - name: Download Linux Executable
         uses: actions/download-artifact@v4
         with:
@@ -117,53 +100,20 @@ jobs:
           name: macos-executable
           path: ./artefacts/macos
 
-      - name: Create Release
-        id: create_release
+      - name: Create and Upload Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG_NAME="v${{ steps.get_version.outputs.version }}"
-          RELEASE_NAME="Release v${{ steps.get_version.outputs.version }}"
+          VERSION="${{ steps.get_version.outputs.version }}"
+          TAG_NAME="v$VERSION"
+          RELEASE_NAME="Release v$VERSION"
           
-          # Твоя проверенная команда с генерацией логов
+          # Создаем релиз и сразу загружаем файлы
           gh release create "$TAG_NAME" \
+            "./artefacts/linux/fresh#Fresh-linux-musl-v$VERSION" \
+            "./artefacts/windows/fresh.exe#Fresh-windows-v$VERSION.exe" \
+            "./artefacts/macos/fresh#Fresh-macos-v$VERSION" \
             --repo="$GITHUB_REPOSITORY" \
             --title="$RELEASE_NAME" \
             --generate-notes \
             --latest
-            
-          echo "UPLOAD_URL=$(gh release view "$TAG_NAME" --repo="$GITHUB_REPOSITORY" --json uploadUrl -q .uploadUrl)" >> $GITHUB_ENV
-
-      # 1. Загрузка Linux (твой оригинал)
-      - name: Upload Linux Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./artefacts/linux/fresh
-          asset_name: Fresh-linux-musl-v${{ steps.get_version.outputs.version }}
-          asset_content_type: application/octet-stream
-
-      # 2. Загрузка Windows
-      - name: Upload Windows Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ./artefacts/windows/fresh.exe
-          asset_name: Fresh-windows-v${{ steps.get_version.outputs.version }}.exe
-          asset_content_type: application/octet-stream
-
-      # 3. Загрузка MacOS
-      - name: Upload MacOS Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ env.UPLOAD_URL }}
-          asset_path: ${{ github.workspace }}/artefacts/macos/fresh
-          asset_name: Fresh-macos-v${{ steps.get_version.outputs.version }}
-          asset_content_type: application/octet-stream
-
