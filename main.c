@@ -14,5 +14,5 @@ int main(int argc, char *argv[]) {
   if (flag) {
     while (ViewPort()) {
       Show();
-      Delay_ms(20); } }
+      Delay_ms(Free); } }
    return (int)SystemSwitch(); }

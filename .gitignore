@@ -13,11 +13,10 @@
 !README.md
 !LICENSE
 !NOTICE
-!Deepseek_about_Fresh.pdf
 !.gitignore
 !.github/
 !.github/workflows/
 !.github/workflows/*
-!GoogleIIabout/
-!GoogleIIabout/*
+!IIAbout/
+!IIAbout/*
 # Игнорировать

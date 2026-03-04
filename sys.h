@@ -77,6 +77,7 @@
 
 #define On          1
 #define Off         0
+#define Free        0x14            // pause in main [Delay(Free)]
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)
   
