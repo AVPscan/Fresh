@@ -97,8 +97,6 @@ uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem) {
     
 typedef struct { Cell addr, size; } Vram_;
 Vram_ VRam = {0};
-void SetColour(uint8_t col) { if (!(col &= Mcol)) col = 3;
-  col <<= 2; MemCpy(Parse(Ccurrent), Parse(col), 128); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
@@ -120,13 +118,13 @@ typedef struct { uint8_t pop, push, mode, tic; char key[6]; uint8_t Mkey, MX, MY
 
 Cur_ Cur = {0,0,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
 Buf_ Buf = {0};
-uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *d, char *key) {
+uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key) {
   if (Buf.pop == Buf.push) return 0;
   char *src = KeyBuf(++Buf.pop), *dst = key; uint8_t i = *src++; *len = i; while(i--) *dst++ = *src++; 
-  src += 4 - *len; *vlen = *src++; *mrtl = *src++; *d = *src;
+  src += 4 - *len; *vlen = *src++; *mrtl = *src++; *count = (uint8_t)(*src + 1); if (!*count) *count = 0xFF;
   if (Buf.pop != Buf.push) return 1;
   --Buf.pop; uint16_t b = ((*src << 8) + Buf.tic); if (b < AutoR) return 0;
-  Buf.tic = b % AutoR; *src = 0; b /= AutoR; *d = (b > 0xFF) ? 0xFF:(uint8_t)b; return 1; }
+  Buf.tic = b % AutoR; *src = 0; b /= AutoR; *count = (b > 0xFF) ? 0xFF:(uint8_t)b; return 1; }
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t vlen, len, mrtl, t = 0, c = 0; uint16_t d; *control = 0;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
