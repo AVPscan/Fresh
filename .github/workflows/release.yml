@@ -5,12 +5,14 @@ permissions:
 
 on:
   push:
-    tags: ['v*.*.*']
+    tags: 
+      - 'v*'
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version'
+        description: 'Версия (например: 3.00)'
         required: true
+        default: 'manual'
 
 jobs:
   # 1. Честная сборка Musl в Alpine
