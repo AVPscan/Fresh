@@ -21,7 +21,10 @@
 
 Компьютер не шумит: `Delay_ms(20)` — это реально 20 мс теперь.
 
-Самое смешное: вам больше не нужно знать ничего о GTK, Qt и прочем, чтобы творить.
+Вам больше не нужно знать ничего о GTK, Qt и прочем, чтобы творить, а если не программировали то достаточно прочесть, сэкономите годы в ВУЗе.
+
+![Forth book](IIAbout/Forth%20book.jpeg)
+
 # Fresh
 
 **Fresh** — A high-performance, self-contained terminal engine designed for low-latency system software and embedded applications. Distributed under the **GPLv3** license.
@@ -84,3 +87,4 @@ E-mail: [avp70ru@mail.ru](mailto:avp70ru@mail.ru)
 
 ---
 *This software is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3.*
+

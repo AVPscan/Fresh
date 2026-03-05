@@ -1,3 +1,4 @@
+#
 # Copyright (C) 2026 Поздняков Алексей Васильевич
 # E-mail: avp70ru@mail.ru
 # 
@@ -66,8 +67,7 @@ all: tiny
 tiny: $(SOURCES)
 	@echo "🎯 Сборка: $(SYS_SRC) -> $(TARGET)$(EXT) ($(UNAME_S))"
 	@$(CC) $(CFLAGS_TINY) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS_TINY)
-	
-	# Агрессивная зачистка секций (только там, где работает strip)
+
 	@if [ "$(OS)" != "Windows_NT" ] && [ "$(UNAME_S)" != "Darwin" ]; then \
 		strip --strip-all \
 		--remove-section=.note.gnu.build-id \

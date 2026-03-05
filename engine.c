@@ -100,13 +100,13 @@ Vram_ VRam = {0};
 void SetColour(uint8_t col) { if (!(col &= Mcol)) col = 3;
   col <<= 2; MemCpy(Parse(Ccurrent), Parse(col), 128); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  char* colors[] = { Green, ColorOff, Grey, Green, Red, Blue, Orange, Gold };
+  char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
-  uint8_t lm, cbi, ca, c = StrLen(ColorOff), i = 8; char *ac, *dst;
+  uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst;
   Cdata = (char*)(addr); Coffset = (uint16_t*)(Cdata + SizeData); Cattr = (uint8_t*)((uint8_t*)Coffset + SizeOffset);
   Cvlen = (uint8_t*)(Cattr + SizeAttr); Clen = (uint8_t*)(Cvlen + SizeVizLen);
   Cpdat = (char*)(Clen + SizeLen); Ckbuf = (char*)(Cpdat + SizePalBuff); Cvdat = (char*)(Ckbuf + SizeKeyBuf);
-  while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, ColorOff, c);
+  while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
       ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
             while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
@@ -115,17 +115,18 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
 typedef struct { int16_t X, Y, viewX, viewY;
                  uint8_t Mode, dXY, Tic, Cod, oCod,
                          Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } Cur_;
-Cur_ Cur = {0,0,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
 typedef struct { uint8_t pop, push, mode, tic; char key[6]; uint8_t Mkey, MX, MY; 
 		 int16_t LkX, LkY, MkX, MkY, RkX, RkY; } Buf_;
+
+Cur_ Cur = {0,0,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
 Buf_ Buf = {0};
 uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *d, char *key) {
   if (Buf.pop == Buf.push) return 0;
   char *src = KeyBuf(++Buf.pop), *dst = key; uint8_t i = *src++; *len = i; while(i--) *dst++ = *src++; 
   src += 4 - *len; *vlen = *src++; *mrtl = *src++; *d = *src;
   if (Buf.pop != Buf.push) return 1;
-  --Buf.pop; if (*d) return 1;
-  return 0; }
+  --Buf.pop; uint16_t b = ((*src << 8) + Buf.tic); if (b < AutoR) return 0;
+  Buf.tic = b % AutoR; *src = 0; b /= AutoR; *d = (b > 0xFF) ? 0xFF:(uint8_t)b; return 1; }
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t vlen, len, mrtl, t = 0, c = 0; uint16_t d; *control = 0;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
@@ -169,7 +170,7 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
           if (c) { if (*dst == c) t = 0xFF; }
           else { while (t--) { if (*(dst + t) != Buf.key[t]) break; } } }
         if (t != 0xFF) { d = ((*(KeyBuf(Buf.push) + 7) << 8) + Buf.tic) / AutoR;
-          *(KeyBuf(Buf.push) + 7) = (uint8_t)d;
+          *(KeyBuf(Buf.push) + 7) = (d > 0xFF) ? 0xFF:(uint8_t)d;
           if (++Buf.push == Buf.pop) Buf.pop++;
 	  dst = KeyBuf(Buf.push); *dst++ = len;
           if (c) *dst = c;
@@ -239,7 +240,7 @@ Cell SystemSwitch(void) { static uint8_t flag = 1;
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
-      if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov ");
+      if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov ");
                   Print(Corange," in 07.02.2026 version 2.84 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
@@ -259,4 +260,4 @@ void Show(void) { uint16_t s, r, c = TermCR(&r); Cell o, m = VRam.size;
   s = 256; if (Buf.push >= Buf.pop) s = Buf.push - Buf.pop;
   snprintf(Cvdat + 100, 100, "x%d y%d wx%d wy%d xy%d KeyBuf %d    ", Cur.X, Cur.Y, Cur.viewX, Cur.viewY, Cur.dXY, s);
   if (StrLen(Cvdat + 100) > c) return;
-  Print(Cblue,Cvdat); Print(Cgreen,Cvdat + 100); }
+  Print(Corange,Cvdat); Print(Cred,Cvdat + 100); }
