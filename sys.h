@@ -59,7 +59,7 @@ enum {
     Utf8 = 4,
     CellLine = 1 << CellPow,
     String = CellLine * 987 / 1597,
-    SKey = 256,                     // [256] Ring buffer keys
+    SKey = 256,                     // [256] Ring buffer
     SizePal = 32,                   // [32] colour anci
     SizeKey = Utf8 + 4,             // [8]( len UTF8[4 byte] vlen mrtl tic )
     
@@ -78,16 +78,18 @@ enum {
     Parse_shift = Utf8 + 1,
     KeyBuf_shift = Utf8 - 1 };
 
-enum {
-    Minv = 0x01,                    // invers
-    Mbol = 0x02,                    // bold
-    Mcol = 0x1C,                    // color 0-7
-    Mcbi = 0x1F,     
-    Mdub = 0x20,                    // dubble vision
-    Mdata = 0x40,                   // bata
-    Fresh = 0x80,                   // degree
-    Free = 0x14,                    // pause in main [Delay(Free)]
-    AutoR = 0x19,                   // auto repeat key
+enum {                              // Attr(y,x)       структура атрибута
+    Minv = 0x01,                    // invers         0(0 нет)
+    Mbol = 0x02,                    // bold           1(0 нет)
+    Mcol = 0x1C,                    // color 0-7      2(0...7) цвет 0-6 холст 7 вокруг
+    Mcbi = 0x1F,                    //                34 
+    Msmem = 0x20,                   // shape memory   5(0 нет) память формы, резиновые структуры [просто лень затирать хвосты] - усложнение рендера но это просто удобно и 67 ускоряют однако
+    Mdata = 0x40,                   // bata           6(0 нет) есть ли данные в ячейке
+    Fresh = 0x80,                   // degree         7(0 нет) есть ли изменения в ячейке
+                                    //                 клавиатура реальное время и буфер на 256 клавиш если прозевали
+    Free = 0x14,                    // pause          20мс не гудим даже на одноядерном
+    AutoR = 0x19,                   // auto repeat    25 тиков и ещё одна такая же кнопка в буфер залетела, но там компрессия а значит спать на клавиатуре отныне можно
+                                    //                 мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
     Off = 0 };
 

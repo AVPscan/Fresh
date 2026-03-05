@@ -181,7 +181,7 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
 void ShowC(void) {
   if (!(Cur.Mode & 1) && (uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) {
     uint8_t *a = Attr(Cur.Y,Cur.X); *a ^= Minv; *a |= Fresh;
-    if (*a & Mdub && Cur.X < CellLine - 1) { *++a ^= Minv; *a |= Fresh; } } }
+    if (*Visi(Cur.Y, Cur.X) == 2 && Cur.X < CellLine - 1) { *++a ^= Minv; *a |= Fresh; } } }
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode;
   Buf.mode |= 1; if (Cur.Mode & 4) Buf.mode--;
@@ -239,7 +239,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.84 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+                  Print(Corange," in 07.02.2026 version 2.86 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }
