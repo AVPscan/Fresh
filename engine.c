@@ -228,18 +228,18 @@ void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
   char *dst = Cvdat + 1024, *sav; uint16_t len;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
   len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  sav = Parse(Ccurrent); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
+  sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
 Cell SystemSwitch(void) { static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
               flag--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
-              SyncSize(VRam.addr,Off); Print(Ccurrent,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
-  else { flag++; if (VRam.size) { SwitchRaw(); Print(Ccurrent,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
+              SyncSize(VRam.addr,Off); Print(Cdefault,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
+  else { flag++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
   return 1; }
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) { 
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
-      if (flag) { Print(Ccurrent,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov ");
-                  Print(Corange," in 07.02.2026 version 2.86 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
+      if (flag) { Print(Cdefault,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov ");
+                  Print(Corange," in 07.02.2026 version 3.00 email: avp70ru@mail.ru https://github.com/AVPscan\n"); }
       else printf("The processor did not allocate memory\n"); }
     flag = 0; }
   return flag; }
@@ -249,7 +249,7 @@ uint32_t Bin(void) { uint8_t x = Cur.Mode;
                                     x <<= 1; }
   c += 100000000; return c; }
 void Show(void) { uint16_t s, r, c = TermCR(&r); Cell o, m = VRam.size;
-  Print(Ccurrent,Home); if (18 > c) return;
+  Print(Cdefault,Home); if (18 > c) return;
   Print(Cgrey," esc 842  F2 F3 F4\n");
   o = m % (1024 * 1024); m /= (1024 * 1024); if (o) m++;
   s = (uint16_t)m;

@@ -1,131 +1,117 @@
-name: Linux musl static +(Cross-Platform)
+name: Cross-Platform Build & Release
 
-# Внимание: Разрешение на запись необходимо для создания релиза и загрузки файлов
 permissions:
   contents: write
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (e.g., 1.00)'
+        description: 'Version'
         required: true
-        type: string
 
 jobs:
-  build-din:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      # 1. Собираем обычный (динамический) бинарник
-    - name: Build Dynamic
-      run: make c
-    - name: Upload Dynamic Artifact
-      uses: actions/upload-artifact@v4
-      with:
-         name: linux-dynamic
-         path: fresh      
-  # --- Сборка LINUX (без изменений) ---
-  build-linux:
+  # 1. Честная сборка Musl в Alpine
+  build-musl:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Install build tools (GCC, make, and musl in Alpine)
-        run: apk add --no-cache build-base make musl binutils
-      # 2. Собираем статический (musl) бинарник
-      - name: Build Static Musl
-        run: make musl
-      - name: Upload Static Artifact
+      - uses: actions/checkout@v4
+      - name: Build Static
+        run: |
+          apk add --no-cache build-base make musl binutils
+          make musl
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: linux-static
           path: fresh
 
-  # --- Сборка WINDOWS (без изменений) ---
-  build-windows:
-    runs-on: windows-latest
+  # 2. Матрица для остальных (без контейнера)
+  build-others:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - desc: "Linux-Dynamic"
+            os: ubuntu-latest
+            cmd: make c
+            artifact: linux-dynamic
+          - desc: "Windows"
+            os: windows-latest
+            cmd: make OS=Windows_NT
+            artifact: windows-executable
+          - desc: "macOS"
+            os: macos-latest
+            cmd: make mac
+            artifact: macos-executable
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run make OS=Windows_NT
+      - uses: actions/checkout@v4
+      - name: Build
         shell: bash
-        run: make OS=Windows_NT
-      - name: Upload Windows Artifact
+        run: ${{ matrix.cmd }}
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: windows-executable
-          path: fresh.exe
+          name: ${{ matrix.artifact }}
+          path: fresh*
 
-  # --- Сборка MACOS (без изменений) ---
-  build-macos:
-    runs-on: macos-latest 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run make mac
-        run: make mac
-      - name: Upload macOS Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-executable
-          path: fresh
-
-  # --- Создание релиза ---
+  # 3. Релиз, который собирает всё воедино
   create-release:
-    needs: [build-din,build-linux, build-windows, build-macos]
+    needs: [build-musl, build-others]
     runs-on: ubuntu-latest
     steps:
-      # 1. Обязательный шаг для работы утилиты gh
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # 2. Определяем версию
-      - name: Get the release version
-        id: get_version
+      - uses: actions/checkout@v4
+      - name: Get Version
+        id: v
         run: |
           if [[ "${{ github.event_name }}" == "push" ]]; then
-            echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+            echo "ver=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
           else
-            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "ver=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
           fi
-      
-      # 3. Скачиваем собранное
-      - name: Download Artifacts
+
+      - name: Download All
         uses: actions/download-artifact@v4
         with:
           path: ./artefacts
 
-      # 4-5. Ультимативное создание релиза и загрузка
-      - name: Create and Upload Release
+      - name: Assets & Upload
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
-          TAG="v$VERSION"
+          # 1. Данные
+          NAME=$(basename ${{ github.repository }})
+          VER="${{ steps.v.outputs.ver }}"
+          TAG="v$VER"
 
-          # 1. Пытаемся создать релиз. Игнорируем ошибку, если он уже есть.
-          gh release create "$TAG" --title="Release $TAG" --generate-notes --latest || echo "Release already exists"
+          gh release create "$TAG" --title="Release $TAG" --generate-notes --latest || echo "Exists"
 
-          # Чистим старое, если есть (твой проверенный метод)
-          gh release delete-asset "$TAG" "Fresh-linux-dynamic-$TAG" -y || true
-          gh release delete-asset "$TAG" "Fresh-linux-musl-$TAG" -y || true
-          gh release delete-asset "$TAG" "Fresh-windows-$TAG.exe" -y || true
-          gh release delete-asset "$TAG" "Fresh-macos-$TAG" -y || true
+          # 2. Создаем временную папку для готовых файлов
+          mkdir -p ./out
 
-          # Переименовываем и заливаем
-          cp ./artefacts/linux-dynamic/fresh ./Fresh-linux-dynamic-$TAG
-          cp ./artefacts/linux-static/fresh ./Fresh-linux-musl-$TAG
-          cp ./artefacts/windows-executable/fresh.exe ./Fresh-windows-$TAG.exe
-          cp ./artefacts/macos-executable/fresh ./Fresh-macos-$TAG
+          # 3. Собираем файлы из артефактов без лишних префиксов
+          for folder in ./artefacts/*; do
+            if [ -d "$folder" ]; then
+              PLATFORM=$(basename "$folder")
+              
+              find "$folder" -type f | while read -r src; do
+                ext=""
+                [[ "$src" == *.exe ]] && ext=".exe"
+                
+                # Имя файла будет типа: Fresh-linux-static-v2.90
+                # Без всяких sys_ в начале
+                dst="${NAME}-${PLATFORM}-v${VER}${ext}"
+                
+                cp "$src" "./out/$dst"
+                echo "✅ Ready: $dst"
+              done
+            fi
+          done
 
-          gh release upload "$TAG" ./Fresh-linux-dynamic-$TAG
-          gh release upload "$TAG" ./Fresh-linux-musl-$TAG
-          gh release upload "$TAG" ./Fresh-windows-$TAG.exe
-          gh release upload "$TAG" ./Fresh-macos-$TAG
+          # 4. Заходим в папку с готовыми файлами и заливаем всё оттуда
+          cd out
+          sha256sum * > ../checksums.txt
+          gh release upload "$TAG" * ../checksums.txt --clobber

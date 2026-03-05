@@ -1,6 +1,4 @@
-[![Build on Linux](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/Build%20on%20Linux.yml)
-[![Build on macOS](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20macos.yml/badge.svg)](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20macos.yml)
-[![Build on Windows](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20windows.yml/badge.svg)](https://github.com/AVPscan/Fresh/actions/workflows/Build%20on%20windows.yml)
+
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
 ## Немного о созданном
@@ -87,4 +85,5 @@ E-mail: [avp70ru@mail.ru](mailto:avp70ru@mail.ru)
 
 ---
 *This software is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3.*
+
 

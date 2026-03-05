@@ -104,10 +104,10 @@ enum { K_NO,
     K_F12, K_F13, K_F14, K_F15, K_BAC = 127, K_Max = K_F15 + 1 };
 
 enum { 
-    Ccurrent, CcurrentI, CcurrentB, CcurrentBI, Cgrey, CgreyI, CgreyB, CgreyBI,
+    Cdefault, CdefaultI, CdefaultB, CdefaultBI, Cgrey, CgreyI, CgreyB, CgreyBI,
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
-    Cgold, CgoldI, CgoldB, CgoldBI, Cdef, CdefI, CdefB, CdefBI };
+    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
 
 Cell SysWrite(void *buf, Cell len);
 
