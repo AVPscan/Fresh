@@ -123,6 +123,7 @@ uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, ch
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);
 uint8_t ViewPort(void);
 Cell SystemSwitch(void);
+void ShowC(void);
 
 void SwitchRaw(void);
 void GetKey(char *b);

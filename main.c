@@ -11,8 +11,5 @@
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc; Cell flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
-  if (flag) {
-    while (ViewPort()) {
-      Show();
-      Delay_ms(Free); } }
-   return (int)SystemSwitch(); }
+  if (flag) { ShowC(); while (ViewPort()) { Show(); Delay_ms(Free); } }
+  return (int)SystemSwitch(); }
