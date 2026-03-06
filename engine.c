@@ -128,7 +128,7 @@ uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, ch
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t vlen, len, mrtl, t = 0, c = 0; uint16_t d; *control = 0;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
-  if ((vlen ==3 && c == K_NO) || vlen ==4) { *tic = Buf.tic; return 0; }
+  if ((vlen == 3 && c == K_NO) || vlen == 4) { *tic = Buf.tic; return 0; }
   if (c == K_Mouse) { Buf.Mkey = (uint8_t)Buf.key[2];
     Buf.MX = (uint8_t)Buf.key[3] - 33; Buf.MY = (uint8_t)Buf.key[4] - 33;
     if ((Buf.Mkey & 0xFC) == 0x20) {
@@ -180,8 +180,8 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
 
 void ShowC(void) {
   if (!(Cur.Mode & 1) && (uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) {
-    uint8_t *a = Attr(Cur.Y,Cur.X); *a ^= Minv; *a |= Fresh;
-    if (*Visi(Cur.Y, Cur.X) == 2 && Cur.X < CellLine - 1) { *++a ^= Minv; *a |= Fresh; } } }
+    int16_t x = Cur.X; uint8_t *a = Attr(Cur.Y,Cur.X), len = *Visi(Cur.Y, Cur.X); if (len > 4) len = 4;
+    while (len-- && x++ < CellLine) { *a ^= Minv; *a++ |= Fresh; } } }
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode;
   Buf.mode |= 1; if (Cur.Mode & 4) Buf.mode--;
@@ -229,6 +229,7 @@ void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
   len = StrLen(str); MemCpy(dst, str, len); dst += len;
   sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
+
 Cell SystemSwitch(void) { static uint8_t flag = 1;
   if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
               flag--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -258,4 +259,4 @@ void Show(void) { uint16_t s, r, c = TermCR(&r); Cell o, m = VRam.size;
   s = 256; if (Buf.push >= Buf.pop) s = Buf.push - Buf.pop;
   snprintf(Cvdat + 100, 100, "x%d y%d wx%d wy%d xy%d KeyBuf %d    ", Cur.X, Cur.Y, Cur.viewX, Cur.viewY, Cur.dXY, s);
   if (StrLen(Cvdat + 100) > c) return;
-  Print(Corange,Cvdat); Print(Cred,Cvdat + 100); }
+  Print(Corange,Cvdat); Print(Cdefault,Cvdat + 100); }
