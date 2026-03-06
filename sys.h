@@ -9,14 +9,14 @@
  
 #ifndef SYS_H
 #define SYS_H
-#include <stddef.h>
+
 #include <stdint.h>
 
 #define Reset       "\033[0m"       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
+#define Cls         "\033[2J\033[H" // Очистить экран и в начало
 #define Home        "\033[H"        // В начало экрана
 #define HideCur     "\033[?25l"     // Скрыть курсор
 #define ShowCur     "\033[?25h"     // Показать курсор
-#define Cls         "\033[2J\033[H" // Очистить экран и в начало
 #define WrapOn      "\033[?7h"      // Включить перенос длинных строк
 #define WrapOff     "\033[?7l"      // Выключить перенос строк
 #define MouseX10on  "\033[?1000h"   // Включаем мышь
@@ -121,9 +121,9 @@ uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem);
 void InitVram(Cell addr, Cell size);
 uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);
+void ShowC(void);
 uint8_t ViewPort(void);
 Cell SystemSwitch(void);
-void ShowC(void);
 
 void SwitchRaw(void);
 void GetKey(char *b);
@@ -138,5 +138,4 @@ Cell GetSC(Cell addr);
 
 void Print(uint8_t n, char *str);
 void Show(void);
-Cell Help(Cell argc, char *argv[], Cell flag);
 #endif /* SYS_H */

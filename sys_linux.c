@@ -12,7 +12,6 @@
 #include <termios.h>   // tcgetattr, tcsetattr
 #include <fcntl.h>     // fcntl, O_NONBLOCK
 #include <unistd.h>    // read, write, chdir, readlink
-#include <stdint.h>    // uint8_t, Cell
 #include <sys/mman.h>  // mmap, munmap
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
 #include "sys.h"
@@ -89,7 +88,7 @@ Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
     Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
 void Delay_ms(uint8_t ms) { static Cell cpu_hz = 0;
-    if (cpu_hz == 0) { struct timespec ts = {0, 10000000L}; Cell start = GetCycles();
+    if (!cpu_hz) { struct timespec ts = {0, 10000000L}; Cell start = GetCycles();
         nanosleep(&ts, NULL); cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
     Cell total_cycles = (Cell)ms * (cpu_hz / 1000); Cell start_time = GetCycles();
     if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
