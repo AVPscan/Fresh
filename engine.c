@@ -125,13 +125,15 @@ Cell SystemSwitch(void) { static uint8_t flag = 1;
   else { flag++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
   return 1; }
 
+// [8]( len vlen tic mrtl UTF8[4 byte] )
 uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key) {
   if (Buf.pop == Buf.push) return 0;
-  char *src = KeyBuf(++Buf.pop), *dst = key; uint8_t i = *src++; *len = i; while(i--) *dst++ = *src++; 
-  src += 4 - *len; *vlen = *src++; *mrtl = *src++; *count = (uint8_t)(*src + 1); if (!*count) *count = 0xFF;
+  char *sav, *src = KeyBuf(++Buf.pop), *dst = key; uint8_t i = *src++; *len = i; *vlen = *src++;
+  sav = src; *count = (uint8_t)(*src++ + 1); *mrtl = *src; if (!*count) *count = 0xFF;
+  while(i--) *dst++ = *src++;
   if (Buf.pop != Buf.push) return 1;
-  --Buf.pop; uint16_t b = ((*src << 8) + Buf.tic); if (b < AutoR) return 0;
-  Buf.tic = b % AutoR; *src = 0; b /= AutoR; *count = (b > 0xFF) ? 0xFF:(uint8_t)b; return 1; }
+  --Buf.pop; uint16_t b = ((*sav << 8) + Buf.tic); if (b < AutoR) return 0;
+  Buf.tic = b % AutoR; *sav = 0; b /= AutoR; *count = (b > 0xFF) ? 0xFF:(uint8_t)b; return 1; }
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t vlen, len, mrtl, t = 0, c = 0; uint16_t d; *control = 0;
   GetKey(Buf.key); vlen = UTFinfo(Buf.key, &len, &mrtl); if (vlen == 3) c = Buf.key[1];
@@ -164,23 +166,22 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
           else if (Cur.X + Cur.viewX >= x) Cur.X = x - 1 - Cur.viewX; } } }
     *tic = Buf.tic; *control = t; return c; }
   if (c && *num < K_Max) { d = *num++; while (d--) if (*num++ == c) { *control = 1; break; } }
-  if (!(*control && (Buf.mode & 1))) { char *dst; t = len;
-    if (Buf.push == Buf.pop) { Buf.push++; dst = KeyBuf(Buf.push); *dst++ = t;
+  if (!(*control && (Buf.mode & 1))) { char *sav, *dst; t = len;
+// [8]( len vlen tic mrtl UTF8[4 byte] ) 
+    if (Buf.push == Buf.pop) { Buf.push++;
+      dst = KeyBuf(Buf.push); *dst++ = len; *dst++ = vlen; *dst++ = 0; *dst++ = mrtl;
       if (c) *dst = c;
-      else { while(t--) *(dst + t) = Buf.key[t]; }
-      dst += 4; *dst++ = vlen; *dst++ = mrtl; *dst = 0; }
-    else { dst = KeyBuf(Buf.push);
-      if (*dst++ == t) {
+      else { while(t--) *(dst + t) = Buf.key[t]; } }
+    else { sav = KeyBuf(Buf.push); dst = sav + 4;
+      if (*sav == t) {
         if (c) { if (*dst == c) t = 0xFF; }
         else { while (t--) { if (*(dst + t) != Buf.key[t]) break; } } }
-      if (t != 0xFF) { d = ((*(KeyBuf(Buf.push) + 7) << 8) + Buf.tic) / AutoR;
-        *(KeyBuf(Buf.push) + 7) = (d > 0xFF) ? 0xFF:(uint8_t)d;
-        if (++Buf.push == Buf.pop) Buf.pop++;
-        dst = KeyBuf(Buf.push); *dst++ = len;
+      sav += 2; if (t != 0xFF) { d = ((*sav << 8) + Buf.tic) / AutoR;
+        *sav = (d > 0xFF) ? 0xFF:(uint8_t)d; if (++Buf.push == Buf.pop) Buf.pop++;
+        dst = KeyBuf(Buf.push); *dst++ = len; *dst++ = vlen; *dst++ = 0; *dst++ = mrtl;
         if (c) *dst = c;
-        else { while(len--) *(dst + len) = Buf.key[len]; }
-        dst += 4; *dst++ = vlen; *dst++ = mrtl; *dst = 0; }
-      else { if (!Buf.tic) *(dst + 6) += 1; } }
+        else { while(len--) *(dst + len) = Buf.key[len]; } }
+      else { if (!Buf.tic) *sav += 1; } }
     if (!c) c = 0xFF; }
   *tic = ++Buf.tic; return c; }
 
@@ -198,7 +199,7 @@ uint8_t ViewPort(void) {
     else if (Cur.Cod == Cur.F3 && (uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) Cur.Mode ^= 2;
     else if (Cur.Cod == Cur.F2 && (uint16_t)Cur.X < CellLine && (uint16_t)Cur.Y < String) { Cur.Mode ^= 4;
       if (!(Cur.Mode & 4)) { if (Buf.push != Buf.pop) { --Buf.push;
-        uint16_t d = *(KeyBuf(Buf.push) + 7) * AutoR; *(KeyBuf(Buf.push) + 7) = (uint8_t)(d >> 8); --Buf.tic; } } }
+        uint16_t d = *(KeyBuf(Buf.push) + 2) * AutoR; *(KeyBuf(Buf.push) + 2) = (uint8_t)(d >> 8); --Buf.tic; } } }
     if (Cur.Cod != Cur.oCod) { Cur.dXY = 1; Cur.oCod = Cur.Cod; }
     if ((Cur.Cod & 0xF8) == 0x20) {
       if ((Cur.Tic > 7) && !(Cur.Tic & 3) && (Cur.dXY < 64)) Cur.dXY <<= 1;

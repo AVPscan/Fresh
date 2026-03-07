@@ -11,7 +11,6 @@
 #include <termios.h>        // tcgetattr, tcsetattr
 #include <fcntl.h>          // open, O_RDONLY, O_NONBLOCK
 #include <unistd.h>         // read, write, chdir, close
-#include <stdint.h>         // uint8_t
 #include <sys/ioctl.h>      // ioctl, TIOCGWINSZ
 #include <sys/mman.h>       // mmap, munmap
 #include <mach-o/dyld.h>    // _NSGetExecutablePath
