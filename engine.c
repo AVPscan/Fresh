@@ -95,10 +95,10 @@ uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem) {
     return UTFinfo(s, len, Mrtl); }
 
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } Cur_;
-typedef struct { uint8_t pop, push, mode, tic; char key[6]; int16_t LkX, LkY, MkX, MkY, RkX, RkY; uint8_t Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } Buf_;
+typedef struct { int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, tic, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } Buf_;
 typedef struct { Cell addr, size; } Vrm_;
 Cur_ Cur = {0,0,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
-Buf_ Buf = {0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65};
+Buf_ Buf = {0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 Vrm_ VRam = {0};
 
 void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
@@ -155,38 +155,31 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
     *tic = Buf.tic; *control = t; return c; }
   if (c && *num < K_Max) { d = *num++; while (d--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) { char *sav, *dst; t = len;
-    if (Buf.push == Buf.pop) { Buf.push++; dst = KeyBuf(Buf.push); *dst++ = t;
+    if (Buf.push == Buf.pop) { Buf.push++; dst = KeyBuf(Buf.push); *dst++ = t; vlen |= 0x10;
       if (len < 3 && mrtl) { vlen |= 0x02; mrtl--; }
       *dst++ = vlen; *dst++ = 0; *dst++ = mrtl;
       if (c) *dst = c;
       else { while(t--) *(dst + t) = Buf.key[t]; } }
-    else { sav = KeyBuf(Buf.push); dst = sav + 4; d = 2; if (*sav < 3 && (*(sav + 1) & 0x10)) { dst += 2; d++; } 
+    else { sav = KeyBuf(Buf.push); dst = sav + 4; d = 2; if (*sav < 3 && (*(sav + 1) & 0x20)) { dst += 2; d++; } 
       if (*sav == t) {
         if (c) { if (*dst == c) t = 0xFF; }
         else { while (t--) { if (*(dst + t) != Buf.key[t]) break; } } }
       sav += d;
       if (t != 0xFF) { d = ((*sav << 8) + Buf.tic) / AutoR;
         *sav = (d > 0xFF) ? 0xFF:(uint8_t)d; dst = KeyBuf(Buf.push);
-        if (len < 3 && *dst < 3 && !(*(dst + 1) & 0x10)) { d = *(dst + 1) | 0x10; if (vlen) d |= 0x04;
+        if (len < 3 && *dst < 3 && !(*(dst + 1) & 0x20)) { d = *(dst + 1) | 0x20; if (vlen) d |= 0x04;
           if (mrtl) { d |= 0x08; mrtl--; }
           vlen = (uint8_t)d; d = *(dst + 2); t = 2; }
         else  { d = 0; if (++Buf.push == Buf.pop) Buf.pop++;
-                dst = KeyBuf(Buf.push); t = 0; if (len < 3 && mrtl) { vlen |= 0x02; mrtl--; } }
+                dst = KeyBuf(Buf.push); t = 0; vlen |= 0x10; if (len < 3 && mrtl) { vlen |= 0x02; mrtl--; } } 
         *dst++ = len; *dst++ = vlen; *dst++ = (uint8_t)d; *dst++ = mrtl; dst += t;
         if (c) *dst = c;
         else { while(len--) *(dst + len) = Buf.key[len]; } }
       else { if (!Buf.tic) *sav += 1; } }
     if (!c) c = 0xFF; }
   *tic = ++Buf.tic; return c; }
-uint16_t KeysBuf(void) {
-  uint16_t s = 0, e = Buf.push, c = Buf.pop;
-  if (e < c) { e = 256;
-    while (c < e) { s++; if (*(KeyBuf(c) + 1) & 0x10) s++;
-                    c++; }
-    c = 0; e = Buf.push; }
-  if (e == c) return s;
-  e++; while (c < e) { s++; if (*(KeyBuf(c) + 1) & 0x10) s++;
-                       c++; }
+uint16_t KeysBuf(void) { uint16_t s = 0; uint8_t c = Buf.push;
+  while (c != Buf.pop) { s++; if (*(KeyBuf(c--) + 1) & 0x20) s++; }
   return s; }
 
 void ShowC(void) {
