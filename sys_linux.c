@@ -16,21 +16,28 @@
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
 #include "sys.h"
 
-Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
-
-void SwitchRaw(void) {
-    static struct termios oldt; static uint8_t flag = 1;
-    if (flag) {
-        tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG);
-        tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); flag = 0; } 
-    else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); flag = 1; } }
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
+typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
+typedef struct { uint16_t col , row; } T_;
+T_ TS = {0};
+F_ Flag = {1,0,0};
 KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
     {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF},
     {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, {"[17~", K_F6},
     {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
     {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
     {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
+extern char **environ;
+
+Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
+
+void SwitchRaw(void) {
+    static struct termios oldt;
+    if (Flag.SwitchRaw) {
+        tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG);
+        tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
+    else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
+
 void GetKey(char *b) {
     unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len--) b[len] = 0;
     if (read(0, p, 1) <= 0) { *p = 27; return; }
@@ -55,7 +62,7 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
     if (r == MAP_FAILED) { r = 0; l = 0; }
     *size = l; return (Cell)r; }
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
-extern char **environ;
+
 void SWD(Cell addr) { if (!addr) return;
     char *path = (char *)(addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
     path[len] = '\0';
@@ -65,17 +72,15 @@ void SWD(Cell addr) { if (!addr) return;
         return; }
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
-typedef struct { uint16_t col , row; } TermState;
-TermState TS = {0};
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
-int16_t SyncSize(Cell addr, uint8_t flag) { if (!addr) return 0;
+int16_t SyncSize(Cell addr) { if (!addr) return 0;
     struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-    if (flag) { uint8_t stable = 100;
+    if (Flag.SyncSize) { uint8_t stable = 100;
         while (stable) {
             Delay_ms(10); stable -= 10;
             if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 100; } } }
-    TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
+    TS.col = ws.ws_col; TS.row = ws.ws_row; Flag.SyncSize = 1; return 1; }
 Cell GetCycles(void) {
     Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
     #if __SIZEOF_POINTER__ > 4
@@ -87,13 +92,13 @@ Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
     char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
     Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
-void Delay_ms(uint8_t ms) { static Cell cpu_hz = 0;
-    if (!cpu_hz) { struct timespec ts = {0, 10000000L}; Cell start = GetCycles();
-        nanosleep(&ts, NULL); cpu_hz = (GetCycles() - start) * 100; if (cpu_hz == 0) cpu_hz = 1; }
-    Cell total_cycles = (Cell)ms * (cpu_hz / 1000); Cell start_time = GetCycles();
-    if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
-    struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); Cell safety = 0;
-    while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
-        if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-                               if (now.tv_sec > check_start.tv_sec) { cpu_hz = 0; break; }
-                               safety = 0; } } }
+void Delay_ms(uint8_t ms) {
+  if (!Flag.Delay_ms) { struct timespec ts = {0, 10000000L}; Cell start = GetCycles();
+    nanosleep(&ts, NULL); Flag.Delay_ms = (GetCycles() - start) * 100; if (Flag.Delay_ms == 0) Flag.Delay_ms++; }
+  Cell total_cycles = (Cell)ms * (Flag.Delay_ms / 1000); Cell start_time = GetCycles();
+  if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
+  struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); Cell safety = 0;
+  while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
+    if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+      if (now.tv_sec > check_start.tv_sec) { Flag.Delay_ms = 0; break; }
+      safety = 0; } } }
