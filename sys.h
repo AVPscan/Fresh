@@ -88,7 +88,6 @@ enum {                              // Attr(y,x)     структура атри
     Fresh = 0x80,                   // degree         7(0 нет) есть ли изменения в ячейке
                                     //               клавиатура реальное время и буфер на 256 клавиш если прозевали
     Free = 0x14,                    // pause          20мс не гудим даже на одноядерном
-    AutoR = 0x19,                   // auto repeat    25 тиков и ещё одна такая же кнопка в буфер залетела, но там компрессия а значит спать на клавиатуре отныне можно
                                     //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
     Off = 0 };
@@ -119,7 +118,7 @@ void MemMove(void* dst, void* src, Cell len);
 uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl);
 uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem);
 void InitVram(Cell addr, Cell size);
-uint8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);
+int8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);
 uint16_t KeysBuf(void);
 void ShowC(void);
