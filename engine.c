@@ -28,10 +28,10 @@ char      *Cvdat      = NULL;
 
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { Cell addr, size; } R_;
+typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 V_ VP = {0,0,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
 B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65};
-R_ VRam = {0};
+R_ VRam = {0,0,1};
 
 Cell StrLen(char *s) { if (!s) return 0;
     char *f = s; while (*f++);
@@ -118,11 +118,11 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
             while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
                 dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } }
-Cell SystemSwitch(void) { static uint8_t flag = 1;
-  if (flag) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
-              flag--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
+Cell SystemSwitch(void) {
+  if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
+              VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
               SyncSize(VRam.addr); Print(Cdefault,AltBufOn Reset HideCur WrapOn Cls MouseX10on); }
-  else { flag++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
+  else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } }
   return 1; }
 
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
@@ -176,19 +176,29 @@ uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
       else if (!(*(sav + d) += 1)) *(sav + d) = 0xFF; }
     if (!c) c = 0xFF; }
   *tic = ++Buf.tic; return c; }
-uint16_t KeysBuf(void) { uint16_t s = 0; uint8_t c = Buf.push;
+uint16_t Keys(void) { uint16_t s = 0; uint8_t c = Buf.push;
   while (c != Buf.pop) { s++; if ((*(KeyBuf(c--) + 1) & 0x30) == 0x30) s++; }
   return s; }
 int8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key) {
   *len = 0; *vlen = 0; *mrtl = 0; *count = 0; if (Buf.pop == Buf.push) return -1;
   char *src = KeyBuf(++Buf.pop); uint8_t n = 1, t, i = *src++, v = *src++, c = *src++, m = *src++;
-  if (Buf.pop == Buf.push) { --Buf.pop; n--; }
+  if (Buf.pop == Buf.push) { Buf.pop--; n--; }
   if (i < 3) { t = v;
     if ((t & 0x10) == 0x10) { v = (t & 0x01) ? 1:0; m = (t & 0x02) ? 1:0;
-      if ((t & 0x20) == 0x20) { t &= 0x2C; *(src - 3) = t; n = 1; } }
+      if ((t & 0x20) == 0x20) { n = 1; *(src - 3) &= 0x2C; } }
     else if ((t & 0x20) == 0x20) { c = *(src - 1); src += 2; v = (t & 0x04) ? 1:0; m = (t & 0x08) ? 1:0; } }
   *len = i; *vlen = v; *mrtl = m; *count = c; while(i--) *key++ = *src++;
   return n; }
+int8_t GetLastKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key) {
+  *len = 0; *vlen = 0; *mrtl = 0; *count = 0; if (Buf.pop == Buf.push) return -1;
+  char *src = KeyBuf(Buf.push); uint8_t t, i = *src++, v = *src++, c = *src++, m = *src++;
+  Buf.push--; Buf.tic--;
+  if (i < 3) { t = v;
+    if ((t & 0x10) == 0x10) { v = (t & 0x01) ? 1:0; m = (t & 0x02) ? 1:0;
+      if ((t & 0x20) == 0x20) { Buf.push++; *(src - 3) &= 0x13; } }
+    else if ((t & 0x20) == 0x20) { Buf.push++; *(src - 3) = 0; c = *(src - 1); src += 2; v = (t & 0x04) ? 1:0; m = (t & 0x08) ? 1:0; } }
+  *len = i; *vlen = v; *mrtl = m; *count = c; while(i--) *key++ = *src++;
+  return 1; }
   
 void ShowC(void) {
   if (!(VP.Mode & 1) && (uint16_t)VP.X < CellLine && (uint16_t)VP.Y < String) {
@@ -204,12 +214,11 @@ uint8_t ViewPort(void) {
     else if (VP.Cod == VP.F3 && (uint16_t)VP.X < CellLine && (uint16_t)VP.Y < String) VP.Mode ^= 2;
     else if (VP.Cod == VP.F2 && (uint16_t)VP.X < CellLine && (uint16_t)VP.Y < String) { VP.Mode ^= 4;
       if (!(VP.Mode & 4)) { 
-        if (Buf.push != Buf.pop) { char *tic = KeyBuf(Buf.push);
-          if ((*(tic + 1) & 0x30) == 0x30) { Buf.push++; *(tic + 1) &= 0x13; }
-          --Buf.push; --Buf.tic; } } }
+        if (Buf.push != Buf.pop) { char *tic = KeyBuf(Buf.push--); Buf.tic--;
+          if ((*(tic + 1) & 0x30) == 0x30) { Buf.push++; *(tic + 1) &= 0x13; } } } }
     if (VP.Cod != VP.oCod) { VP.dXY = 1; VP.oCod = VP.Cod; }
     if ((VP.Cod & 0xF8) == 0x20) {
-      if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 64)) VP.dXY <<= 1;
+      if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 128)) VP.dXY <<= 1;
       if (!(VP.Mode & 6)) {
         if (VP.Cod == VP.cle) { VP.viewX -= VP.dXY; VP.Cod = VP.le; }
         else if (VP.Cod == VP.cri) { VP.viewX += VP.dXY; VP.Cod = VP.ri; }
@@ -238,14 +247,11 @@ uint8_t ViewPort(void) {
       if (dr < 0 || dc < 0) control--; } }
   ShowC(); return 1; }
 
-uint32_t Bin(void) { uint8_t x = VP.Mode;
-  uint32_t c = 0, i = 8; while(i--){ c *= 10; if (x & 0x80) c++;
-                                     x <<= 1; }
-  c += 100000000; return c; }
-void Show(void) { uint16_t s, r, c = TermCR(&r); Cell o, m = VRam.size; if (18 > c) return;
-  Print(CdefaultB,Home); Print(Cgrey," esc 842  F2 F3 F4\n"); o = m % (1024 * 1024); m /= (1024 * 1024); if (o) m++;
-  s = (uint16_t)m; snprintf(Cvdat, 100, "%d %dMb c%d r%d b%d x%d y%d       \n", Bin(), s, c, r, Buf.Mkey, Buf.MX, Buf.MY); *Cvdat = 'v'; if (StrLen(Cvdat) > c) return;
+void Show(void) { static uint16_t b = 1, bc = 0; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size; if (18 > c) return;
+  Print(CdefaultB,Home); Print(Cgrey," esc 842  F2 F3 F4\n");
+  s = (uint16_t)((m + 1048575) / 1048576); char *p = Cvdat; *p++ = 'v'; int8_t i = 8; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
+  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d       \n", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) > c) return;
   Print(Corange,Cvdat); snprintf(Cvdat, 100, "x%d y%d wx%d wy%d xy%d      \n", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) > c) return;
-  Print(Cred,Cvdat); uint8_t l = 0, v = 0, q = 0, w = 0; int8_t i = GetBufKey(&l,&v,&w,&q,Buf.key); 
-  snprintf(Cvdat, 100, "KeysBuf %d {%d:%d} %d Repeat %d lvm %d%d%d      ", KeysBuf(), Buf.pop, Buf.push, i, q, l, v, w); if (StrLen(Cvdat) > c) return;
+  Print(Cred,Cvdat); uint8_t l = 0, v = 0, q = 0, w = 0; i = GetBufKey(&l,&v,&w,&q,Buf.key); b = (Buf.pop > Buf.push) ? 0 : b; if (b && i == 1) bc++;
+  snprintf(Cvdat, 100, "Keys %d {%d:%d} %d Repeat %d lvm %d%d%d      ", (bc > 0) ? bc + 1:0, Buf.pop, Buf.push, i, q, l, v, w); if (StrLen(Cvdat) > c) return;
   Print(CgoldB,Cvdat); }

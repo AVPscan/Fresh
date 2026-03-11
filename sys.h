@@ -108,34 +108,34 @@ enum {
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
     Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
 
-Cell SysWrite(void *buf, Cell len);
+Cell StrLen(char *s);                                                                       // Длина строки
+void MemSet(void* buf, uint8_t val, Cell len);                                              // Заполнение куска памяти val
+void MemCpy(void* dst, void* src, Cell len);                                                // Копирование куска памяти, без проверки наложения!
+int8_t MemCmp(void* dst, void* src, Cell len);                                              // Сравнение
+void MemMove(void* dst, void* src, Cell len);                                               // Копирование куска памяти с проверкой наложения
+uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl);                                      // Рассказ об utf8
+uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem);                        // Рассказ об utf8 с учётом буфера
+void Print(uint8_t n, char *str);                                                           // Для отладки
+void InitVram(Cell addr, Cell size);                                                        // Инициализация мира
+Cell SystemSwitch(void);                                                                    // Вход и выход в мир
+uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);                                  // Читаем мышь и клавиатуру, заполняем буфер при необходимости RealTime
+uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
+int8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);    // Взять первую клавишу из буфера [1] или показать ожидаемую [0]
+int8_t GetLastKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);   // Взять последнюю клавишу из буфера даже ожидаемую в key [1]
+void ShowC(void);                                                                           // Инвертировать поля с позиции курсора согласно vlen
+uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
 
-Cell StrLen(char *s);
-void MemSet(void* buf, uint8_t val, Cell len);
-void MemCpy(void* dst, void* src, Cell len);
-int8_t MemCmp(void* dst, void* src, Cell len);
-void MemMove(void* dst, void* src, Cell len);
-uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl);
-uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem);
-void InitVram(Cell addr, Cell size);
-int8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);
-uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);
-uint16_t KeysBuf(void);
-void ShowC(void);
-uint8_t ViewPort(void);
-Cell SystemSwitch(void);
+Cell SysWrite(void *buf, Cell len);                                                         // Выстрел в терминал
+void SwitchRaw(void);                                                                       // Включение/выключение неблокирующего ввода RealTime
+void GetKey(char *b);                                                                       // Читаем utf8 из порта
+Cell GetRam(Cell *size);                                                                    // Взять память
+void FreeRam(Cell addr, Cell size);                                                         // Вернуть память
+void SWD(Cell addr);                                                                        // Установить рабочую директорию
+uint16_t TermCR(uint16_t *r);                                                               // Считать рамки терминала
+int16_t SyncSize(Cell addr);                                                                // Получить рамки терминала при необходимости стабилизировать
+Cell GetCycles(void);                                                                       // Тики
+void Delay_ms(uint8_t ms);                                                                  // Адаптивная задержка, гарантия точности ms
+Cell GetSC(Cell addr);                                                                      // Измерение пропускной способности терминала
 
-void SwitchRaw(void);
-void GetKey(char *b);
-Cell GetRam(Cell *size);
-void FreeRam(Cell addr, Cell size);
-void SWD(Cell addr);
-uint16_t TermCR(uint16_t *r);
-int16_t SyncSize(Cell addr);
-Cell GetCycles(void);
-void Delay_ms(uint8_t ms);
-Cell GetSC(Cell addr);
-
-void Print(uint8_t n, char *str);
-void Show(void);
+void Show(void);                                                                            // Для отладки
 #endif /* SYS_H */
