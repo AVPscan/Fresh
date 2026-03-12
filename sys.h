@@ -120,8 +120,8 @@ void InitVram(Cell addr, Cell size);                                            
 Cell SystemSwitch(void);                                                                    // Вход и выход в мир
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);                                  // Читаем мышь и клавиатуру, заполняем буфер при необходимости RealTime
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
-int8_t GetBufKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);    // Взять первую клавишу из буфера [1] или показать ожидаемую [0]
-int8_t GetLastKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);   // Взять последнюю клавишу из буфера даже ожидаемую в key [1]
+int8_t PopKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);       // Взять первую клавишу из буфера [1] или показать ожидаемую [0]
+void ForgetKey(void);                                                                       // Забыть последнюю клавишу в буфере даже ожидаемую в key [1]
 void ShowC(void);                                                                           // Инвертировать поля с позиции курсора согласно vlen
 uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
 
