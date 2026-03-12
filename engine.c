@@ -127,34 +127,34 @@ Cell SystemSwitch(void) {
 
 uint8_t PushKey(char *key) {
   char *sav, *dst; uint8_t v, l, c, len, mrtl, d = 0, t = 0, vlen = UTFinfo(key, &len, &mrtl); c = (vlen == 3) ? *(key + 1) : 0; if (vlen == 4) return t;
-  vlen |= ((mrtl) ? 0x4 : 0x0) | ((len == 2) ? 0x8 : 0x0);
-  if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push); *dst++ = len | 0x8; *dst++ = vlen; *dst++ = 1; *dst++ = 0;
+  vlen |= ((mrtl) ? 0x04 : 0x0) | ((len == 2) ? 0x08 : 0x0);
+  if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push); *dst++ = len | 0x08; *dst++ = vlen; *dst++ = 1; *dst++ = 0;
     if (c) *dst++ = c;
     else while(len--) *(dst + len) = *(key + len); }
   else { dst = KeyBuf(Buf.push); l = *dst++; v = *dst++; sav = dst++; dst++;
-    if (len < 3 && l & 0x10) { t++; dst += 2; l = (v & 0x8) ? 2 : 1; v >>= 4; }
-    if ((l & 0x7) == len && (v & 0xF) == vlen) { d = len; 
+    if (l & 0x10) { t++; dst += 2; l = (v & 0x08) ? 2 : 1; v >>= 4; }
+    if ((l & 0x07) == len && (v & 0x0F) == vlen) { d = len; 
       if (c) { if (*dst == c) d = 0xFF; }
       else while (d--) { if (*(dst + d) != *(key + d)) break; } }
     if (d == 0xFF) { if (!(*(sav + t) += 1)) *(sav + t) = 0xFF; }
-    else { if (len > 2 || t) { sav = KeyBuf(++Buf.push); *sav++ = 0; sav++; if (Buf.pop == Buf.push) Buf.pop++; }
-      if (!(*(sav - 2) & 0x8)) { *(sav - 2) = len | 0x08; *(sav - 1) = vlen; *sav++ = 1; *sav++ = 0; }
-      else { *(sav - 2) |= 0x10; *(sav - 1) |= (vlen << 4); sav++; *sav++ = 1; sav += 2; }
+    else { if ((l & 0x07) > 2 || len > 2 || t) { sav = KeyBuf(++Buf.push); *sav++ = 0; sav++; if (Buf.pop == Buf.push) Buf.pop++; }
+      if (!(*(sav - 2) & 0x08)) { *(sav - 2) = len | 0x08; *(sav - 1) = vlen; *sav++ = 1; *sav++ = 0; }
+      else { *(sav - 2) |= 0x10; *(sav - 1) = (*(sav - 1) & 0x0F) | (vlen << 4); sav++; *sav++ = 1; sav += 2; }
       if (c) *sav = c;
       else while(len--) *(sav + len) = *(key + len); } }
   if (!c) c = 0xFF; 
   return c; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
-  char *src = KeyBuf(Buf.pop++); Buf.tic--; if (*src & 0x10) { Buf.pop--; *src++ &= 0xF; *src &= 0xF; } }
+  char *src = KeyBuf(Buf.pop++); Buf.tic--; if (*src & 0x10) { Buf.pop--; *src++ &= 0x17; *src &= 0x0F; } }
 int8_t PopKey(uint8_t *l, uint8_t *v, uint8_t *m, uint8_t *c, char *key) {
   uint8_t d, n = 1; char *dst; *l = 0; *v = 0; *m = 0; *c = 0; if (Buf.pop == Buf.push) return -1;
   dst = KeyBuf(++Buf.pop); if (Buf.pop == Buf.push) { n--; Buf.pop--; }
   d = *dst++; *v = *dst++; *c = *dst++; *m = *dst++;
-  if (d & 0x8) { if (d & 0x10) { n = 1; *(dst - 4) &= 0x17; }
-                 d &= 0x7; }
-  else if (d & 0x10) { *v >>= 4; *c = *m; d = (*v & 0x8) ? 2 : 1; dst += 2; }
-  *m = (*v & 0x4); *v &= 0x3; *l = d; while (d--) *(key + d) = *(dst + d);
+  if (d & 0x08) { if (d & 0x10) { n = 1; *(dst - 4) &= 0x17; }
+                 d &= 0x07; }
+  else if (d & 0x10) { *v >>= 4; *c = *m; d = (*v & 0x08) ? 2 : 1; dst += 2; }
+  *m = (*v & 0x04); *v &= 0x03; *l = d; while (d--) *(key + d) = *(dst + d);
   return n; }
 uint16_t Keys(void) {
   uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x10) s++; }
