@@ -61,7 +61,7 @@ enum {
     String = CellLine * 987 / 1597,
     SKey = 256,                     // [256] Ring buffer
     SizePal = 32,                   // [32] colour anci
-    SizeKey = Utf8 + 4,             // [8]( len vlen tic mrtl UTF8[4 byte] )
+    SizeKey = Utf8 + 4,             // [8]( data1 data2 tic1 tic2 UTF8[4 byte] )
     
     SizeData = String * CellLine * 4,
     SizeOffset = String * CellLine * 2,
@@ -107,20 +107,21 @@ enum {
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
     Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
-
+// UTFinfo = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
 Cell StrLen(char *s);                                                                       // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                                              // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                                                // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                                              // Сравнение
 void MemMove(void* dst, void* src, Cell len);                                               // Копирование куска памяти с проверкой наложения
-uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl);                                      // Рассказ об utf8
-uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem);                        // Рассказ об utf8 с учётом буфера
+uint8_t UTFinfo(char *s);                                                                   // Рассказ об utf8
+uint8_t UTFinfoTile(char *s, Cell rem);                                                     // Рассказ об utf8 с учётом буфера
 void Print(uint8_t n, char *str);                                                           // Для отладки
 void InitVram(Cell addr, Cell size);                                                        // Инициализация мира
 Cell SystemSwitch(void);                                                                    // Вход и выход в мир
-uint8_t PushKey(char *key);                                                                 // Положить клавишу в буфер
-int8_t PopKey(uint8_t *len, uint8_t *vlen, uint8_t *mrtl, uint8_t *count, char *key);       // Взять первую клавишу из буфера [1] или показать ожидаемую [0]
-void ForgetKey(void);                                                                       // Забыть последнюю клавишу в буфере даже ожидаемую в key [1]
+uint8_t PushKey(char *key);                                                                 // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                                  // Показать последнюю пришедшую клавишу
+uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять первую клавишу из буфера [1] буфер пуст [0] видна последняя
+void ForgetKey(void);                                                                       // Забыть последнюю клавишу в буфере даже ожидаемую в key
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);                                  // Читаем мышь и клавиатуру, заполняем буфер при необходимости RealTime
 void ShowC(void);                                                                           // Инвертировать поля с позиции курсора согласно vlen

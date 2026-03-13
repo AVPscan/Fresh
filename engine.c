@@ -69,37 +69,37 @@ int8_t MemCmp(void* dst, void* src, Cell len) {
         d = (uint8_t *)dW; s = (uint8_t *)sW; }
     while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
     return 0; }
-uint8_t UTFinfo(char *s, uint8_t *len, uint8_t *Mrtl) {
-    unsigned char c = *s++; uint32_t cp = 0xFFFD; *len = 1; *Mrtl = 0;
+
+uint8_t UTFinfo(char *s) {
+    uint32_t cp; uint8_t d = 0x00; unsigned char c = *s++;
     if (c < 0x80) cp = (uint32_t) c;
     else if ((c & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80)
-            { *len = 2; cp = ((c & 0x1F) << 6) | (*s & 0x3F); }
-    else if ((c & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 1) & 0xC0) == 0x80)
-            { *len = 3; cp = ((c & 0x0F) << 12) | ((*s & 0x3F) << 6) | (*(s + 1) & 0x3F); }
-    else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 1) & 0xC0) == 0x80 && (*(s + 2) & 0xC0) == 0x80) 
-            { *len = 4; cp = ((c & 0x07) << 18) | ((*s & 0x3F) << 12) | ((*(s + 1) & 0x3F) << 6) | (*(s + 2) & 0x3F); }
-    else return 4;
-    if (cp == 0 || cp < 32 || (cp >= 0x7F && cp < 0xA0)) return 3;                                              // управляющие
-    if (cp < 0x100) return 1;                                                                                   // обычный
-    if (cp >= 0x0590 && cp <= 0x08FF) *Mrtl = 1;
-    if ((*len == 2 && cp < 0x80) || (*len == 3 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
-        (*len == 4 && (cp < 0x10000 || cp > 0x10FFFF))) return 4;                                               // битый
+            { d++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
+    else if ((c & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
+            { d = 0x02; cp = ((c & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
+    else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
+            { d = 0x03; cp = ((c & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
+    else return (d |= 0x80);
+    if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) return (d = 0x2C);
+    if (cp < 0x100) return (d |= 0x04);
+    if (cp >= 0x0590 && cp <= 0x08FF) d |= 0x10;
+    if (((d & 0x03) == 0x01 && cp < 0x80) || ((d & 0x03) == 0x02 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
+        ((d & 0x03) == 0x03 && (cp < 0x10000 || cp > 0x10FFFF))) return (d |= 0x80);
     if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
-        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return 0;                                             // прилепало
+        (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) return (d &= 0xF3);
     if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) ||
-        (cp >= 0xE0100 && cp <= 0xE01EF)) return 0;
+        (cp >= 0xE0100 && cp <= 0xE01EF)) return (d &= 0xF3);
     if ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) || (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || 
         (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE10 && cp <= 0xFE19) || 
         (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
-        (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) return 2;      // двойной
-    return 1; }
-uint8_t UTFinfoTile(char *s, uint8_t *len, uint8_t *Mrtl, Cell rem) {
-    *len = 0; *Mrtl = 0; if (rem == 0) return 5;                                                                // нет влезет и не проверяем
-    *len = 1;
-    if ((*s & 0xE0) == 0xC0 && rem < 2) return 5;
-    else if ((*s & 0xF0) == 0xE0 && rem < 3) return 5;
-    else if ((*s & 0xF8) == 0xF0 && rem < 4) return 5;
-    return UTFinfo(s, len, Mrtl); }
+        (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) return (d |= 0x08);
+    return (d |= 0x04); }
+uint8_t UTFinfoTile(char *s, Cell rem) {
+    if (!rem) return 0xC0;
+    if ((*s & 0xE0) == 0xC0 && rem < 0x02) return 0xC0;
+    else if ((*s & 0xF0) == 0xE0 && rem < 0x03) return 0xC0;
+    else if ((*s & 0xF8) == 0xF0 && rem < 0x04) return 0xC0;
+    return UTFinfo(s); }
 
 void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
   char *dst = Cvdat + 1024, *sav; uint16_t len;
@@ -126,40 +126,44 @@ Cell SystemSwitch(void) {
   return 1; }
 
 uint8_t PushKey(char *key) {
-  char *sav, *dst; uint8_t v, l, c, len, mrtl, d = 0, t = 0, vlen = UTFinfo(key, &len, &mrtl); c = (vlen == 3) ? *(key + 1) : 0; if (vlen == 4) return t;
-  vlen |= ((mrtl) ? 0x04 : 0x0) | ((len == 2) ? 0x08 : 0x0);
-  if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push); *dst++ = len | 0x08; *dst++ = vlen; *dst++ = 1; *dst++ = 0;
-    if (c) *dst++ = c;
-    else while(len--) *(dst + len) = *(key + len); }
-  else { dst = KeyBuf(Buf.push); l = *dst++; v = *dst++; sav = dst++; dst++;
-    if (l & 0x10) { t++; dst += 2; l = (v & 0x08) ? 2 : 1; v >>= 4; }
-    if ((l & 0x07) == len && (v & 0x0F) == vlen) { d = len; 
-      if (c) { if (*dst == c) d = 0xFF; }
-      else while (d--) { if (*(dst + d) != *(key + d)) break; } }
-    if (d == 0xFF) { if (!(*(sav + t) += 1)) *(sav + t) = 0xFF; }
-    else { if ((l & 0x07) > 2 || len > 2 || t) { sav = KeyBuf(++Buf.push); *sav++ = 0; sav++; if (Buf.pop == Buf.push) Buf.pop++; }
-      if (!(*(sav - 2) & 0x08)) { *(sav - 2) = len | 0x08; *(sav - 1) = vlen; *sav++ = 1; *sav++ = 0; }
-      else { *(sav - 2) |= 0x10; *(sav - 1) = (*(sav - 1) & 0x0F) | (vlen << 4); sav++; *sav++ = 1; sav += 2; }
-      if (c) *sav = c;
-      else while(len--) *(sav + len) = *(key + len); } }
-  if (!c) c = 0xFF; 
+  char *sav, *dst; uint8_t d, l, c, data = UTFinfo(key); c = (data == 0x2C) ? *(key + 1) : 0; if (data & 0x80) return 0;
+  if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push); *dst++ = data | 0x40; dst++; *dst++ = 1; dst++; if (Buf.pop == Buf.push) ++Buf.pop;
+    l = 1 + (data & 0x03);
+    if (c) *dst = c;
+    else while(l--) *(dst + l) = *(key + l); }
+  else { dst = KeyBuf(Buf.push); d = *dst; sav = dst + 2; dst += 4;
+    if (d & 0x80) { d = *(dst - 3) | 0x80; sav++; dst += 2; }
+    l = 1 + (data & 0x03);
+    if ((d & 0x3F) == data) {
+      if (c) { if (*dst == c) l = 0xFF; }
+      else while(l--) { if (*(dst + l) != *(key + l)) break; } }
+    if (l == 0xFF) { if (!(*sav += 1)) *sav = 0xFF; }
+    else { l = 1 + (data & 0x03);
+      if ((d & 0x03) < 2 && ((data & 0x03) < 2 && !(d & 0x80))) { dst = KeyBuf(Buf.push); *dst++ |= 0x80; *dst++ = data; dst++; *dst++ = 1; dst += 2; }
+      else { dst = KeyBuf(++Buf.push); *dst++ = data | 0x40; dst++; *dst++ = 1; dst++; if (Buf.pop == Buf.push) ++Buf.pop; }
+      if (c) *dst = c;
+      else while(l--) *(dst + l) = *(key + l); } }
+  if (!c) c = 0xFF;
   return c; }
+uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key) {
+  uint8_t d; char *dst; *data = 0; *count = 0; if (Buf.pop == Buf.push) return 0;
+  dst = KeyBuf(Buf.push); d = *dst; *count = *(dst + 2); dst += 4;
+  if (d & 0x80) { d = *(dst - 3); *count = *(dst - 1); dst += 2; }
+  *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
+  return 1; }
+uint8_t PopKey(uint8_t *data, uint8_t *count, char *key) {
+  uint8_t d, n = 1; char *dst; *data = 0; *count = 0; if (Buf.pop == Buf.push) return 0;
+  dst = KeyBuf(++Buf.pop); d = *dst; if (Buf.pop == Buf.push) { n--; Buf.pop--; }
+  if ((d & 0xC0) == 0x80) { d = *(dst + 1); *count = *(dst + 3); dst += 6; if (n) *(dst - 6) &= 0x7F; }
+  else { *dst &= 0xBF; *count = *(dst + 2); dst += 4; if (d & 0x80) n = 1; }
+  *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
+  return n; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
-  char *src = KeyBuf(Buf.pop++); Buf.tic--; if (*src & 0x10) { Buf.pop--; *src++ &= 0x17; *src &= 0x0F; } }
-int8_t PopKey(uint8_t *l, uint8_t *v, uint8_t *m, uint8_t *c, char *key) {
-  uint8_t d, n = 1; char *dst; *l = 0; *v = 0; *m = 0; *c = 0; if (Buf.pop == Buf.push) return -1;
-  dst = KeyBuf(++Buf.pop); if (Buf.pop == Buf.push) { n--; Buf.pop--; }
-  d = *dst++; *v = *dst++; *c = *dst++; *m = *dst++;
-  if (d & 0x08) { if (d & 0x10) { n = 1; *(dst - 4) &= 0x17; }
-                 d &= 0x07; }
-  else if (d & 0x10) { *v >>= 4; *c = *m; d = (*v & 0x08) ? 2 : 1; dst += 2; }
-  *m = (*v & 0x04); *v &= 0x03; *l = d; while (d--) *(key + d) = *(dst + d);
-  return n; }
+  char *src = KeyBuf(Buf.push--); Buf.tic--; if (*src & 0x80) { Buf.push++; *src &= 0x7F; } }
 uint16_t Keys(void) {
-  uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x10) s++; }
+  uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x80) s++; }
   return s; }
-
 uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t = 0, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
   if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return 0; }
@@ -236,14 +240,14 @@ uint8_t ViewPort(void) {
       if (dr < 0 || dc < 0) control--; } }
   ShowC(); return 1; }
 
-void Show(void) { static uint16_t b = 1, bc = 0; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size; if (18 > c) return;
-  Print(CdefaultB,Home); Print(Cgrey," esc 842  F2 F3 F4\n");
-  s = (uint16_t)((m + 1048575) / 1048576); char *p = Cvdat; *p++ = 'v'; int8_t i = 8; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
+void Show(void) {
+  char *p = Cvdat; uint8_t l, v, q = 0, w = 0, i = 8; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size; if (18 > c) return;
+  Print(CdefaultB,Home); Print(Cgrey," esc 842  F2 F3 F4\n"); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d       \n", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) > c) return;
   Print(Corange,Cvdat); snprintf(Cvdat, 100, "x%d y%d wx%d wy%d xy%d      \n", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) > c) return;
-  Print(Cred,Cvdat); uint8_t l = 0, v = 0, q = 0, w = 0; i = PopKey(&l,&v,&w,&q,Buf.key); p = Cvdat; b = (Buf.pop > Buf.push) ? 0 : b; if (b && i == 1) bc++;
-  snprintf(p, 100, "Keys %d %d {%d:%d} %d Repeat %d lvm %d%d%d [", Keys(), (bc) ? bc + 1:0, Buf.pop, Buf.push, i, q, l, v, w); p += StrLen(p);
-  if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
-  else { v = *Buf.key; snprintf(p, 50, "%d", v); }
-  p = Cvdat + StrLen(Cvdat); snprintf(p, 50, "]       "); if (StrLen(Cvdat) > c) return;
-  Print(CgoldB,Cvdat); }
+  Print(CredB,Cvdat); i = ShowKey(&w,&q,Buf.key); if (i) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+    p = Cvdat; snprintf(p, 100, "Keys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
+    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
+    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
+    p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "       "); if (StrLen(Cvdat) > c) return;
+    Print(Cgreen,Cvdat); } }
