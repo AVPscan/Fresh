@@ -3,7 +3,7 @@
 
 ## Демонстрация работы
 
-[▶️ Скачать/смотреть видео](IIAbout/ScreenRecord2026-03-14-13-23-49.mp4)
+<video src="https://github.com/user-attachments/assets/231a6004-a684-45f1-87d9-8ce4f11437bc" controls width="600"></video>
 
 ## Fresh
 
