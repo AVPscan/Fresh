@@ -1,6 +1,10 @@
 
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
+## Демонстрация работы
+
+[▶️ Скачать/смотреть видео](IIAbout/ScreenRecord2026-03-14-13-23-49.mp4)
+
 ## Fresh
 
 Описание в папке проекта **IIAbout**
