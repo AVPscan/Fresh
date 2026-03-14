@@ -21,13 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
       - name: Build Static
         run: |
           apk add --no-cache build-base make musl binutils
           make musl
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: linux-static
           path: fresh
@@ -51,12 +51,12 @@ jobs:
             cmd: make mac
             artifact: macos-executable
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
       - name: Build
         shell: bash
         run: ${{ matrix.cmd }}
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: ${{ matrix.artifact }}
           path: fresh*
@@ -66,7 +66,7 @@ jobs:
     needs: [build-musl, build-others]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
       - name: Get Version
         id: v
         shell: bash
@@ -83,7 +83,7 @@ jobs:
           fi
 
       - name: Download All
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@main
         with:
           path: ./artefacts
 
