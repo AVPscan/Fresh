@@ -90,13 +90,13 @@ int16_t SyncSize(size_t addr) {
     uint16_t h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
     if (w == TS.col && h == TS.row) return 0;
     if (Flag.SyncSize) { 
-        uint8_t stable = 70;
-        while (stable) {
-            Delay_ms(10); stable -= 10;
+        uint8_t stable = 3;
+        while (stable) { stable--;
+            Delay_ms(0);
             if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
                 uint16_t cur_w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
                 uint16_t cur_h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-                if (cur_w != w || cur_h != h) { w = cur_w; h = cur_h; stable = 100; } } } }
+                if (cur_w != w || cur_h != h) { w = cur_w; h = cur_h; stable = 3; } } } }
     TS.col = w; TS.row = h; Flag.SyncSize = 1; return 1; }
 
 Cell GetCycles(void) {

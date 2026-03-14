@@ -231,7 +231,7 @@ uint8_t ViewPort(void) {
       else if ((VP.X + VP.viewX) >= c) { VP.viewX = c - 1 - VP.X; control++; }
       if ((VP.Y + VP.viewY) < 0) { VP.viewY = - VP.Y; control++; }
       else if ((VP.Y + VP.viewY) >= r) { VP.viewY = r - 1 - VP.Y; control++; } } }
-  if (SyncSize(VRam.addr)) { int16_t dr = r, dc = c; c = TermCR(&r); dr -= r; dc -= c;
+  if (SyncSize(VRam.addr)) { int16_t dr = r, dc = c; c = TermCR(&r); dr -= r; dc -= c; Print(Cdefault,Cls);
     if (VP.X + VP.viewX >= c) VP.X = c - 1 - VP.viewX;
     else if (VP.X + VP.viewX < 0)  VP.X = -VP.viewX;
     if (VP.Y + VP.viewY >= r) VP.Y = r - 1 - VP.viewY;
@@ -241,13 +241,13 @@ uint8_t ViewPort(void) {
   ShowC(); return 1; }
 
 void Show(void) {
-  char *p = Cvdat; uint8_t l, v, q = 0, w = 0, i = 8; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size; if (18 > c) return;
-  Print(CdefaultB,Home); Print(Cgrey," esc 842  F2 F3 F4\n"); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
-  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d       \n", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) > c) return;
-  Print(Corange,Cvdat); snprintf(Cvdat, 100, "x%d y%d wx%d wy%d xy%d      \n", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) > c) return;
+  char *p = Cvdat; uint8_t l, v, q = 0, w = 0, i = 8; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size;
+  Print(CdefaultB,Home); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
+  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) > c) *(Cvdat + c) = 0;
+  Print(Corange,Cvdat); snprintf(Cvdat, 100, "\nx%d y%d wx%d wy%d xy%d      ", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) > c) *(Cvdat + c + 1) = 0;
   Print(CredB,Cvdat); i = ShowKey(&w,&q,Buf.key); if (i) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
-    p = Cvdat; snprintf(p, 100, "Keys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
+    p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
     if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
     else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
-    p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "       "); if (StrLen(Cvdat) > c) return;
+    p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "       "); if (StrLen(Cvdat) > c) *(Cvdat + c + 1) = 0;
     Print(Cgreen,Cvdat); } }
