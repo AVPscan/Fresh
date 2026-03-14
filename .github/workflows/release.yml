@@ -13,20 +13,21 @@ on:
         description: 'Версия (например: 3.00)'
         required: true
         default: 'manual'
-
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
   # 1. Честная сборка Musl в Alpine
   build-musl:
     runs-on: ubuntu-latest
     container: alpine:latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - name: Build Static
         run: |
           apk add --no-cache build-base make musl binutils
           make musl
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: linux-static
           path: fresh
@@ -50,12 +51,12 @@ jobs:
             cmd: make mac
             artifact: macos-executable
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - name: Build
         shell: bash
         run: ${{ matrix.cmd }}
       - name: Upload
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: fresh*
@@ -65,7 +66,7 @@ jobs:
     needs: [build-musl, build-others]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
       - name: Get Version
         id: v
         shell: bash
@@ -82,7 +83,7 @@ jobs:
           fi
 
       - name: Download All
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           path: ./artefacts
 
