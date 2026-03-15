@@ -94,11 +94,11 @@ uint8_t UTFinfo(char *s) {
         (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
         (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) return (d |= 0x08);
     return (d |= 0x04); }
-uint8_t UTFinfoTile(char *s, Cell rem) {
-    if (!rem) return 0xC0;
-    if ((*s & 0xE0) == 0xC0 && rem < 0x02) return 0xC0;
-    else if ((*s & 0xF0) == 0xE0 && rem < 0x03) return 0xC0;
-    else if ((*s & 0xF8) == 0xF0 && rem < 0x04) return 0xC0;
+uint8_t UTFinfoTile(char *s, Cell len) {
+    if (!len) return 0xC0;
+    if ((*s & 0xE0) == 0xC0 && len < 0x02) return 0xC0;
+    else if ((*s & 0xF0) == 0xE0 && len < 0x03) return 0xC0;
+    else if ((*s & 0xF8) == 0xF0 && len < 0x04) return 0xC0;
     return UTFinfo(s); }
 
 void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
@@ -132,31 +132,33 @@ uint8_t PushKey(char *key) {
     if (c) *dst = c;
     else while(l--) *(dst + l) = *(key + l); }
   else { dst = KeyBuf(Buf.push); d = *dst; sav = dst + 2; dst += 4;
-    if (d & 0x80) { d = *(dst - 3) | 0x80; sav++; dst += 2; }
+    if (d & 0x80) { sav++; dst += 2; }
     l = 1 + (data & 0x03);
     if ((d & 0x3F) == data) {
       if (c) { if (*dst == c) l = 0xFF; }
       else while(l--) { if (*(dst + l) != *(key + l)) break; } }
     if (l == 0xFF) { if (!(*sav += 1)) *sav = 0xFF; }
     else { l = 1 + (data & 0x03);
-      if ((d & 0x03) < 2 && ((data & 0x03) < 2 && !(d & 0x80))) { dst = KeyBuf(Buf.push); *dst++ |= 0x80; *dst++ = data; dst++; *dst++ = 1; dst += 2; }
-      else { dst = KeyBuf(++Buf.push); *dst++ = data | 0x40; dst++; *dst++ = 1; dst++; if (Buf.pop == Buf.push) ++Buf.pop; }
+      if ((d & 0x03) < 2 && ((data & 0x03) < 2 && !(d & 0x80))) { dst = KeyBuf(Buf.push); *dst |= 0x80; *(dst + 1) = data; *(dst + 3) = 1; dst += 6; }
+      else { dst = KeyBuf(++Buf.push); *dst = data | 0x40; *(dst + 2) = 1; dst += 4; if (Buf.pop == Buf.push) ++Buf.pop; }
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
   if (!c) c = 0xFF;
   return c; }
 uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key) {
-  uint8_t d; char *dst; *data = 0; *count = 0; if (Buf.pop == Buf.push) return 0;
+  uint8_t d; char *dst; if (Buf.pop == Buf.push) { *data = 0; *count = 0; return 0; }
   dst = KeyBuf(Buf.push); d = *dst; *count = *(dst + 2); dst += 4;
   if (d & 0x80) { d = *(dst - 3); *count = *(dst - 1); dst += 2; }
   *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
   return 1; }
 uint8_t PopKey(uint8_t *data, uint8_t *count, char *key) {
-  uint8_t d, n = 1; char *dst; *data = 0; *count = 0; if (Buf.pop == Buf.push) return 0;
-  dst = KeyBuf(++Buf.pop); d = *dst; if (Buf.pop == Buf.push) { n--; Buf.pop--; }
-  if ((d & 0xC0) == 0x80) { d = *(dst + 1); *count = *(dst + 3); dst += 6; if (n) *(dst - 6) &= 0x7F; }
-  else { *dst &= 0xBF; *count = *(dst + 2); dst += 4; if (d & 0x80) n = 1; }
-  *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
+  char *dst; uint8_t d, n = 1;
+  while(!((d = *(dst = KeyBuf(Buf.pop))) & 0xC0) && (Buf.pop != Buf.push)) Buf.pop++;
+  if (!(d & 0xC0)) { *data = 0; *count = 0; return 0; }
+  if (Buf.pop == Buf.push) { n--; Buf.pop--; if ((d & 0xC0) == 0xC0) n++; }
+  if (d & 0x40) { *count = *(dst + 2); if (n) *dst &= 0xBF; }
+  else { dst += 2; d = *(dst - 1); *count = *(dst + 1); if (n) *(dst - 2) &= 0x3F; }
+  dst += 4; *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
   return n; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
@@ -164,9 +166,9 @@ void ForgetKey(void) {
 uint16_t Keys(void) {
   uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x80) s++; }
   return s; }
-uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control) {
+uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t = 0, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
-  if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return 0; }
+  if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) { int16_t dx = 0, dy = 0; uint16_t y, x = TermCR(&y);
     Buf.Mkey = (uint8_t)Buf.key[2]; Buf.MX = (uint8_t)Buf.key[3] - 33; Buf.MY = (uint8_t)Buf.key[4] - 33;
     if (Buf.Mkey == Buf.Lk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
@@ -203,7 +205,7 @@ void ShowC(void) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode;
   ShowC(); Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
-  VP.Cod = Key(&VP.Key, &VP.Tic, &control); Buf.mode = s;
+  VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
     if (VP.Cod == VP.es) return 0;
     else if (VP.Cod == VP.F4) VP.Mode ^= 1;
@@ -245,9 +247,16 @@ void Show(void) {
   Print(CdefaultB,Home); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) > c) *(Cvdat + c) = 0;
   Print(Corange,Cvdat); snprintf(Cvdat, 100, "\nx%d y%d wx%d wy%d xy%d      ", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) > c) *(Cvdat + c + 1) = 0;
-  Print(CredB,Cvdat); i = ShowKey(&w,&q,Buf.key); if (i) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+  Print(CredB,Cvdat);
+  if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
     p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
     if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
     else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
     p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "       "); if (StrLen(Cvdat) > c) *(Cvdat + c + 1) = 0;
     Print(Cgreen,Cvdat); } }
+  else { i = ShowKey(&w,&q,Buf.key); if (q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+    p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
+    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
+    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
+    p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "       "); if (StrLen(Cvdat) > c) *(Cvdat + c + 1) = 0;
+    Print(Cgreen,Cvdat); } } }

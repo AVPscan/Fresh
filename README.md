@@ -1,7 +1,10 @@
 
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
-## Демонстрация работы
+## Вьюпорт мышь клавиатура изменение размеров и масштаба, нет рендера (наполнение файл порт) вложенности окон.
+`keyboard` `up`,`down`,`left`,`rigth` `+ctrl` `mouse` `+shift roll` `mouse` `+ctrl roll` — `F2F3F4`,`esc`
+
+`ViewPort` review of space without borders
 
 <video src="https://github.com/user-attachments/assets/231a6004-a684-45f1-87d9-8ce4f11437bc" controls width="600"></video>
 

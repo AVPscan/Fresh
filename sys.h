@@ -84,7 +84,7 @@ enum {                              // Attr(y,x)     структура атри
     Mcol = 0x1C,                    // color 0-7      2(0...7) цвет 0-6 холст 7 вокруг
     Mcbi = 0x1F,                    //                34 
     Msmem = 0x20,                   // shape memory   5(0 нет) память формы, резиновые структуры [просто лень затирать хвосты] - усложнение рендера но это просто удобно и 67 ускоряют однако
-    Mdata = 0x40,                   // bata           6(0 нет) есть ли данные в ячейке
+    Mdata = 0x40,                   // bata           6(0 нет) есть ли данные в ячейке или пробел[ы]
     Fresh = 0x80,                   // degree         7(0 нет) есть ли изменения в ячейке
                                     //               клавиатура реальное время и буфер на 256 клавиш если прозевали
     Free = 0x14,                    // pause          20мс не гудим даже на одноядерном
@@ -107,23 +107,23 @@ enum {
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
     Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
-// UTFinfo = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
+// [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
 Cell StrLen(char *s);                                                                       // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                                              // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                                                // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                                              // Сравнение
 void MemMove(void* dst, void* src, Cell len);                                               // Копирование куска памяти с проверкой наложения
-uint8_t UTFinfo(char *s);                                                                   // Рассказ об utf8
-uint8_t UTFinfoTile(char *s, Cell rem);                                                     // Рассказ об utf8 с учётом буфера
+uint8_t UTFinfo(char *s);                                                                   // Рассказ об utf8 возвращает [data]
+uint8_t UTFinfoTile(char *s, Cell len);                                                     // Рассказ об utf8 возвращает [data] с учётом буфера
 void Print(uint8_t n, char *str);                                                           // Для отладки
 void InitVram(Cell addr, Cell size);                                                        // Инициализация мира
 Cell SystemSwitch(void);                                                                    // Вход и выход в мир
 uint8_t PushKey(char *key);                                                                 // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
-uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                                  // Показать последнюю пришедшую клавишу
-uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять первую клавишу из буфера [1] буфер пуст [0] видна последняя
-void ForgetKey(void);                                                                       // Забыть последнюю клавишу в буфере даже ожидаемую в key
+uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                                  // Показать ожидаемую/получаемую клавишу
+uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
+void ForgetKey(void);                                                                       // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
-uint8_t Key(uint8_t *num, uint8_t *tic, uint8_t *control);                                  // Читаем мышь и клавиатуру, заполняем буфер при необходимости RealTime
+uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости
 void ShowC(void);                                                                           // Инвертировать поля с позиции курсора согласно vlen
 uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
 
