@@ -29,7 +29,7 @@ char      *Cvdat      = NULL;
 typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch, ShowC; } R_;
-V_ VP = {0,0,0,0,0,0,CellLine,String,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
+V_ VP = {1,1,0,0,0,0,CellLine,String,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC};
 B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 R_ VRam = {0,0,1,0};
 
@@ -170,7 +170,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t = 0, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
   if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) { int16_t dx = 0, dy = 0; uint16_t y, x = TermCR(&y);
-    Buf.Mkey = (uint8_t)Buf.key[2]; Buf.MX = (uint8_t)Buf.key[3] - 33; Buf.MY = (uint8_t)Buf.key[4] - 33;
+    Buf.Mkey = (uint8_t)Buf.key[2]; Buf.MX = (uint8_t)Buf.key[3] - 32; Buf.MY = (uint8_t)Buf.key[4] - 32;
     if (Buf.Mkey == Buf.Lk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
     else if (Buf.Mkey == Buf.Mk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.MkX = VP.X; Buf.MkY = VP.Y; t++; }
     else if (Buf.Mkey == Buf.Rk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.RkX = VP.X; Buf.RkY = VP.Y; t++; }
@@ -180,18 +180,18 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
     else if (Buf.Mkey == Buf.cRd) dx--;
     if (dy) { VP.Y += dy * VP.dXY; t++;
       if (!(VP.Mode & 6)) { VP.viewY += dy * VP.dXY;
-        if ((VP.Y + VP.viewY) < 0) { VP.viewY = - VP.Y; t++; }
-        else if ((VP.Y + VP.viewY) >= y) { VP.viewY = y - 1 - VP.Y; t++; } }
+        if ((VP.Y + VP.viewY) < 1) { VP.viewY = 1 - VP.Y; t++; }
+        else if ((VP.Y + VP.viewY) > y) { VP.viewY = y - VP.Y; t++; } }
       else {
-        if (VP.Y + VP.viewY < 0) VP.Y = -VP.viewY;
-        else if (VP.Y + VP.viewY >= y) VP.Y = y - 1 - VP.viewY; } } 
+        if (VP.Y + VP.viewY < 1) VP.Y = 1 - VP.viewY;
+        else if (VP.Y + VP.viewY > y) VP.Y = y - VP.viewY; } } 
     else if (dx) { VP.X += dx * VP.dXY; t++;
           if (!(VP.Mode & 6)) { VP.viewX += dx * VP.dXY;
-            if ((VP.X + VP.viewX) < 0) { VP.viewX = - VP.X; t++; }
-            else if ((VP.X + VP.viewX) >= x) { VP.viewX = x - 1 - VP.X; t++; } }
+            if ((VP.X + VP.viewX) < 1) { VP.viewX = 1 - VP.X; t++; }
+            else if ((VP.X + VP.viewX) > x) { VP.viewX = x - VP.X; t++; } }
           else {
-            if (VP.X + VP.viewX < 0) VP.X = -VP.viewX;
-            else if (VP.X + VP.viewX >= x) VP.X = x - 1 - VP.viewX; } }
+            if (VP.X + VP.viewX < 1) VP.X = 1 - VP.viewX;
+            else if (VP.X + VP.viewX > x) VP.X = x - VP.viewX; } }
     *control = t; return c; }
   if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
@@ -226,20 +226,20 @@ uint8_t ViewPort(void) {
       else if (VP.Cod == VP.up) VP.Y -= VP.dXY;
       else if (VP.Cod == VP.ud) VP.Y += VP.dXY; }
     if (VP.Mode & 6) {
-      if (VP.X + VP.viewX < 0) VP.X = -VP.viewX;
-      else if (VP.X + VP.viewX >= c) VP.X = c - 1 - VP.viewX;
-      if (VP.Y + VP.viewY < 0) VP.Y = -VP.viewY;
-      else if (VP.Y + VP.viewY >= r) VP.Y = r - 1 - VP.viewY; }
+      if (VP.X + VP.viewX < 1) VP.X = 1 - VP.viewX;
+      else if (VP.X + VP.viewX > c) VP.X = c - VP.viewX;
+      if (VP.Y + VP.viewY < 1) VP.Y = 1 - VP.viewY;
+      else if (VP.Y + VP.viewY > r) VP.Y = r - VP.viewY; }
     else { control--;
-      if ((VP.X + VP.viewX) < 0) { VP.viewX = - VP.X; control++; }
-      else if ((VP.X + VP.viewX) >= c) { VP.viewX = c - 1 - VP.X; control++; }
-      if ((VP.Y + VP.viewY) < 0) { VP.viewY = - VP.Y; control++; }
-      else if ((VP.Y + VP.viewY) >= r) { VP.viewY = r - 1 - VP.Y; control++; } } }
+      if ((VP.X + VP.viewX) < 1) { VP.viewX = 1 - VP.X; control++; }
+      else if ((VP.X + VP.viewX) > c) { VP.viewX = c - VP.X; control++; }
+      if ((VP.Y + VP.viewY) < 1) { VP.viewY = 1 - VP.Y; control++; }
+      else if ((VP.Y + VP.viewY) > r) { VP.viewY = r - VP.Y; control++; } } }
   if (SyncSize(VRam.addr)) { int16_t dr = r, dc = c; c = TermCR(&r); dr -= r; dc -= c; Print(Cdefault,Cls);
-    if (VP.X + VP.viewX >= c) VP.X = c - 1 - VP.viewX;
-    else if (VP.X + VP.viewX < 0)  VP.X = -VP.viewX;
-    if (VP.Y + VP.viewY >= r) VP.Y = r - 1 - VP.viewY;
-    else if (VP.Y + VP.viewY < 0)  VP.Y = -VP.viewY;
+    if (VP.X + VP.viewX > c) VP.X = c - VP.viewX;
+    else if (VP.X + VP.viewX < 1)  VP.X = 1 - VP.viewX;
+    if (VP.Y + VP.viewY > r) VP.Y = r - VP.viewY;
+    else if (VP.Y + VP.viewY < 1)  VP.Y = 1 - VP.viewY;
     if (control) { 
       if (dr < 0 || dc < 0) control--; } }
   ShowC(r,c); return 1; }
