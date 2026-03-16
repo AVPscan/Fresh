@@ -86,7 +86,7 @@ enum {                              // Attr(y,x)     структура атри
     Msmem = 0x20,                   // shape memory   5(0 нет) память формы, резиновые структуры [просто лень затирать хвосты] - усложнение рендера но это просто удобно и 67 ускоряют однако
     Mdata = 0x40,                   // bata           6(0 нет) есть ли данные в ячейке или пробел[ы]
     Fresh = 0x80,                   // degree         7(0 нет) есть ли изменения в ячейке
-                                    //               клавиатура реальное время и буфер на 256 клавиш если прозевали
+                                    //               клавиатура реальное время и буфер на 255/510 клавиш если прозевали
     Free = 0x14,                    // pause          20мс не гудим даже на одноядерном
                                     //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
@@ -117,14 +117,14 @@ uint8_t UTFinfo(char *s);                                                       
 uint8_t UTFinfoTile(char *s, Cell len);                                                     // Рассказ об utf8 возвращает [data] с учётом буфера
 void Print(uint8_t n, char *str);                                                           // Для отладки
 void InitVram(Cell addr, Cell size);                                                        // Инициализация мира
-Cell SystemSwitch(void);                                                                    // Вход и выход в мир
+Cell SystemSwitch(void);                                                                    // Вход/выход в мир
 uint8_t PushKey(char *key);                                                                 // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
 uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                                  // Показать ожидаемую/получаемую клавишу
 uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 void ForgetKey(void);                                                                       // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
-uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости
-void ShowC(void);                                                                           // Инвертировать поля с позиции курсора согласно vlen
+uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+void ShowC(uint16_t r, uint16_t c);                                                         // Инвертировать поля с позиции курсора согласно vlen
 uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
 
 Cell SysWrite(void *buf, Cell len);                                                         // Выстрел в терминал
