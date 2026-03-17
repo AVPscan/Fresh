@@ -166,34 +166,35 @@ void ForgetKey(void) {
 uint16_t Keys(void) {
   uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x80) s++; }
   return s; }
+uint8_t Mouse(uint8_t key, uint8_t kx, uint8_t ky) {
+  uint8_t t = 0; int16_t dx = 0, dy = 0; uint16_t y, x = TermCR(&y); Buf.Mkey = key; Buf.MX = kx - 32; Buf.MY = ky - 32;
+  if (Buf.Mkey == Buf.Lk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
+  else if (Buf.Mkey == Buf.Mk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.MkX = VP.X; Buf.MkY = VP.Y; t++; }
+  else if (Buf.Mkey == Buf.Rk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.RkX = VP.X; Buf.RkY = VP.Y; t++; }
+  if (Buf.Mkey == Buf.Ru) dy--;
+  else if (Buf.Mkey == Buf.Rd) dy++;
+  else if (Buf.Mkey == Buf.cRu) dx++;
+  else if (Buf.Mkey == Buf.cRd) dx--;
+  if (dy) { VP.Y += dy * VP.dXY; t++;
+    if (!(VP.Mode & 6)) { VP.viewY += dy * VP.dXY;
+      if ((VP.Y + VP.viewY) < 1) { VP.viewY = 1 - VP.Y; t++; }
+      else if ((VP.Y + VP.viewY) > y) { VP.viewY = y - VP.Y; t++; } }
+    else {
+      if (VP.Y + VP.viewY < 1) VP.Y = 1 - VP.viewY;
+      else if (VP.Y + VP.viewY > y) VP.Y = y - VP.viewY; } } 
+  else if (dx) { VP.X += dx * VP.dXY; t++;
+        if (!(VP.Mode & 6)) { VP.viewX += dx * VP.dXY;
+          if ((VP.X + VP.viewX) < 1) { VP.viewX = 1 - VP.X; t++; }
+          else if ((VP.X + VP.viewX) > x) { VP.viewX = x - VP.X; t++; } }
+        else {
+          if (VP.X + VP.viewX < 1) VP.X = 1 - VP.viewX;
+          else if (VP.X + VP.viewX > x) VP.X = x - VP.viewX; } }
+  return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
-  uint8_t t = 0, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
+  uint8_t c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
   if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return c; }
-  if (c == K_Mouse) { int16_t dx = 0, dy = 0; uint16_t y, x = TermCR(&y);
-    Buf.Mkey = (uint8_t)Buf.key[2]; Buf.MX = (uint8_t)Buf.key[3] - 32; Buf.MY = (uint8_t)Buf.key[4] - 32;
-    if (Buf.Mkey == Buf.Lk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
-    else if (Buf.Mkey == Buf.Mk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.MkX = VP.X; Buf.MkY = VP.Y; t++; }
-    else if (Buf.Mkey == Buf.Rk) { VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.RkX = VP.X; Buf.RkY = VP.Y; t++; }
-    if (Buf.Mkey == Buf.Ru) dy--;
-    else if (Buf.Mkey == Buf.Rd) dy++;
-    else if (Buf.Mkey == Buf.cRu) dx++;
-    else if (Buf.Mkey == Buf.cRd) dx--;
-    if (dy) { VP.Y += dy * VP.dXY; t++;
-      if (!(VP.Mode & 6)) { VP.viewY += dy * VP.dXY;
-        if ((VP.Y + VP.viewY) < 1) { VP.viewY = 1 - VP.Y; t++; }
-        else if ((VP.Y + VP.viewY) > y) { VP.viewY = y - VP.Y; t++; } }
-      else {
-        if (VP.Y + VP.viewY < 1) VP.Y = 1 - VP.viewY;
-        else if (VP.Y + VP.viewY > y) VP.Y = y - VP.viewY; } } 
-    else if (dx) { VP.X += dx * VP.dXY; t++;
-          if (!(VP.Mode & 6)) { VP.viewX += dx * VP.dXY;
-            if ((VP.X + VP.viewX) < 1) { VP.viewX = 1 - VP.X; t++; }
-            else if ((VP.X + VP.viewX) > x) { VP.viewX = x - VP.X; t++; } }
-          else {
-            if (VP.X + VP.viewX < 1) VP.X = 1 - VP.viewX;
-            else if (VP.X + VP.viewX > x) VP.X = x - VP.viewX; } }
-    *control = t; return c; }
-  if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
+  if (c == K_Mouse) { *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
+  if (c && *num < K_Max) { uint8_t t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
   if (c) { *tic = ++Buf.tic; return c; }
   *control = c; return c; }

@@ -123,6 +123,7 @@ uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                      
 uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 void ForgetKey(void);                                                                       // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
+uint8_t Mouse(uint8_t key, uint8_t kx, uint8_t ky);                                         // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 void ShowC(uint16_t r, uint16_t c);                                                         // Инвертировать поля с позиции курсора согласно vlen
 uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
