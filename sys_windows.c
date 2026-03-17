@@ -86,18 +86,15 @@ int16_t SyncSize(size_t addr) {
     if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return 0;
-    uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-    uint16_t h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-    if (w == TS.col && h == TS.row) return 0;
-    if (Flag.SyncSize) { 
-        uint8_t stable = 3;
-        while (stable) { stable--;
-            Delay_ms(0);
-            if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
-                uint16_t cur_w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-                uint16_t cur_h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
-                if (cur_w != w || cur_h != h) { w = cur_w; h = cur_h; stable = 3; } } } }
-    TS.col = w; TS.row = h; Flag.SyncSize = 1; return 1; }
+    uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left;
+    uint16_t h = csbi.srWindow.Bottom - csbi.srWindow.Top;
+    if (w == TS.col - 1 && h == TS.row - 1) return 0;
+    if (Flag.SyncSize) { uint8_t stable = 3; if (w < TS.col - 1 || h < TS.row - 1) Print(Cconvas,Cls);
+      while (stable--) { Delay_ms(3);
+        if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
+          if ((csbi.srWindow.Right - csbi.srWindow.Left) != w || (csbi.srWindow.Bottom - csbi.srWindow.Top) != h) { 
+            w = csbi.srWindow.Right - csbi.srWindow.Left; h = csbi.srWindow.Bottom - csbi.srWindow.Top; stable = 3; } } } }
+    TS.col = w + 1; TS.row = h + 1; Flag.SyncSize = 1; return 1; }
 
 Cell GetCycles(void) {
     LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }

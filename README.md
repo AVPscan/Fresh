@@ -69,7 +69,7 @@ The engine is engineered for resource-constrained environments. By managing outp
 
 - `sys.h` — Low-level macros, color palettes, and system constants.
 - `engine.c` — The core: memory management, viewport logic, and event processing.
-- `sys_linux.c` / `sys_windows.c` — Platform-specific system layers.
+- `sys_linux.c` / `sys.macos.c` / `sys_windows.c` — Platform-specific system layers.
 
 ## 👨‍💻 Author
 
