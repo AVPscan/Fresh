@@ -1,6 +1,8 @@
 
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
 
+Неделя потеряна в ЦЗН Томска, но я вернулся - теперь математика в норме, пришлось реально замедлять перемещения вьюпорта при `+ctrl` а то слишком быстро - теперь прыгаем пространствами учитывая ускорение.
+
 ## Вьюпорт мышь клавиатура изменение размеров и масштаба, нет рендера (наполнение файл порт) вложенности окон.
 `keyboard` `up`,`down`,`left`,`rigth` `+ctrl` `mouse` `+shift roll` `mouse` `+ctrl roll` — `F2F3F4`,`esc`
 
