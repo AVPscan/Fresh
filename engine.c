@@ -192,15 +192,14 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if (c) *tic = ++Buf.tic;
   return c; }
 
-void ShowC(uint16_t r, uint16_t c) {
+void ShowC(uint16_t c) {
   if (VRam.ShowC) VRam.ShowC = 0;
   else { VP.Cx = VP.X; VP.Cy = VP.Y; VRam.ShowC = 1; }
-  if ((VP.Mode & 1) && (uint16_t)(VP.Cx - 1) < c && (uint16_t)(VP.Cy - 1) < r) {
+  if ((VP.Mode & 1) && (uint16_t)(VP.Cx - 1) < VP.MX && (uint16_t)(VP.Cy - 1) < VP.MY) {
     int16_t x = VP.Cx; uint8_t *a = Attr(VP.Cy,x), len = *Visi(VP.Cy, x); if (len > 4) len = 4;
     while (len-- && x++ < c) { *a ^= Minv; *a++ |= Fresh; } } }
 uint8_t ViewPort(void) {
-  uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode;
-  ShowC(r,c); Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
+  uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
     if ((uint16_t)(VP.X - 1) < VP.MX && (uint16_t)(VP.Y - 1) < VP.MY) { 
@@ -218,19 +217,20 @@ uint8_t ViewPort(void) {
       if (VP.Mode & 6) {
         VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
         VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-      else { int16_t dx = -(VP.X - 1)/c, dy = -(VP.Y - 1)/r;
+      else { int16_t dx = -(VP.X - 1)/c, dy = -(VP.Y - 1)/r; s = (VP.dXY + 15)/16;
         if (VP.viewX != dx*c) { VP.viewX = dx*c; control++; }
         if (VP.viewY != dy*r) { VP.viewY = dy*r; control++; }
-        if (VP.Cod == VP.cle) { VP.viewX -= c*(VP.dXY + 31)/32; VP.X -= c*(VP.dXY + 31)/32; control++; }
-        else if (VP.Cod == VP.cri) { VP.viewX += c*(VP.dXY + 31)/32; VP.X += c*(VP.dXY + 31)/32; control++; }
-        else if (VP.Cod == VP.cup) { VP.viewY -= r*(VP.dXY + 7)/8; VP.Y -= r*(VP.dXY + 7)/8; control++; }
-        else if (VP.Cod == VP.cdo) { VP.viewY += r*(VP.dXY + 7)/8; VP.Y += r*(VP.dXY + 7)/8; control++; } } } }
-  if (SyncSize(VRam.addr)) { int16_t dr = r, dc = c; c = TermCR(&r); dr = r - dr; dc = c - dc;
+        dx = c*s; dy = r*(c*s/r);
+        if (VP.Cod == VP.cle) { VP.viewX -= dx; VP.X -= dx; control++; }
+        else if (VP.Cod == VP.cri) { VP.viewX += dx; VP.X += dx; control++; }
+        else if (VP.Cod == VP.cup) { VP.viewY -= dy; VP.Y -= dy; control++; }
+        else if (VP.Cod == VP.cdo) { VP.viewY += dy; VP.Y += dy; control++; } } } }
+  if (SyncSize(VRam.addr)) { c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
-    VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY;
-    if (control > 1) { control--; }
-    else { control--; } }
-  ShowC(r,c); return 1; }
+    VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
+  if (control > 1) { control--; }
+  else { control--; }
+  return 1; }
 
 void Show(void) {
   char *p = Cvdat; uint8_t l, v, q = 0, w = 0, i = 8; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size;
