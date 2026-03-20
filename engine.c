@@ -179,7 +179,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
     if (VP.Mode & 6) {
       VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
       VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-    else { dx = -(VP.X - 1)/c; dy = -(VP.Y - 1)/r;
+    else { dx = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; dy = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
       if (VP.viewX != dx*c) { VP.viewX = dx*c; t++; }
       if (VP.viewY != dy*r) { VP.viewY = dy*r; t++; } } }
   return t; }
@@ -196,7 +196,7 @@ void ShowC(uint16_t c) {
   if (VRam.ShowC) VRam.ShowC = 0;
   else { VP.Cx = VP.X; VP.Cy = VP.Y; VRam.ShowC = 1; }
   if ((VP.Mode & 1) && (uint16_t)(VP.Cx - 1) < VP.MX && (uint16_t)(VP.Cy - 1) < VP.MY) {
-    int16_t x = VP.Cx; uint8_t *a = Attr(VP.Cy,x), len = *Visi(VP.Cy, x); if (len > 4) len = 4;
+    int16_t x = VP.Cx + VP.viewX - 1; uint8_t *a = Attr(VP.Cy,x), len = *Visi(VP.Cy, x); if (len > 4) len = 4;
     while (len-- && x++ < c) { *a ^= Minv; *a++ |= Fresh; } } }
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
@@ -210,22 +210,18 @@ uint8_t ViewPort(void) {
     if (VP.Cod != VP.oCod) { VP.dXY = 1; VP.oCod = VP.Cod; }
     if (VP.Cod & 0x20) {
       if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 128)) VP.dXY <<= 1;
-      if (VP.Cod == VP.le) VP.X -= VP.dXY;
-      else if (VP.Cod == VP.ri) VP.X += VP.dXY;
-      else if (VP.Cod == VP.up) VP.Y -= VP.dXY;
-      else if (VP.Cod == VP.ud) VP.Y += VP.dXY;
+      if (VP.Cod == VP.le || VP.Cod == VP.cle) VP.X -= VP.dXY;
+      else if (VP.Cod == VP.ri || VP.Cod == VP.cri) VP.X += VP.dXY;
+      else if (VP.Cod == VP.up || VP.Cod == VP.cup) VP.Y -= VP.dXY;
+      else if (VP.Cod == VP.ud || VP.Cod == VP.cdo) VP.Y += VP.dXY;
       if (VP.Mode & 6) {
         VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
         VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-      else { int16_t dx = -(VP.X - 1)/c, dy = -(VP.Y - 1)/r; s = (VP.dXY + 15)/16;
-        if (VP.viewX != dx*c) { VP.viewX = dx*c; control++; }
-        if (VP.viewY != dy*r) { VP.viewY = dy*r; control++; }
-        dx = c*s; dy = r*(c*s/r);
-        if (VP.Cod == VP.cle) { VP.viewX -= dx; VP.X -= dx; control++; }
-        else if (VP.Cod == VP.cri) { VP.viewX += dx; VP.X += dx; control++; }
-        else if (VP.Cod == VP.cup) { VP.viewY -= dy; VP.Y -= dy; control++; }
-        else if (VP.Cod == VP.cdo) { VP.viewY += dy; VP.Y += dy; control++; } } } }
-  if (SyncSize(VRam.addr)) { c = TermCR(&r); control++;
+      else { int16_t x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c, y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
+        if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
+        if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
+  if (SyncSize(VRam.addr)) {
+    c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
     VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
   if (control > 1) { control--; }
@@ -237,7 +233,7 @@ void Show(void) {
   Print(CdefaultB,Home); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) >= c) *(Cvdat + c) = 0;
   Print(Corange,Cvdat); if (r < 2) return;
-  snprintf(Cvdat, 100, "\nx%d y%d wx%d wy%d xy%d                      ", VP.X, VP.Y, VP.viewX, VP.viewY, VP.dXY); if (StrLen(Cvdat) >= c) *(Cvdat + c + 1) = 0;
+  snprintf(Cvdat, 100, "\nx%d y%d wx%d wy%d                      ", VP.X, VP.Y, VP.X + VP.viewX, VP.Y + VP.viewY); if (StrLen(Cvdat) >= c) *(Cvdat + c + 1) = 0;
   Print(CredB,Cvdat); if (r < 3) return;
   if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
     p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
