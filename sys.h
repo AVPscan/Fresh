@@ -50,34 +50,33 @@
     #define Gold    "\033[38;5;178m"
   #endif
 #endif
-
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)
-
-enum { 
-    CellPow = 13,
-    Utf8 = 4,
-    CellLine = 1 << CellPow,
-    String = CellLine * 987 / 1597,
-    SKey = 256,                     // [256] Ring buffer
-    SizePal = 32,                   // [32] colour anci
-    SizeKey = Utf8 + 4,             // [8]( data1 data2 tic1 tic2 UTF8[4 byte] )
-    
-    SizeData = String * CellLine * 4,
-    SizeOffset = String * CellLine * 2,
-    SizeAttr = String * CellLine,
-    SizeVizLen = String * CellLine,
-    SizeLen = String * CellLine,
-    SizePalBuff = SizePal * SizePal,
-    SizeKeyBuf = SKey * SizeKey,
-    SizeVBuff = CellLine * CellLine / 2,
-    SizeVram = SizeData + SizeOffset + SizeAttr + SizeVizLen + SizeLen + SizePalBuff + SizeKeyBuf + SizeVBuff,
-    
-    Data_shift = CellPow + 2,
-    Offset_row_shift = CellPow + 1,
-    Parse_shift = Utf8 + 1,
-    KeyBuf_shift = Utf8 - 1 };
-
+enum {
+    SKey = 256,                             // [256] Ring buffer
+    SizePal = 32,                           // [32] buffer colour anci
+    SizeKey = 8,                            // [8] (data1 data2 tic1 tic2 UTF8[4 byte])
+    Utf8 = 4,                               // Max length utf8
+    Bit32 = 2,                              // 2^2 4 bytes
+    Bit16 = 1,                              // 2^1 2 bytes
+    CellPow = 13,                           // 2^CellPow
+    Data_shift = CellPow + Bit32,           // 2^(CellPow + 2) Utf8 per cell
+    Offset_row_shift = CellPow + Bit16,     // 2^(CellPow + 1) 2 bytes per cell offset
+    Parse_shift = Utf8 + Bit16,             // 2^5 32 bytes per palette cell
+    KeyBuf_shift = Utf8 - Bit16,            // 2^3 8 bytes per keyboard buffer cell
+    Win_shift = Bit16,                      // 2^1 2 bytes window string length
+    CellLine = 1 << CellPow,                // Max cell utf8 in line
+    CellStr = CellLine * 987 / 1597,        // Max cell utf8 string
+    SizeData = CellStr * CellLine * Utf8,   // Data array cell uft8
+    SizeAttr = CellStr * CellLine,          // Attribute array cell utf8
+    SizeVisLen = CellStr * CellLine,        // Visual length array cell utf8
+    SizeLen = CellStr * CellLine,           // Length array cell utf8
+    SizeOffset = CellStr * CellLine * 2,    // Offset cell utf8 in line
+    SizeVlsWin = CellStr * SKey * 2,        // Visual line length in the window [256]
+    SizePalBuff = SizePal * SizePal,        // Palette array [8*4][32]
+    SizeKeyBuf = SKey * SizeKey,            // Keyboard buffer [256][8]
+    SizeVBuff = CellLine * CellLine / 2,    // Video buffer
+    SizeVram = SizeData + SizeAttr + SizeVisLen + SizeLen + SizeOffset + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
 enum {                              // Attr(y,x)     структура атрибута
     Minv = 0x01,                    // invers         0(0 нет)
     Mbol = 0x02,                    // bold           1(0 нет)
@@ -91,7 +90,6 @@ enum {                              // Attr(y,x)     структура атри
                                     //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
     Off = 0 };
-
 enum { K_NO,
     K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G, K_DEL,
     K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O, K_Ctrl_P,
@@ -101,7 +99,6 @@ enum { K_NO,
     K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2, K_F3,
     K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10, K_F11,
     K_F12, K_F13, K_F14, K_F15, K_BAC = 127, K_Max = K_F15 + 1 };
-
 enum {
     Cdefault, CdefaultI, CdefaultB, CdefaultBI, Cgrey, CgreyI, CgreyB, CgreyBI,
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
@@ -125,7 +122,6 @@ void ForgetKey(void);                                                           
 uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                                           // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
-void ShowC(uint16_t c);                                                                     // Инвертировать поля с позиции курсора согласно vlen
 uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
 
 Cell SysWrite(void *buf, Cell len);                                                         // Выстрел в терминал
