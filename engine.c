@@ -20,11 +20,11 @@ char      *Cpdat      = NULL;
 char      *Ckbuf      = NULL;
 char      *Cvdat      = NULL;
 #define Data(r)       (Cdata + ((r) << Data_shift))
-#define Attr(r, c)    (Cattr + ((r) << CellPow) + (c))
-#define Visi(r, c)    (Cvlen + ((r) << CellPow) + (c))
-#define Len(r, c)     (Clen + ((r) << CellPow) + (c))
+#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))
+#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))
+#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))
 #define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))
-#define VlsWin(r, n)  (Cvlswin + ((n) << Win_shift) + (r))
+#define VlsWin(r, n)  (Cvlswin + ((r) << Win_shift) + (n))
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))
 

@@ -12,14 +12,14 @@
 
 #include <stdint.h>
 
-#define Reset       "\033[0m"       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
-#define Cls         "\033[2J\033[H" // Очистить экран и в начало
-#define Home        "\033[H"        // В начало экрана
-#define HideCur     "\033[?25l"     // Скрыть курсор
-#define ShowCur     "\033[?25h"     // Показать курсор
-#define WrapOn      "\033[?7h"      // Включить перенос длинных строк
-#define WrapOff     "\033[?7l"      // Выключить перенос строк
-#define MouseX10on  "\033[?1000h"   // Включаем мышь
+#define Reset       "\033[0m"                                       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
+#define Cls         "\033[2J\033[H"                                 // Очистить экран и в начало
+#define Home        "\033[H"                                        // В начало экрана
+#define HideCur     "\033[?25l"                                     // Скрыть курсор
+#define ShowCur     "\033[?25h"                                     // Показать курсор
+#define WrapOn      "\033[?7h"                                      // Включить перенос длинных строк
+#define WrapOff     "\033[?7l"                                      // Выключить перенос строк
+#define MouseX10on  "\033[?1000h"                                   // Включаем мышь
 #define MouseX10off "\033[?1000l"
 #define AltBufOn    "\033[?1049h"
 #define AltBufOff   "\033[?1049l"
@@ -35,12 +35,12 @@
   #define Gold    ""
 #else
   #ifdef USE_RGB
-    #define Grey    "\033[38;2;120;120;120m" // Бледный нейтральный
-    #define Green   "\033[38;2;34;139;34m"   // Глубокий лесной
-    #define Red     "\033[38;2;220;20;60m"   // Насыщенный малиновый
-    #define Blue    "\033[38;2;30;144;255m"  // Яркий небесный
-    #define Orange  "\033[38;2;210;105;30m"  // Сочный оранжевый
-    #define Gold    "\033[38;2;184;134;11m"  // Светящийся золотой
+    #define Grey    "\033[38;2;120;120;120m"                        // Бледный нейтральный
+    #define Green   "\033[38;2;34;139;34m"                          // Глубокий лесной
+    #define Red     "\033[38;2;220;20;60m"                          // Насыщенный малиновый
+    #define Blue    "\033[38;2;30;144;255m"                         // Яркий небесный
+    #define Orange  "\033[38;2;210;105;30m"                         // Сочный оранжевый
+    #define Gold    "\033[38;2;184;134;11m"                         // Светящийся золотой
   #else
     #define Grey    "\033[38;5;244m"
     #define Green   "\033[38;5;28m"
@@ -53,41 +53,43 @@
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)
 enum {
-    SKey = 256,                             // [256] Ring buffer
-    SizePal = 32,                           // [32] buffer colour anci
-    SizeKey = 8,                            // [8] (data1 data2 tic1 tic2 UTF8[4 byte])
-    Utf8 = 4,                               // Max length utf8
-    Bit32 = 2,                              // 2^2 4 bytes
-    Bit16 = 1,                              // 2^1 2 bytes
-    CellPow = 13,                           // 2^CellPow
-    Data_shift = CellPow + Bit32,           // 2^(CellPow + 2) Utf8 per cell
-    Offset_row_shift = CellPow + Bit16,     // 2^(CellPow + 1) 2 bytes per cell offset
-    Parse_shift = Utf8 + Bit16,             // 2^5 32 bytes per palette cell
-    KeyBuf_shift = Utf8 - Bit16,            // 2^3 8 bytes per keyboard buffer cell
-    Win_shift = Bit16,                      // 2^1 2 bytes window string length
-    CellLine = 1 << CellPow,                // Max cell utf8 in line
-    CellStr = CellLine * 987 / 1597,        // Max cell utf8 string
-    SizeData = CellStr * CellLine * Utf8,   // Data array cell uft8
-    SizeAttr = CellStr * CellLine,          // Attribute array cell utf8
-    SizeVisLen = CellStr * CellLine,        // Visual length array cell utf8
-    SizeLen = CellStr * CellLine,           // Length array cell utf8
-    SizeOffset = CellStr * CellLine * 2,    // Offset cell utf8 in line
-    SizeVlsWin = CellStr * SKey * 2,        // Visual line length in the window [256]
-    SizePalBuff = SizePal * SizePal,        // Palette array [8*4][32]
-    SizeKeyBuf = SKey * SizeKey,            // Keyboard buffer [256][8]
-    SizeVBuff = CellLine * CellLine / 2,    // Video buffer
+    SKey = 256,                                                     // [256] Ring buffer
+    SizePal = 32,                                                   // [32] buffer colour anci
+    SizeKey = 8,                                                    // [8] (data1 data2 tic1 tic2 UTF8[4 byte])
+    Utf8 = 4,                                                       // Max length utf8
+    Bit32 = 2,                                                      // 2^2 4 bytes
+    Bit16 = 1,                                                      // 2^1 2 bytes
+    CellPow = 13,                                                   // 2^CellPow
+    Data_shift = CellPow + Bit32,                                   // 2^(CellPow + 2) Offset Utf8 per cell
+    Offset_row_shift = CellPow + Bit16,                             // 2^(CellPow + 1) Offset 2 bytes per cell offset
+    AVL_shift = CellPow,                                            // 2^(CellPow) Offset attr,vlen,len
+    Win_shift = SizeKey,                                            // 2^8 Offset 2 bytes window string length
+    Parse_shift = Utf8 + Bit16,                                     // 2^5 Offset 32 bytes per palette cell
+    KeyBuf_shift = Utf8 - Bit16,                                    // 2^3 Offset 8 bytes per keyboard buffer cell
+    CellLine = 1 << CellPow,                                        // Max cell utf8 in line
+    CellStr = CellLine * 987 / 1597,                                // Max cell utf8 string
+    SizeData = CellStr * CellLine * Utf8,                           // Data array cell uft8
+    SizeAttr = CellStr * CellLine,                                  // Attribute array cell utf8
+    SizeVisLen = CellStr * CellLine,                                // Visual length array cell utf8
+    SizeLen = CellStr * CellLine,                                   // Length array cell utf8
+    SizeOffset = CellStr * CellLine * 2,                            // Offset cell utf8 in line
+    SizeVlsWin = CellStr * SKey * 2,                                // Visual line length in the window [256]
+    SizePalBuff = SizePal * SizePal,                                // Palette array [8*4][32]
+    SizeKeyBuf = SKey * SizeKey,                                    // Keyboard buffer [256][8]
+    SizeVBuff = CellLine * CellLine / 2,                            // Video buffer
     SizeVram = SizeData + SizeAttr + SizeVisLen + SizeLen + SizeOffset + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
-enum {                              // Attr(y,x)     структура атрибута
-    Minv = 0x01,                    // invers         0(0 нет)
-    Mbol = 0x02,                    // bold           1(0 нет)
-    Mcol = 0x1C,                    // color 0-7      2(0...7) цвет 0-6 холст 7 вокруг
-    Mcbi = 0x1F,                    //                34 
-    Msmem = 0x20,                   // shape memory   5(0 нет) память формы, резиновые структуры [просто лень затирать хвосты] - усложнение рендера но это просто удобно и 67 ускоряют однако
-    Mdata = 0x40,                   // bata           6(0 нет) есть ли данные в ячейке или пробел[ы]
-    Fresh = 0x80,                   // degree         7(0 нет) есть ли изменения в ячейке
-                                    //               клавиатура реальное время и буфер на 255/510 клавиш если прозевали
-    Free = 0x14,                    // pause          20мс не гудим даже на одноядерном
-                                    //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
+enum {                                                              // Attr(y,x)     структура атрибута
+    Minv = 0x01,                                                    // invers         0(0 нет)
+    Mbol = 0x02,                                                    // bold           1(0 нет)
+    Mcol = 0x1C,                                                    // color 0-7      2(0...7) цвет 0-6 холст 7 вокруг
+    Mcbi = 0x1F,                                                    //                34 
+    Msmem = 0x20,                                                   // shape memory   5(0 нет) память формы, резиновые структуры [просто лень затирать хвосты] 
+                                                                    //                усложнение рендера но это просто удобно и 67 ускоряют однако
+    Mdata = 0x40,                                                   // bata           6(0 нет) есть ли данные в ячейке или пробел[ы]
+    Fresh = 0x80,                                                   // degree         7(0 нет) есть ли изменения в ячейке
+                                                                    //               клавиатура реальное время и буфер на 255/510 клавиш если прозевали
+    Free = 0x14,                                                    // pause          20мс не гудим даже на одноядерном
+                                                                    //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
     Off = 0 };
 enum { K_NO,
@@ -105,36 +107,36 @@ enum {
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
     Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
 // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
-Cell StrLen(char *s);                                                                       // Длина строки
-void MemSet(void* buf, uint8_t val, Cell len);                                              // Заполнение куска памяти val
-void MemCpy(void* dst, void* src, Cell len);                                                // Копирование куска памяти, без проверки наложения!
-int8_t MemCmp(void* dst, void* src, Cell len);                                              // Сравнение
-void MemMove(void* dst, void* src, Cell len);                                               // Копирование куска памяти с проверкой наложения
-uint8_t UTFinfo(char *s);                                                                   // Рассказ об utf8 возвращает [data]
-uint8_t UTFinfoTile(char *s, Cell len);                                                     // Рассказ об utf8 возвращает [data] с учётом буфера
-void Print(uint8_t n, char *str);                                                           // Для отладки
-void InitVram(Cell addr, Cell size);                                                        // Инициализация мира
-Cell SystemSwitch(void);                                                                    // Вход/выход в мир
-uint8_t PushKey(char *key);                                                                 // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
-uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);                                  // Показать ожидаемую/получаемую клавишу
-uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);                                   // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
-void ForgetKey(void);                                                                       // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
-uint16_t Keys(void);                                                                        // Сколько клавиш в буфере
-uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                                           // Обработка событий мыши с учётом рамок терминала
-uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);                           // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
-uint8_t ViewPort(void);                                                                     // Полёт над пространством с возможностью приземления на холст
+Cell StrLen(char *s);                                               // Длина строки
+void MemSet(void* buf, uint8_t val, Cell len);                      // Заполнение куска памяти val
+void MemCpy(void* dst, void* src, Cell len);                        // Копирование куска памяти, без проверки наложения!
+int8_t MemCmp(void* dst, void* src, Cell len);                      // Сравнение
+void MemMove(void* dst, void* src, Cell len);                       // Копирование куска памяти с проверкой наложения
+uint8_t UTFinfo(char *s);                                           // Рассказ об utf8 возвращает [data]
+uint8_t UTFinfoTile(char *s, Cell len);                             // Рассказ об utf8 возвращает [data] с учётом буфера
+void Print(uint8_t n, char *str);                                   // Для отладки
+void InitVram(Cell addr, Cell size);                                // Инициализация мира
+Cell SystemSwitch(void);                                            // Вход/выход в мир
+uint8_t PushKey(char *key);                                         // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);          // Показать ожидаемую/получаемую клавишу
+uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);           // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
+void ForgetKey(void);                                               // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
+uint16_t Keys(void);                                                // Сколько клавиш в буфере
+uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                   // Обработка событий мыши с учётом рамок терминала
+uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);   // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+uint8_t ViewPort(void);                                             // Полёт над пространством с возможностью приземления на холст
 
-Cell SysWrite(void *buf, Cell len);                                                         // Выстрел в терминал
-void SwitchRaw(void);                                                                       // Включение/выключение неблокирующего ввода RealTime
-void GetKey(char *b);                                                                       // Читаем utf8 из порта
-Cell GetRam(Cell *size);                                                                    // Взять память
-void FreeRam(Cell addr, Cell size);                                                         // Вернуть память
-void SWD(Cell addr);                                                                        // Установить рабочую директорию
-uint16_t TermCR(uint16_t *r);                                                               // Считать рамки терминала
-int16_t SyncSize(Cell addr);                                                                // Получить рамки терминала при необходимости стабилизировать
-Cell GetCycles(void);                                                                       // Тики
-void Delay_ms(uint8_t ms);                                                                  // Адаптивная задержка, гарантия точности ms
-Cell GetSC(Cell addr);                                                                      // Измерение пропускной способности терминала
+Cell SysWrite(void *buf, Cell len);                                 // Выстрел в терминал
+void SwitchRaw(void);                                               // Включение/выключение неблокирующего ввода RealTime
+void GetKey(char *b);                                               // Читаем utf8 из порта
+Cell GetRam(Cell *size);                                            // Взять память
+void FreeRam(Cell addr, Cell size);                                 // Вернуть память
+void SWD(Cell addr);                                                // Установить рабочую директорию
+uint16_t TermCR(uint16_t *r);                                       // Считать рамки терминала
+int16_t SyncSize(Cell addr);                                        // Получить рамки терминала при необходимости стабилизировать
+Cell GetCycles(void);                                               // Тики
+void Delay_ms(uint8_t ms);                                          // Адаптивная задержка, гарантия точности ms
+Cell GetSC(Cell addr);                                              // Измерение пропускной способности терминала
 
-void Show(void);                                                                            // Для отладки
+void Show(void);                                                    // Для отладки
 #endif /* SYS_H */
