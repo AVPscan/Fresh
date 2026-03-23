@@ -19,15 +19,15 @@ uint16_t  *Cvlswin    = NULL;
 char      *Cpdat      = NULL;
 char      *Ckbuf      = NULL;
 char      *Cvdat      = NULL;
-#define Data(r)       (Cdata + ((r) << Data_shift))
-#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))
-#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))
-#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))
-#define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))
-#define VlsWin(r, n)  (Cvlswin + ((r) << Win_shift) + (n))
-#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))
-#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))
-
+#define Data(r)       (Cdata + ((r) << Data_shift))                 // адрес начала буфера строки холста
+#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))            // адрес атрибута ячейки холста
+#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))            // адрес визуальной длины ячейки холста
+#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))             // адрес длины ячейки в байтах холста
+#define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))   // адрес смещения данных ячейки холста от начала буфера строки
+#define VlsWin(r, n)  (Cvlswin + ((r) << Win_shift) + (n))          // адрес длин строк окон n[0..255]
+#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))              // адрес начала anci кода цвета cbi[0..31] - [8][4]
+#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))               // адрес начала клавиши в буфере n[0..255],
+                                                                    // если две подряд клавиши имеют 1-2 байтовый код(управляющие так же) то упаковываются в одну ячейку
 typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch, ShowC; } R_;
