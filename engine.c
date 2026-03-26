@@ -20,14 +20,14 @@ char      *Cpdat      = NULL;
 char      *Ckbuf      = NULL;
 char      *Cvdat      = NULL;
 #define Data(r)       (Cdata + ((r) << Data_shift))                 // адрес начала буфера строки холста
-#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))            // адрес атрибута ячейки холста
-#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))            // адрес визуальной длины ячейки холста
-#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))             // адрес длины ячейки в байтах холста
+#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))            // адрес атрибута ячейки холста [0..255]
+#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))            // адрес визуальной длины ячейки холста [0,1,2]
+#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))             // адрес длины ячейки в байтах холста [0 - нет данных [1..255] длина]
 #define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))   // адрес смещения данных ячейки холста от начала буфера строки
 #define VlsWin(r, n)  (Cvlswin + ((r) << Win_shift) + (n))          // адрес длин строк окон n[0..255]
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))              // адрес начала anci кода цвета cbi[0..31] - [8][4]
-#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))               // адрес начала клавиши в буфере n[0..255],
-                                                                    // если две подряд клавиши имеют 1-2 байтовый код(управляющие так же) то упаковываются в одну ячейку
+#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))               // адрес начала клавиши в буфере n[0..255], для 3/4 мира подходит - если две подряд клавиши
+                                                                    // имеют 1-2 байтовый код(управляющие так же) то упаковываются в одну ячейку {255/510 буфер}
 typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch, ShowC; } R_;
@@ -103,10 +103,9 @@ uint8_t UTFinfoTile(char *s, Cell len) {
   else if ((*s & 0xF8) == 0xF0 && len < 0x04) return 0xC0;
   return UTFinfo(s); }
 
-void Print(uint8_t n, char *str) { n &= Mcbi; if (!str) return;
-  char *dst = Cvdat + 1024, *sav; uint16_t len;
-  sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len;
-  len = StrLen(str); MemCpy(dst, str, len); dst += len;
+void Print(uint8_t n, char *str) {
+  char *dst = Cvdat + 1024, *sav; uint16_t len; n &= Mcbi; if (!str) return;
+  sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
   sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
@@ -199,19 +198,16 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
       if (VP.viewY != dy*r) { VP.viewY = dy*r; t++; } } }
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
-  uint8_t c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
-  if (*Buf.key == 27) {
-    c = *(Buf.key + 1); if (c == K_NO) return c; }
-  if (c == K_Mouse) {
-    *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
-  if (c && *num < K_Max) {
-    uint8_t t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
+  uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
+  if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return c; }
+  if (c == K_Mouse) { *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
+  if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
   if (c) *tic = ++Buf.tic;
   return c; }
 
 uint8_t ViewPort(void) {
-  uint16_t r, c = TermCR(&r); uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
+  uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
     if ((uint16_t)(VP.X - 1) < VP.MX && (uint16_t)(VP.Y - 1) < VP.MY) { 
@@ -230,7 +226,7 @@ uint8_t ViewPort(void) {
         VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
         VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
       else {
-        int16_t x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c, y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
+        x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
         if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
         if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
   if (SyncSize(VRam.addr)) {

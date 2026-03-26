@@ -87,9 +87,7 @@ enum {                                                              // Attr(y,x)
                                                                     //                усложнение рендера но это просто удобно и 67 ускоряют однако
     Mdata = 0x40,                                                   // bata           6(0 нет) есть ли данные в ячейке или пробел[ы]
     Fresh = 0x80,                                                   // degree         7(0 нет) есть ли изменения в ячейке
-                                                                    //               клавиатура реальное время и буфер на 255/510 клавиш если прозевали
     Free = 0x14,                                                    // pause          20мс не гудим даже на одноядерном
-                                                                    //               мышь реальное время, просто читаем из Buf.[Mkey, MX, MY, LkX, LkY, MkX, MkY, RkX, RkY]
     On = 1,
     Off = 0 };
 enum { K_NO,
@@ -111,7 +109,7 @@ Cell StrLen(char *s);                                               // Длин�
 void MemSet(void* buf, uint8_t val, Cell len);                      // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                        // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                      // Сравнение
-void MemMove(void* dst, void* src, Cell len);                       // Копирование куска памяти с проверкой наложения
+void MemMove(void* dst, void* src, Cell len);                       // Перемещение куска памяти с проверкой наложения
 uint8_t UTFinfo(char *s);                                           // Рассказ об utf8 возвращает [data]
 uint8_t UTFinfoTile(char *s, Cell len);                             // Рассказ об utf8 возвращает [data] с учётом буфера
 void Print(uint8_t n, char *str);                                   // Для отладки
