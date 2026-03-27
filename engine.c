@@ -39,9 +39,10 @@ Cell StrLen(char *s) { if (!s) return 0;
   char *f = s; while (*f++);
   return (--f - s); }
 void MemSet(void* buf, uint8_t val, Cell len) {
-  uint8_t *p = (uint8_t *)buf; while (len && ((Cell)p & (SizeCell - 1))) { *p++ = val; len--; }
+  uint8_t *p = (uint8_t *)buf;
+  while (len && ((Cell)p & (SizeCell - 1))) { len--; *p++ = val; }
   if (len >= SizeCell) {
-    Cell vW = val * ((Cell)-1 / 255); Cell *pW = (Cell *)p;
+    Cell vW = val * (((Cell) - 1) / 255); Cell *pW = (Cell *)p;
     Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *pW++ = vW;
     p = (uint8_t *)pW; }
   while (len--) *p++ = val; }
@@ -49,24 +50,26 @@ void MemCpy(void* dst, void* src, Cell len) {
   uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src;
   while (len && ((Cell)d & (SizeCell - 1))) { *d++ = *s++; len--; }
   if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-    Cell *dW = (Cell *)d; Cell *sW = (Cell *)s; Cell i = len / SizeCell;
-    len &= (SizeCell - 1); while (i--) *dW++ = *sW++;
+    Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
+    Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *dW++ = *sW++;
     d = (uint8_t *)dW; s = (uint8_t *)sW; }
   while (len--) *d++ = *s++ ; }
 void MemMove(void* dst, void* src, Cell len) {
-  if (dst > src) { uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src;
-    d += len; s += len; while (len && ((Cell)d & (SizeCell - 1))) { *--d = *--s; len--; }
+  if (dst > src) { 
+    uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src; d += len; s += len;
+    while (len && ((Cell)d & (SizeCell - 1))) { len--; *--d = *--s; }
     if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-      Cell *dW = (Cell *)d; Cell *sW = (Cell *)s; Cell i = len / SizeCell;
-      len &= (SizeCell - 1); while (i--) *--dW = *--sW;
-      d = (uint8_t *)dW; s = (uint8_t *)sW; } }
+      Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
+      Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *--dW = *--sW;
+      d = (uint8_t *)dW; s = (uint8_t *)sW; }
+    while (len--) *--d = *--s ; }
   else if (dst < src ) MemCpy(dst, src, len); }
 int8_t MemCmp(void* dst, void* src, Cell len) {
   uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src;
   while (len && ((Cell)d & (SizeCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
   if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
-    Cell *dW = (Cell *)d; Cell *sW = (Cell *)s; Cell i = len / SizeCell;
-    len %= SizeCell; while (i-- && (*dW++ == *sW++));
+    Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
+    Cell i = len / SizeCell; len %= (SizeCell - 1); while (i-- && (*dW++ == *sW++));
     if (i + 1) { --dW; --sW; len += SizeCell; }
     d = (uint8_t *)dW; s = (uint8_t *)sW; }
   while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
