@@ -239,12 +239,14 @@ uint8_t ViewPort(void) {
   else { control--; }
   return 1; }
 
+void Window(uint8_t n, uint8_t col, int16_t c, int16_t r) { (void)n; (void)col; (void)c; (void)r; }
+void WSet(uint8_t n, int16_t c, int16_t r) { (void)n; (void)c; (void)r; }
+void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
+  int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
+  (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
-void Window(uint8_t n, uint8_t col, int16_t c, int16_t r) { (void)n; (void)col; (void)c; (void)r; }
-void WConst(uint8_t n, char *str) { (void)n; (void)str; }
-void WSet(uint8_t n, int16_t c, int16_t r) { (void)n; (void)c; (void)r; }
 
 void Show(void) {
-  WData(0, "k"); WData(1, "b0d0d", VP.Mode, VP.X, VP.Y); }
+  WData(1, "bdd", VP.Mode, VP.X, VP.Y); WData(0, "k"); }

@@ -11,7 +11,6 @@
 #define SYS_H
 
 #include <stdint.h>
-#include <stdarg.h>
 
 #define Reset       "\033[0m"                                       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
 #define Cls         "\033[2J\033[H"                                 // Очистить экран и в начало
@@ -125,11 +124,13 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                   // Обра�
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);   // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                             // Полёт над пространством с возможностью приземления на холст
 void Show(void);                                                    // Для тестирования библиотеки
-void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);    // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
 void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);          // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 теневое)
-void WConst(uint8_t n, char *str);                                  // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
-void WSet(uint8_t n, int16_t c, int16_t r);                         // Привязка к рендеру (+ от левого верхнего - от противоположного 0 нет привязки)
-#define WData(n, str, ...) _WData(n, str, (uint8_t)(sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2 - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+void WSet(uint8_t n, int16_t c, int16_t r);                         // Привязка к рендеру ([1,1] левый верхний -> [-1,-1] от нижнего правого <- [0,0] холст)
+void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);   // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
+void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);    // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
+#define WConst(n, str, ...) _WConst(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+#define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+
 Cell SysWrite(void *buf, Cell len);                                 // Выстрел в терминал
 void SwitchRaw(void);                                               // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                               // Читаем utf8 из порта
@@ -141,5 +142,4 @@ int16_t SyncSize(Cell addr);                                        // Полу�
 Cell GetCycles(void);                                               // Тики
 void Delay_ms(uint8_t ms);                                          // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                              // Измерение пропускной способности терминала
-
 #endif /* SYS_H */
