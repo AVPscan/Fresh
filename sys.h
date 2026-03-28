@@ -11,6 +11,7 @@
 #define SYS_H
 
 #include <stdint.h>
+#include <stdarg.h>
 
 #define Reset       "\033[0m"                                       // СБРОСИТЬ ВСЁ (и цвета, и режимы)
 #define Cls         "\033[2J\033[H"                                 // Очистить экран и в начало
@@ -103,8 +104,8 @@ enum {
     Cdefault, CdefaultI, CdefaultB, CdefaultBI, Cgrey, CgreyI, CgreyB, CgreyBI,
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
-    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
-// [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
+    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };   // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма
+                                                                    // 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
 Cell StrLen(char *s);                                               // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                      // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                        // Копирование куска памяти, без проверки наложения!
@@ -112,7 +113,7 @@ int8_t MemCmp(void* dst, void* src, Cell len);                      // Срав�
 void MemMove(void* dst, void* src, Cell len);                       // Перемещение куска памяти с проверкой наложения
 uint8_t UTFinfo(char *s);                                           // Рассказ об utf8 возвращает [data]
 uint8_t UTFinfoTile(char *s, Cell len);                             // Рассказ об utf8 возвращает [data] с учётом буфера
-void Print(uint8_t n, char *str);                                   // Для отладки
+void Print(uint8_t n, char *str);                                   // Вывод строки в цвете палитры напрямую в терминал минуя Vram.
 void InitVram(Cell addr, Cell size);                                // Инициализация мира
 Cell SystemSwitch(void);                                            // Вход/выход в мир
 uint8_t PushKey(char *key);                                         // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
@@ -123,7 +124,12 @@ uint16_t Keys(void);                                                // Скол�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                   // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);   // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                             // Полёт над пространством с возможностью приземления на холст
-
+void Show(void);                                                    // Для тестирования библиотеки
+void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);    // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
+void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);          // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 теневое)
+void WConst(uint8_t n, char *str);                                  // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
+void WSet(uint8_t n, int16_t c, int16_t r);                         // Привязка к рендеру (+ от левого верхнего - от противоположного 0 нет привязки)
+#define WData(n, str, ...) _WData(n, str, (uint8_t)(sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2 - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                 // Выстрел в терминал
 void SwitchRaw(void);                                               // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                               // Читаем utf8 из порта
@@ -136,5 +142,4 @@ Cell GetCycles(void);                                               // Тики
 void Delay_ms(uint8_t ms);                                          // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                              // Измерение пропускной способности терминала
 
-void Show(void);                                                    // Для отладки
 #endif /* SYS_H */

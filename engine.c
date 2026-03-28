@@ -7,18 +7,17 @@
  * лицензии GNU (GPLv3).
  */
 
-#include <stdio.h>  //snprintf для теста
 #include "sys.h"
 
-char      *Cdata      = NULL;
-uint8_t   *Cattr      = NULL;
-uint8_t   *Cvlen      = NULL;
-uint8_t   *Clen       = NULL;
-uint16_t  *Coffset    = NULL;
-uint16_t  *Cvlswin    = NULL;
-char      *Cpdat      = NULL;
-char      *Ckbuf      = NULL;
-char      *Cvdat      = NULL;
+char      *Cdata      = 0;
+uint8_t   *Cattr      = 0;
+uint8_t   *Cvlen      = 0;
+uint8_t   *Clen       = 0;
+uint16_t  *Coffset    = 0;
+uint16_t  *Cvlswin    = 0;
+char      *Cpdat      = 0;
+char      *Ckbuf      = 0;
+char      *Cvdat      = 0;
 #define Data(r)       (Cdata + ((r) << Data_shift))                 // адрес начала буфера строки холста
 #define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))            // адрес атрибута ячейки холста [0..255]
 #define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))            // адрес визуальной длины ячейки холста [0,1,2]
@@ -240,22 +239,12 @@ uint8_t ViewPort(void) {
   else { control--; }
   return 1; }
 
+void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
+  int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
+  (void)n; (void)str; (void)args; (void)val; }
+void Window(uint8_t n, uint8_t col, int16_t c, int16_t r) { (void)n; (void)col; (void)c; (void)r; }
+void WConst(uint8_t n, char *str) { (void)n; (void)str; }
+void WSet(uint8_t n, int16_t c, int16_t r) { (void)n; (void)c; (void)r; }
+
 void Show(void) {
-  char *p = Cvdat; uint8_t l, v, q = 0, w = 0, i = 8; uint16_t s, r, c = TermCR(&r); Cell m = VRam.size;
-  Print(CdefaultB,Home); s = (uint16_t)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
-  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(Cvdat) >= c) *(Cvdat + c) = 0;
-  Print(Corange,Cvdat); if (r < 2) return;
-  snprintf(Cvdat, 100, "\nx%d y%d wx%d wy%d                      ", VP.X, VP.Y, VP.X + VP.viewX, VP.Y + VP.viewY); if (StrLen(Cvdat) >= c) *(Cvdat + c + 1) = 0;
-  Print(CredB,Cvdat); if (r < 3) return;
-  if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
-    p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
-    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
-    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
-    p = Cvdat + StrLen(Cvdat); snprintf(p, 10, "    "); if (StrLen(Cvdat) >= c) *(Cvdat + c + 1) = 0;
-    if (r > 2) Print(Cgreen,Cvdat); } }
-  else { i = ShowKey(&w,&q,Buf.key); if (q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
-    p = Cvdat; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
-    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
-    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
-    p = Cvdat + StrLen(Cvdat); snprintf(p, 10,"    "); if (StrLen(Cvdat) >= c) *(Cvdat + c + 1) = 0;
-    if (r > 2) Print(Cgreen,Cvdat); } } }
+  WData(0, "k"); WData(1, "b0d0d", VP.Mode, VP.X, VP.Y); }
