@@ -53,30 +53,43 @@
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)
 enum {
-    SKey = 256,                                                     // [256] Ring buffer
-    SizePal = 32,                                                   // [32] buffer colour anci
-    SizeKey = 8,                                                    // [8] (data1 data2 tic1 tic2 UTF8[4 byte])
-    Utf8 = 4,                                                       // Max length utf8
-    Bit32 = 2,                                                      // 2^2 4 bytes
-    Bit16 = 1,                                                      // 2^1 2 bytes
-    CellPow = 13,                                                   // 2^CellPow
-    Data_shift = CellPow + Bit32,                                   // 2^(CellPow + 2) Offset Utf8 per cell
-    Offset_row_shift = CellPow + Bit16,                             // 2^(CellPow + 1) Offset 2 bytes per cell offset
-    AVL_shift = CellPow,                                            // 2^(CellPow) Offset attr,vlen,len
-    Win_shift = SizeKey,                                            // 2^8 Offset 2 bytes window string length
-    Parse_shift = Utf8 + Bit16,                                     // 2^5 Offset 32 bytes per palette cell
-    KeyBuf_shift = Utf8 - Bit16,                                    // 2^3 Offset 8 bytes per keyboard buffer cell
-    CellLine = 1 << CellPow,                                        // Max cell utf8 in line
-    CellStr = CellLine * 987 / 1597,                                // Max cell utf8 string
-    SizeData = CellStr * CellLine * Utf8,                           // Data array cell uft8
-    SizeAttr = CellStr * CellLine,                                  // Attribute array cell utf8
-    SizeVisLen = CellStr * CellLine,                                // Visual length array cell utf8
-    SizeLen = CellStr * CellLine,                                   // Length array cell utf8
-    SizeOffset = CellStr * CellLine * 2,                            // Offset cell utf8 in line
-    SizeVlsWin = CellStr * SKey * 2,                                // Visual line length in the window [256]
-    SizePalBuff = SizePal * SizePal,                                // Palette array [8*4][32]
-    SizeKeyBuf = SKey * SizeKey,                                    // Keyboard buffer [256][8]
-    SizeVBuff = CellLine * CellLine / 2,                            // Video buffer
+    CellPow = 13,                                                   // Константа определяющая буквально всё (взял 13 чтоб перекрыть сегодняшние потребности с запасом
+                                                                    //  пример 8192*5062 это при графике Браэля 16384*20248 точек это 16к монитор будет желание не
+                                                                    //  переписывая код сделать 32к - возьмите 14 это предел для слова процессора так как у нас utf8, 
+                                                                    //  вместо 13) если нужно больше 14 то придётся перейти на 32 битную архитектуру это не сложно.
+                                                                    //  В любом случае это самое быстрое, что сегодня есть в мире с такими возможностями:
+                                                                    //   настоящее время для клавиатуры и мыши, окна с перекрытиями без копирования данных, холст
+                                                                    //   с независимыми окнами и бездна вокруг, свободное перемещение над всем этим с возможностью
+                                                                    //   фиксации - входа в окна, автоматически подхватывается тема пользователя, адаптация к изменению
+                                                                    //   размера терминала и масштаба шрифта (до свиданья костыли современности), при сборке автоматическая
+                                                                    //   адаптация под цветность среды использования, запрашивает у процессора на всё очень мало памяти - 
+                                                                    //   просто осознайте 390 метров для поддержки 16к монитора уже сейчас с возможность создания
+                                                                    //   полноценного оконного приложения с огромным числом наложенных окон интерфейса, создавайте быстрый
+                                                                    //   софт не зависящий от процессора, видеокарты и страны - теперь можно написать один раз и сразу для
+                                                                    //   всех, а что именно напишите (игра, ось или программу) зависит от Вас, я ограничения отменил.
+    SKey = 256,                                                     // Буфер клавиатуры
+    SizePal = 32,                                                   // Размер в байтах одной палитры (len,bytes[len])
+    SizeKey = 8,                                                    // Формат ячейки буфера клавиатуры (data1 data2 tic1 tic2 UTF8[2*[1,2]bytes / 1*[3,4]bytes])
+    Utf8 = 4,                                                       // Максимальная длина utf8=4
+    Bit32 = 2,                                                      // 2^2 32 бита - 4 байта = 2 слова процессора
+    Bit16 = 1,                                                      // 2^1 16 бит - 2 байта = 1 слово процессора
+    Data_shift = CellPow + Bit32,                                   // 2^(CellPow + 2) Смещение между строк холста
+    Offset_row_shift = CellPow + Bit16,                             // 2^(CellPow + 1) Смещение от начала ячейками в строке (2 байта 65536 значений с запасом)
+    AVL_shift = CellPow,                                            // 2^(CellPow + 0) Смещение данных ячейки в строке (1 байт [Attr,Vis,Len])
+    Win_shift = SizeKey,                                            // 2^8 Смещение 512 байта для визуальных длин строк 256 окон
+    Parse_shift = Utf8 + Bit16,                                     // 2^5 Смещение 32 байта для 32 палитр
+    KeyBuf_shift = Utf8 - Bit16,                                    // 2^3 Смещение 8 байт для 256 ячеек буфера клавиатуры
+    CellLine = 1 << CellPow,                                        // 2^(CellPow + 0) Количество ячеек в строке холста (8192)
+    CellStr = CellLine * 987 / 1597,                                // Количество строк холста (при 8192 - будет 5062)
+    SizeData = CellStr * CellLine * Utf8,                           // Размер данных в ячейках холста
+    SizeAttr = CellStr * CellLine,                                  // Размер атрибутов данных в ячейках холста
+    SizeVisLen = CellStr * CellLine,                                // Размер визуальной длины данных в ячейках холста
+    SizeLen = CellStr * CellLine,                                   // Размер длины данных в ячейках холста
+    SizeOffset = CellStr * CellLine * 2,                            // Размер смещений для данных в ячейках холста
+    SizeVlsWin = CellStr * SKey * 2,                                // Размер данных визуальных длин строк 256 окон
+    SizePalBuff = SizePal * SizePal,                                // Размер данных 32 палитр (8 цветов 2 атрибута [32 байта])
+    SizeKeyBuf = SKey * SizeKey,                                    // Размер данных кольцевого буфера клавиатуры на 255/510 значений
+    SizeVBuff = CellLine * CellLine / 2,                            // Размер видео буфера для формирования картинки в рамках терминала
     SizeVram = SizeData + SizeAttr + SizeVisLen + SizeLen + SizeOffset + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
 enum {                                                              // Attr(y,x)     структура атрибута
     Minv = 0x01,                                                    // invers         0(0 нет)
@@ -124,7 +137,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                   // Обра�
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);   // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                             // Полёт над пространством с возможностью приземления на холст
 void Show(void);                                                    // Для тестирования библиотеки
-void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);          // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 теневое)
+void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);          // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 теневое окно)
 void WSet(uint8_t n, int16_t c, int16_t r);                         // Привязка к рендеру ([1,1] левый верхний -> [-1,-1] от нижнего правого <- [0,0] холст)
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);   // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);    // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
