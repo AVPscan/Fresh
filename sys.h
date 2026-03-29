@@ -76,21 +76,23 @@ enum {
     Data_shift = CellPow + Bit32,                                   // 2^(CellPow + 2) Смещение между строк холста
     Offset_row_shift = CellPow + Bit16,                             // 2^(CellPow + 1) Смещение от начала ячейками в строке (2 байта 65536 значений с запасом)
     AVL_shift = CellPow,                                            // 2^(CellPow + 0) Смещение данных ячейки в строке (1 байт [Attr,Vis,Len])
-    Win_shift = SizeKey,                                            // 2^8 Смещение 512 байта для визуальных длин строк 256 окон
-    Parse_shift = Utf8 + Bit16,                                     // 2^5 Смещение 32 байта для 32 палитр
-    KeyBuf_shift = Utf8 - Bit16,                                    // 2^3 Смещение 8 байт для 256 ячеек буфера клавиатуры
+    WinData_shift = Utf8,                                           // 2^4 Смещение для данных 256 окон 16 слов - 32 байта на окно.
+    Win_shift = SizeKey,                                            // 2^8 Смещение для визуальных длин строк 256 окон
+    Parse_shift = Utf8 + Bit16,                                     // 2^5 Смещение для 32 палитр
+    KeyBuf_shift = Utf8 - Bit16,                                    // 2^3 Смещение для 256 ячеек буфера клавиатуры
     CellLine = 1 << CellPow,                                        // 2^(CellPow + 0) Количество ячеек в строке холста (8192)
     CellStr = CellLine * 987 / 1597,                                // Количество строк холста (при 8192 - будет 5062)
     SizeData = CellStr * CellLine * Utf8,                           // Размер данных в ячейках холста
     SizeAttr = CellStr * CellLine,                                  // Размер атрибутов данных в ячейках холста
     SizeVisLen = CellStr * CellLine,                                // Размер визуальной длины данных в ячейках холста
     SizeLen = CellStr * CellLine,                                   // Размер длины данных в ячейках холста
-    SizeOffset = CellStr * CellLine * 2,                            // Размер смещений для данных в ячейках холста
-    SizeVlsWin = CellStr * SKey * 2,                                // Размер данных визуальных длин строк 256 окон
+    SizeOffset = CellStr * CellLine * Bit32,                        // Размер смещений для данных в ячейках холста
+    SizeWinData = SKey + SizePal,                                   // Размер данных 256 окон
+    SizeVlsWin = CellStr * SKey * Utf8,                             // Размер данных визуальных длин строк 256 окон
     SizePalBuff = SizePal * SizePal,                                // Размер данных 32 палитр (8 цветов 2 атрибута [32 байта])
     SizeKeyBuf = SKey * SizeKey,                                    // Размер данных кольцевого буфера клавиатуры на 255/510 значений
     SizeVBuff = CellLine * CellLine / 2,                            // Размер видео буфера для формирования картинки в рамках терминала
-    SizeVram = SizeData + SizeAttr + SizeVisLen + SizeLen + SizeOffset + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
+    SizeVram = SizeData + SizeAttr + SizeVisLen + SizeLen + SizeOffset + SizeWinData + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
 enum {                                                              // Attr(y,x)     структура атрибута
     Minv = 0x01,                                                    // invers         0(0 нет)
     Mbol = 0x02,                                                    // bold           1(0 нет)
@@ -143,7 +145,6 @@ void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);   // Данн�
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);    // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
 #define WConst(n, str, ...) _WConst(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
-
 Cell SysWrite(void *buf, Cell len);                                 // Выстрел в терминал
 void SwitchRaw(void);                                               // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                               // Читаем utf8 из порта

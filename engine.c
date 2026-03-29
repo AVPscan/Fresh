@@ -14,19 +14,21 @@ uint8_t   *Cattr      = 0;
 uint8_t   *Cvlen      = 0;
 uint8_t   *Clen       = 0;
 uint16_t  *Coffset    = 0;
+uint16_t  *Cwin       = 0;
 uint16_t  *Cvlswin    = 0;
 char      *Cpdat      = 0;
 char      *Ckbuf      = 0;
 char      *Cvdat      = 0;
-#define Data(r)       (Cdata + ((r) << Data_shift))                 // адрес начала буфера строки холста
-#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))            // адрес атрибута ячейки холста [0..255]
-#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))            // адрес визуальной длины ячейки холста [0,1,2]
-#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))             // адрес длины ячейки в байтах холста [0 - нет данных [1..255] длина]
-#define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))   // адрес смещения данных ячейки холста от начала буфера строки
-#define VlsWin(r, n)  (Cvlswin + ((r) << Win_shift) + (n))          // адрес длин строк окон n[0..255]
-#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))              // адрес начала anci кода цвета cbi[0..31] - [8][4]
-#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))               // адрес начала клавиши в буфере n[0..255], для 3/4 мира подходит - если две подряд клавиши
-                                                                    // имеют 1-2 байтовый код(управляющие так же) то упаковываются в одну ячейку {255/510 буфер}
+#define Data(r)       (Cdata + ((r) << Data_shift))                   // адрес начала буфера строки холста
+#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))              // адрес атрибута ячейки холста [0..255]
+#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))              // адрес визуальной длины ячейки холста [0,1,2]
+#define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))               // адрес длины ячейки в байтах холста [0 - нет данных [1..255] длина]
+#define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))     // адрес смещения данных ячейки холста от начала буфера строки
+#define Win(n)        (Cwin + ((n) << WinData_shift))                 // адрес начала данных окон
+#define VlsWin(r, n)  (Cvlswin + (((r) << Win_shift) + (n)) << Bit16) // адрес визуальных длин и длин строк окон n[0..255]
+#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                // адрес начала anci кода цвета cbi[0..31] - [8][4]
+#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                 // адрес начала клавиши в буфере n[0..255], для 3/4 мира подходит - если две подряд клавиши
+                                                                      //  имеют 1-2 байтовый код(управляющие так же) то упаковываются в одну ячейку {255/510 буфер}
 typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch, ShowC; } R_;
@@ -114,7 +116,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = base + SizeData; Cvlen = Cattr + SizeAttr; Clen = Cvlen + SizeVisLen;
-  Coffset = (uint16_t*)(Clen + SizeLen); Cvlswin = (uint16_t*)((uint8_t*)Coffset + SizeOffset);
+  Coffset = (uint16_t*)(Clen + SizeLen); Cwin = (uint16_t*)((uint8_t*)Coffset + SizeOffset); Cvlswin = Cwin + SizeWinData;
   Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Ckbuf = Cpdat + SizePalBuff; Cvdat = Ckbuf + SizeKeyBuf;
   while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
