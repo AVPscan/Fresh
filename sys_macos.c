@@ -17,17 +17,7 @@
 #include <mach/mach_time.h> // mach_absolute_time
 #include "sys.h"
 
-typedef struct { const char *name; unsigned char id; } KeyIdMap;
-typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
-typedef struct { uint16_t col , row; } T_;
-T_ TS = {0};
-F_ Flag = {1,0,0};
-KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
-    {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF},
-    {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, {"[17~", K_F6},
-    {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
-    {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
-    {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
+SYS_VARS_INIT;
 
 Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
 
@@ -61,6 +51,7 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
     Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (r == MAP_FAILED) { r = 0; l = 0; }
     *size = l; return (Cell)r; }
+    
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
 
 void SWD(Cell addr) { if (!addr) return;
@@ -69,6 +60,7 @@ void SWD(Cell addr) { if (!addr) return;
     for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
+
 int16_t SyncSize(Cell addr) { if (!addr) return 0;
     struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
@@ -76,12 +68,15 @@ int16_t SyncSize(Cell addr) { if (!addr) return 0;
         while (stable--) { Delay_ms(3); if (ws.ws_col < TS.col || ws.ws_row < TS.row) Print(Cconvas,Cls);
             if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 3; } } }
     TS.col = ws.ws_col; TS.row = ws.ws_row; Flag.SyncSize = 1; return 1; }
+    
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
+
 Cell GetSC(Cell addr) { 
     if (!addr || !TS.col) return 1;
     char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
     Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
+    
 static mach_timebase_info_data_t timebase = {0};
 void Delay_ms(uint8_t ms) {
     if (timebase.denom == 0) mach_timebase_info(&timebase);

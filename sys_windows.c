@@ -12,17 +12,7 @@
 #include <io.h>
 #include "sys.h"
 
-typedef struct { const char *name; unsigned char id; } KeyIdMap;
-typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
-typedef struct { uint16_t col , row; } T_;
-T_ TS = {0};
-F_ Flag = {1,0,0};
-KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF},
-    {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF},
-    {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, {"[17~", K_F6},
-    {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"[21~", K_F10},
-    {"[23~", K_F11}, {"[24~", K_F12},  {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN},
-    {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
+SYS_VARS_INIT;
 
 Cell SysWrite(void *buf, Cell len) { return (Cell)_write(1, buf, (unsigned int)len); }
 
@@ -73,6 +63,7 @@ size_t GetRam(size_t *size) { if (!*size) return 0;
     size_t l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!r) l = 0;
     *size = l; return (size_t)r; }
+    
 void FreeRam(size_t addr, size_t size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
 
 void SWD(size_t addr) { if (!addr) return;
@@ -80,6 +71,7 @@ void SWD(size_t addr) { if (!addr) return;
     for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
+
 int16_t SyncSize(size_t addr) {
     if (!addr) return 0;
     static HANDLE hOut = NULL; 
@@ -98,6 +90,7 @@ int16_t SyncSize(size_t addr) {
 
 Cell GetCycles(void) {
     LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
+    
 Cell GetSC(Cell addr) {
     if (!addr || !TS.col) return 1;
     char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
@@ -105,6 +98,7 @@ Cell GetSC(Cell addr) {
     for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
     QueryPerformanceCounter(&end);
     return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.col * 10)); }
+    
 void Delay_ms(uint8_t ms) {
     static LARGE_INTEGER freq, start, after_sleep; static uint64_t total_target = 0;
     if (!Flag.Delay_ms) { QueryPerformanceFrequency(&freq); Flag.Delay_ms = 1; }
