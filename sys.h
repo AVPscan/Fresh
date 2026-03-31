@@ -143,12 +143,12 @@ extern char      *Cpdat;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 #define Data(r)       (Cdata + ((r) << Data_shift))                   // адрес начала буфера строки холста
-#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))              // адрес атрибута ячейки холста [0..255]
-#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))              // адрес визуальной длины ячейки холста [0,1,2]
+#define Attr(r, c)    (Cattr + ((r) << AVL_shift) + (c))              // адрес атрибута ячейки холста
+#define Visi(r, c)    (Cvlen + ((r) << AVL_shift) + (c))              // адрес визуальной длины ячейки холста
 #define Len(r, c)     (Clen + ((r) << AVL_shift) + (c))               // адрес длины ячейки в байтах холста [0 - нет данных [1..255] длина]
 #define Offset(r, c)  (Coffset + ((r) << Offset_row_shift) + (c))     // адрес смещения данных ячейки холста от начала буфера строки
-#define Win(n)        (Cwin + ((n) << WinData_shift))                 // адрес начала данных окон
-#define VlsWin(r, n)  (Cvlswin + (((r) << Win_shift) + (n)) << Bit16) // адрес визуальных длин и длин строк окон n[0..255]
+#define Win(n)        (Cwin + ((n) << WinData_shift))                 // адрес начала данных окна n
+#define VlsWin(r, n)  (Cvlswin + (((r) << Win_shift) + (n)) << Bit16) // адрес визуальных длин и длин строк окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                // адрес начала anci кода цвета cbi[0..31] - [8][4]
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                 // адрес начала клавиши в буфере n[0..255]
 typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
@@ -184,8 +184,7 @@ extern R_ VRam;
         {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, \
         {"[20~", K_F9}, {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, \
         {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, \
-        {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }
-                                                                      // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма
+        {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }      // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма
                                                                       // 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
@@ -205,10 +204,10 @@ uint16_t Keys(void);                                                  // Ско�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);            // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 теневое окно)
+void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);            // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 окно задаётся снизу холста)
 void WSet(uint8_t n, int16_t c, int16_t r);                           // Привязка к рендеру ([1,1] левый верхний -> [-1,-1] от нижнего правого <- [0,0] холст)
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);     // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
-void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна.
+void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна(возможно ширина определена ранее).
 #define WConst(n, str, ...) _WConst(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал

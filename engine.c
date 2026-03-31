@@ -85,7 +85,8 @@ uint8_t UTFinfoTile(char *s, Cell len) {
 void Print(uint8_t n, char *str) {
   char *dst = Cvdat + 1024, *sav; uint16_t len; n &= Mcbi; if (!str) return;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
+  if (n != Cdefault) { sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; }
+  SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
