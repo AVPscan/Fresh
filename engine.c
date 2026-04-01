@@ -98,7 +98,8 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
-      dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } }
+      dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
+  *Parse(LastAttr) = Cdefault; *(uint16_t*)Parse(WinsData) = 0xFFFF; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -217,11 +218,17 @@ uint8_t ViewPort(void) {
   else { control--; }
   return 1; }
 
-void Window(uint8_t n, uint8_t col, int16_t c, int16_t r) { (void)n; (void)col; (void)c; (void)r; }
-void WSet(uint8_t n, int16_t c, int16_t r) { (void)n; (void)c; (void)r; }
+uint8_t Window(uint8_t col, int16_t c, int16_t r) { 
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt; 
+  (void)col; (void)c; (void)r; return n; }
+void WSet(uint8_t n, int16_t c, int16_t r) {
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  (void)c; (void)r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }

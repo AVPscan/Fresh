@@ -131,7 +131,7 @@ enum {
     Cdefault, CdefaultI, CdefaultB, CdefaultBI, Cgrey, CgreyI, CgreyB, CgreyBI,
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
-    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr };
+    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr, WinsData };
 extern char      *Cdata;
 extern uint8_t   *Cattr;
 extern uint8_t   *Cvlen;
@@ -204,7 +204,7 @@ uint16_t Keys(void);                                                  // Ско�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void Window(uint8_t n, uint8_t col, int16_t c, int16_t r);            // Определение окна n, цветом col, визуальной шириной c, высотой r (r<0 окно задаётся снизу холста)
+uint8_t Window(uint8_t col, int16_t c, int16_t r);                    // Определение окна цветом col, визуальной шириной c, высотой r (r<0 окно задаётся снизу холста)
 void WSet(uint8_t n, int16_t c, int16_t r);                           // Привязка к рендеру ([1,1] левый верхний -> [-1,-1] от нижнего правого <- [0,0] холст)
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);     // Данные формата str, с позиции курсора в окно n(цифры в формате - ширина резиновой структуры)
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна(возможно ширина определена ранее).
