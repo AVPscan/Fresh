@@ -99,7 +99,8 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; *(int16_t*)Parse(WinsData) = -1; }
+  *Parse(LastAttr) = Cdefault; uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt++ = 0xFFFF;
+  *cnt++ = CellLine; *cnt++ = CellStr; *cnt++ = CellLine; *cnt++ = CellStr; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -190,8 +191,8 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
-  if (control && VP.Cod != K_Mouse) {
-    if ((uint16_t)(VP.X - 1) < VP.MX && (uint16_t)(VP.Y - 1) < VP.MY) { 
+  if (control && VP.Cod != K_Mouse) { uint16_t *cnt = (uint16_t*)Parse(WinsData);
+    if ((uint16_t)(VP.X - 1) < *(cnt + 1) && (uint16_t)(VP.Y - 1) < *(cnt + 2)) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= 4; if (!(VP.Mode & 4)) ForgetKey(); }
       else if (VP.Cod == VP.F3) { VP.Mode ^= 2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= 1; } }
@@ -218,21 +219,22 @@ uint8_t ViewPort(void) {
   else { control--; }
   return 1; }
 
-uint8_t Window(uint8_t col, int16_t c, int16_t r) { 
-  int16_t *cnt = (int16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
-  cnt = (int16_t*)Win(n); *cnt++ = 0; *cnt++ = 0; *cnt++ = c; *cnt++ = (r < 0) ? -r : r; *cnt++ = 0; *cnt++ = 0;
-  *cnt++ = 1; *cnt++ = 1;
-  *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0;
+uint8_t Window(uint8_t col, int16_t c, int16_t r) {
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
+  if (!n) { *(cnt + 1) = *(cnt+3); *(cnt + 2) = *(cnt+4); }
+  cnt = (uint16_t*)Win(n); *cnt++ = 0; *cnt++ = 0; *cnt++ = c; *cnt++ = (r < 0) ? -r : r;
+  *cnt++ = 0; *cnt++ = 0; *cnt++ = 1; *cnt++ = 1;
+  *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0;                 // нужно верно распределить холст - пока заглушка
   *cnt++ = 0; *cnt++ = 0; uint8_t *cb = (uint8_t*)cnt; *cb++ = n; *cb++ = n; *cb++ = col;
   *cb = (r < 0) ? 0xF0 : 0x20; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
-  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
-  cnt = (int16_t*)Win(n); *cnt++ = c; *cnt++ = r; }
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  cnt = (uint16_t*)Win(n); *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
+  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }

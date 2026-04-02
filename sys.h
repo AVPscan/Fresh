@@ -151,7 +151,7 @@ extern char      *Cvdat;
 #define VlsWin(r, n)  (Cvlswin + (((r) << Win_shift) + (n)) << Bit16) // адрес визуальных длин и длин строк окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                // адрес начала anci кода цвета cbi[0..31] - [8][4]
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                 // адрес начала клавиши в буфере n[0..255]
-typedef struct { int16_t X, Y, viewX, viewY, Cx, Cy; uint16_t MX, MY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
+typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
@@ -171,20 +171,19 @@ extern R_ VRam;
     char      *Cpdat      = 0; \
     char      *Ckbuf      = 0; \
     char      *Cvdat      = 0; \
-    V_ VP = {1,1,0,0,0,0,CellLine,CellStr,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC}; \
+    V_ VP = {1,1,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC}; \
     B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
     static F_ Flag = {1,0,0}; \
-    static KeyIdMap NameId[] = { \
-        {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
+    static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, \
         {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
-        {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, \
-        {"[20~", K_F9}, {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, \
-        {"[4~", K_END}, {"[5~", K_PUP}, {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, \
-        {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }      // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма
+        {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
+        {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
+        {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }
+                                                                      // [data] = 7 не UTF8 6 не влезает в буфер 5 управляющий код 4 направление письма
                                                                       // 32 визуальная длина 0-2[3 управляющий] 10 длина 0-3 [1-4].
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
