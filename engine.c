@@ -99,7 +99,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; *(uint16_t*)Parse(WinsData) = 0xFFFF; }
+  *Parse(LastAttr) = Cdefault; *(int16_t*)Parse(WinsData) = -1; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -219,16 +219,20 @@ uint8_t ViewPort(void) {
   return 1; }
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) { 
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt; 
-  (void)col; (void)c; (void)r; return n; }
+  int16_t *cnt = (int16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
+  cnt = (int16_t*)Win(n); *cnt++ = 0; *cnt++ = 0; *cnt++ = c; *cnt++ = (r < 0) ? -r : r; *cnt++ = 0; *cnt++ = 0;
+  *cnt++ = 1; *cnt++ = 1;
+  *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0;
+  *cnt++ = 0; *cnt++ = 0; uint8_t *cb = (uint8_t*)cnt; *cb++ = n; *cb++ = n; *cb++ = col;
+  *cb = (r < 0) ? 0xF0 : 0x20; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
-  (void)c; (void)r; }
+  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
+  cnt = (int16_t*)Win(n); *cnt++ = c; *cnt++ = r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  int16_t *cnt = (int16_t*)Parse(WinsData); if (*cnt == -1 || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
