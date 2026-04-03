@@ -222,11 +222,13 @@ uint8_t ViewPort(void) {
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
   uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
   if (!n) { *(cnt + 1) = *(cnt+3); *(cnt + 2) = *(cnt+4); }
-  cnt = (uint16_t*)Win(n); *cnt++ = 0; *cnt++ = 0; *cnt++ = c; *cnt++ = (r < 0) ? -r : r;
-  *cnt++ = 0; *cnt++ = 0; *cnt++ = 1; *cnt++ = 1;
-  *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0;                 // нужно верно распределить холст - пока заглушка
-  *cnt++ = 0; *cnt++ = 0; uint8_t *cb = (uint8_t*)cnt; *cb++ = n; *cb++ = n; *cb++ = col;
-  *cb = (r < 0) ? 0xF0 : 0x20; return n; }
+  uint16_t *dst = (uint16_t*)Win(n); *dst++ = 0; *dst++ = 0; *dst++ = c; *dst++ = (r < 0) ? -r : r;
+  *dst++ = 0; *dst++ = 0; *dst++ = 1; *dst++ = 1; *dst++ = 0;
+  if (r < 0) { if ((*(cnt + 4) - *(cnt + 2)) < -r) *(cnt + 2) = *(cnt + 4) + r;
+    *dst++ = *(cnt + 4) + r; *dst++ = c; *dst++ = *(cnt + 4); }
+  else { *dst++ = 0; *dst++ = c; *dst++ = r; }
+  *dst++ = 0; *dst++ = 0; uint8_t *cb = (uint8_t*)dst; *cb++ = n; *cb++ = n; *cb++ = col;
+  *cb = (r < 0) ? 0xF0 : 0x00; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
   uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   cnt = (uint16_t*)Win(n); *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
