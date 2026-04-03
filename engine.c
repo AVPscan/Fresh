@@ -100,7 +100,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
   *Parse(LastAttr) = Cdefault; uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt++ = 0xFFFF;
-  *cnt++ = CellLine; *cnt++ = CellStr; *cnt++ = CellLine; *cnt++ = CellStr; }
+  *cnt++ = CellLine; *cnt++ = CellStr; *cnt++ = 0; *cnt++ = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -221,14 +221,14 @@ uint8_t ViewPort(void) {
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
   uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
-  if (!n) { *(cnt + 1) = *(cnt+3); *(cnt + 2) = *(cnt+4); }
+  if (!n) { *(cnt + 3) = 0; *(cnt + 4) = 0; }
   uint16_t *dst = (uint16_t*)Win(n); *dst++ = 0; *dst++ = 0; *dst++ = c; *dst++ = (r < 0) ? -r : r;
-  *dst++ = 0; *dst++ = 0; *dst++ = 1; *dst++ = 1; *dst++ = 0;
-  if (r < 0) { if ((*(cnt + 4) - *(cnt + 2)) < -r) *(cnt + 2) = *(cnt + 4) + r;
-    *dst++ = *(cnt + 4) + r; *dst++ = c; *dst++ = *(cnt + 4); }
-  else { *dst++ = 0; *dst++ = c; *dst++ = r; }
-  *dst++ = 0; *dst++ = 0; uint8_t *cb = (uint8_t*)dst; *cb++ = n; *cb++ = n; *cb++ = col;
-  *cb = (r < 0) ? 0xF0 : 0x00; return n; }
+  *dst++ = 0; *dst++ = 0; *dst++ = 1; *dst++ = 1; *dst++ = 0; *dst++ = 0;
+  uint8_t *cb = (uint8_t*)dst; dst += 2; *cb++ = n; *cb++ = n; *cb++ = col; *cb = (r < 0) ? 0xF0 : 0x00;
+  if (r < 0) {
+    *dst++ = *(cnt + 1) - c; *dst++ = *(cnt + 2) - *(cnt + 4) + r; *dst++ = *(cnt + 1);
+    *dst++ = *(cnt + 2) - *(cnt + 4); *(cnt + 4) -= r; return n; }
+  *dst++ = 0; *dst++ = 0; *dst++ = c; *dst++ = r; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
   uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
   cnt = (uint16_t*)Win(n); *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
