@@ -82,8 +82,8 @@ ADOCell 4 байта структура
     SizeVlsWin = CellStr * SKey * 4,                                  // Размер визуальных и реальных длин строк 256 окон - обновляются при наполнении
     SizePalBuff = SizePal * SizePal,                                  // Размер данных 32 палитр (7 цветов 2 атрибута [32 байта])
     SizeKeyBuf = SKey * SizeKey,                                      // Размер данных кольцевого буфера клавиатуры на 255/510 ячеек
-    SizeVBuff = CellLine * CellLine / 2,                              // Размер видео буфера для формирования картинки в рамках терминала
-    SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeVBuff };
+    SizeBuff = 1024,                                                  // Размер буфера
+    SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeKeyBuf + SizeBuff };
 enum {
     Minv = 0x01, Mbol = 0x02, Mcol = 0x1C, Mcbi = 0x1F, Msmem = 0x20,
     Mdata = 0x40, Fresh = 0x80, Free = 0x14, On = 1, Off = 0 };
@@ -106,6 +106,7 @@ extern uint16_t  *Cattr;
 extern uint16_t  *Cwin;
 extern uint16_t  *Cvlswin;
 extern char      *Cpdat;
+extern uint16_t  *Cdwin;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 #define Data(r)       (Cdata + ((r) << Data_shift))                   // адрес начала буфера строки холста
@@ -130,6 +131,7 @@ extern R_ VRam;
     uint16_t  *Cwin       = 0; \
     uint16_t  *Cvlswin    = 0; \
     char      *Cpdat      = 0; \
+    uint16_t  *Cdwin      = 0; \
     char      *Ckbuf      = 0; \
     char      *Cvdat      = 0; \
     V_ VP = {1,1,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC}; \

@@ -67,7 +67,7 @@ The result? Any mouse. Any era. Horizontal scroll. Four codes. Zero cost.
 
 The engine is engineered for resource-constrained environments. By managing output buffers manually and eliminating abstraction layers, the input-to-render latency is pushed to the physical limits of the terminal, even on single-core systems.
 
-**Binary size:** ~18.6 KB on Linux — a complete terminal engine fitting in less space than a single modern webpage.
+**Binary size:** ~16 KB on Linux — a complete terminal engine fitting in less space than a single modern webpage.
 
 ## 📂 Project Structure
 

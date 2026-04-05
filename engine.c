@@ -83,10 +83,10 @@ uint8_t UTFinfoTile(char *s, Cell len) {
   return UTFinfo(s); }
 
 void Print(uint8_t n, char *str) {
-  char *dst = Cvdat + 1024, *sav; uint16_t len; n &= Mcbi; if (!str) return;
+  char *dst = Cvdat + 512, *sav; uint16_t len; n &= Mcbi; if (!str) return;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cdefault) { sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; }
-  SysWrite(Cvdat + 1024, (dst - Cvdat - 1024)); }
+  SysWrite(Cvdat + 512, (dst - Cvdat - 512)); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
@@ -98,7 +98,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt++ = 0xFFFF;
+  *Parse(LastAttr) = Cdefault; Cdwin = (uint16_t*)Parse(WinsData); uint16_t *cnt = Cdwin; *cnt++ = 0xFFFF;
   *cnt++ = CellLine; *cnt++ = CellStr; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
@@ -219,7 +219,7 @@ uint8_t ViewPort(void) {
   return 1; }
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
+  uint16_t *cnt = Cdwin; *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
   if (!n) { *(cnt + 3) = 0; *(cnt + 4) = 0; *(cnt + 5) = 0; *(cnt + 6) = 0; }
   uint16_t *dst = (uint16_t*)Win(n); *dst++ = 0; *dst++ = 0; *dst++ = c; *dst++ = (r < 0) ? -r : r;
   col &= Mcbi; *dst++ = (uint16_t)((r < 0) ? col | 0x1E0 : col); *dst++ = 0; *dst++ = 0;
@@ -227,13 +227,13 @@ uint8_t Window(uint8_t col, int16_t c, int16_t r) {
     *dst++ = *(cnt + 1) - c; *(cnt + 4) -= r; *dst++ = *(cnt + 2) - *(cnt + 4); return n; }
   *dst++ = *(cnt + 5); *dst++ = *(cnt + 6); *(cnt + 6) += r; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
   cnt = (uint16_t*)Win(n); *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = (uint16_t*)Parse(WinsData); if (*cnt == 0xFFFF || n > *cnt) return;
+  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
