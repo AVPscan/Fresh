@@ -221,14 +221,14 @@ uint8_t ViewPort(void) {
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
   uint16_t *cnt = Cdwin; *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
   if (!n) { *(cnt + 3) = 0; *(cnt + 4) = 0; *(cnt + 5) = 0; *(cnt + 6) = 0; }
-  uint16_t *dst = (uint16_t*)Win(n); *dst++ = 0; *dst++ = 0; *dst++ = c; *dst++ = (r < 0) ? -r : r;
-  col &= Mcbi; *dst++ = (uint16_t)((r < 0) ? col | 0x1E0 : col); *dst++ = 0; *dst++ = 0;
+  uint16_t *dst = Win(n); *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = c;
+  *dst++ = (r < 0) ? -r : r; col &= Mcbi; *dst++ = (uint16_t)((r < 0) ? col | 0x1E0 : col); *dst++ = 0; *dst++ = 0;
   if (r < 0) {
     *dst++ = *(cnt + 1) - c; *(cnt + 4) -= r; *dst++ = *(cnt + 2) - *(cnt + 4); return n; }
   *dst++ = *(cnt + 5); *dst++ = *(cnt + 6); *(cnt + 6) += r; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
   uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
-  cnt = (uint16_t*)Win(n); *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
+  cnt = Win(n) + 2; *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
   uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
