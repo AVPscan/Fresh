@@ -223,8 +223,7 @@ uint8_t Window(uint8_t col, int16_t c, int16_t r) {
   if (!n) { *(cnt + 3) = 0; *(cnt + 4) = 0; *(cnt + 5) = 0; *(cnt + 6) = 0; }
   uint16_t *dst = Win(n); *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = c;
   *dst++ = (r < 0) ? -r : r; col &= Mcbi; *dst++ = (uint16_t)((r < 0) ? col | 0x1E0 : col); *dst++ = 0; *dst++ = 0;
-  if (r < 0) {
-    *dst++ = *(cnt + 1) - c; *(cnt + 4) -= r; *dst++ = *(cnt + 2) - *(cnt + 4); return n; }
+  if (r < 0) { *dst++ = *(cnt + 1) - c; *(cnt + 4) -= r; *dst++ = *(cnt + 2) - *(cnt + 4); return n; }
   *dst++ = *(cnt + 5); *dst++ = *(cnt + 6); *(cnt + 6) += r; return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
   uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
