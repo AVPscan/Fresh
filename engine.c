@@ -219,20 +219,21 @@ uint8_t ViewPort(void) {
   return 1; }
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
-  uint16_t *cnt = Cdwin; *cnt = (*cnt + 1) & 0xFF; uint8_t n = (uint8_t)*cnt;
-  if (!n) { *(cnt + 3) = 0; *(cnt + 4) = 0; *(cnt + 5) = 0; *(cnt + 6) = 0; }
-  uint16_t *dst = Win(n); *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = 0; *dst++ = c;
-  *dst++ = (r < 0) ? -r : r; col &= Mcbi; *dst++ = (uint16_t)((r < 0) ? col | 0x1E0 : col); *dst++ = 0; *dst++ = 0;
-  if (r < 0) { *dst++ = *(cnt + 1) - c; *(cnt + 4) -= r; *dst++ = *(cnt + 2) - *(cnt + 4); return n; }
-  *dst++ = *(cnt + 5); *dst++ = *(cnt + 6); *(cnt + 6) += r; return n; }
+  StateWin->MN = (StateWin->MN + 1) & 0xFF; uint8_t n = StateWin->MN;
+  if (!n) { StateWin->X = 0; StateWin->Y = 0; StateWin->SX = 0; StateWin->SY = 0; }
+  WindowData* w = Win(n); w->X = 0; w->Y = 0; w->MVW = 0; w->MH = 0; w->W = c;
+  w->H = (r < 0) ? -r : r; col &= Mcbi; w->Flags = (r < 0) ? (col | 0x1E0) : col; w->CX = 0; w->CY = 0;
+  if (r < 0) { w->CVSX = StateWin->CVSW - c; StateWin->Y -= r; w->CVSY = StateWin->CVSH - StateWin->Y; }
+  else { w->CVSX = StateWin->SX; w->CVSY = StateWin->SY; StateWin->SY += r; }
+  return n; }
 void WSet(uint8_t n, int16_t c, int16_t r) {
-  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
-  cnt = Win(n) + 2; *cnt++ = (uint16_t)c; *cnt++ = (uint16_t)r; }
+  if (StateWin->MN == 0xFFFF || n > StateWin->MN) return;
+  WindowData* w = Win(n); w->X = c; w->Y = r; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
+  if (StateWin->MN == 0xFFFF || n > StateWin->MN) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  uint16_t *cnt = Cdwin; if (*cnt == 0xFFFF || n > *cnt) return;
+  if (StateWin->MN == 0xFFFF || n > StateWin->MN) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
