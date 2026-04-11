@@ -92,14 +92,14 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeDCell);Cwin = (uint16_t*)((uint8_t*)Cattr + SizeADCell); Cvlswin = Cwin + SizeWinData;
-  Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Ckbuf = Cpdat + SizePalBuff; Cvdat = Ckbuf + SizeKeyBuf;
+  Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Cdwin = (uint16_t*)Parse(WinsData); Ckbuf = Cpdat + SizePalBuff; Cvdat = Ckbuf + SizeKeyBuf;
   while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; Cdwin = (uint16_t*)Parse(WinsData); uint16_t *cnt = Cdwin; *cnt++ = 0xFFFF;
-  *cnt++ = CellLine; *cnt++ = CellStr; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; *cnt++ = 0; }
+  *Parse(LastAttr) = Cdefault; StateWin->MN = 0xFFFF; StateWin->CVSW = CellLine;
+  StateWin->CVSH = CellStr; StateWin->X = 0; StateWin->Y = 0; StateWin->SX = 0; StateWin->SY = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -190,8 +190,8 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
-  if (control && VP.Cod != K_Mouse) { uint16_t *cnt = (uint16_t*)Parse(WinsData);
-    if ((uint16_t)(VP.X - 1) < *(cnt + 1) && (uint16_t)(VP.Y - 1) < *(cnt + 2)) { 
+  if (control && VP.Cod != K_Mouse) {
+    if ((uint16_t)(VP.X - 1) < StateWin->CVSW && (uint16_t)(VP.Y - 1) < StateWin->CVSH) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= 4; if (!(VP.Mode & 4)) ForgetKey(); }
       else if (VP.Cod == VP.F3) { VP.Mode ^= 2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= 1; } }
