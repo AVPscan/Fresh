@@ -69,17 +69,17 @@ enum {
     SizeDCell = CellStr * CellLine * Utf8,                            // Размер данных в ячейках холста
     SizeADCell = SizeDCell,                                           // Размер атрибутов, данных, смещения для ячейках холста
     SizeWinData = SKey * SizePal,                                     /* Размер данных 256 окон
-ADOCell 4 байта структура
-1 7 есть изменение, 6 есть данные, 5 есть структура, 432 colour, 10 BI.
-1 5{0} 7 направление письма 10 визуальная длина {0,1,2}; 5{1} 7 с начала поля, 6 с конца поля, (76 {00 || 11} по центу) 5-0 длина поля ascii [1-64]
-2 смещение от начала строки холста до начала ячейки на холсте в байтах.
- WinData 18 байт структура
-4 X Y   вывод (0 0 не отображается, если (>0) привязка левым верхним углом окна относительно холста иначе (0<) привязка по модулю к вьюпорту)
-4 c lc  максимальная визуальная и реальная длина строки в окне
-4 c r   размер ширина и высота (0 безразмерна иначе визуальная ширина окна если r<0 то окно интерфейса, элементы иерархического меню (теневое окно))
-2 Data  8 теневое, 7 запрет авто переноса строк, 6 включить статику окна, 5 отключить отображение курсора окна, 432 colour, 10 BI
-4 Xk Yk реальные координаты курсора внутри окна, всегда положительные так как это не вьюпорт
-4 Xo Yo координаты на холсте левого верхнего угла окна */    
+ADOCell
+1 info   7 есть изменение, 6 есть данные, 5 есть структура, 432 colour, 10 BI.
+1 [data] 5{1} 7 с начала поля, 6 с конца поля, (76 {00 || 11} по центу) 5-0 длина поля ascii [1-64]
+2 offset смещение от начала строки холста до начала ячейки на холсте в байтах.
+WinData
+4 X Y    вывод (0 0 не отображается, если (>0) привязка левым верхним углом окна относительно холста иначе (0<) привязка по модулю к вьюпорту)
+4 c lc   максимальная визуальная и реальная длина строки в окне
+4 c r    размер ширина и высота (0 безразмерна иначе визуальная ширина окна если r<0 то окно интерфейса, элементы иерархического меню (теневое окно))
+2 Data   8 теневое, 7 запрет авто переноса строк, 6 включить статику окна, 5 отключить отображение курсора окна, 432 colour, 10 BI
+4 Xk Yk  реальные координаты курсора внутри окна, всегда положительные так как это не вьюпорт
+4 Xo Yo  координаты на холсте левого верхнего угла окна */    
     SizeVlsWin = CellStr * SKey * 4,                                  // Размер визуальных и реальных длин строк 256 окон - обновляются при наполнении
     SizePalBuff = SizePal * SizePal,                                  // Размер данных 32 палитр (7 цветов 2 атрибута [32 байта])
     SizeKeyBuf = SKey * SizeKey,                                      // Размер данных кольцевого буфера клавиатуры на 255/510 ячеек
@@ -111,9 +111,9 @@ extern uint16_t  *Cdwin;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender; uint16_t MaxW, MaxBS; int16_t W, H; uint16_t Flags, XCur, YCur, Xconvas, Yconvas, reserved[5]; } WindowData;
-typedef struct { uint16_t MaxN, Wconvas, Hconvas, Xwindow, Ywindow, Xshadow, Yshadow; } GlobalState;
-typedef struct { uint16_t bytes, visual; } VlsPair;
+typedef struct { int16_t Xrender, Yrender; uint16_t MaxBS, MaxVS; int16_t W, H; uint16_t Flags, XCur, YCur, Xconvas, Yconvas, reserved[5]; } WindowData;
+typedef struct { uint8_t No, MaxN; uint16_t W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
+typedef struct { uint16_t MaxBS, MaxVS; } WConSrt;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
@@ -123,9 +123,9 @@ typedef struct { uint16_t col , row; } T_;
 #define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
 #define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADOC_shift) + (c)) << 1))  // адрес атрибута, данных и смещения ячейки холста
 #define Win(n)        ((WindowData*)(Cwin + ((n) << WinData_shift)))          // адрес начала данных окна n
-#define Wbv(r,n)      ((VlsPair*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес длин и визуальных длин строк окна n принадлежащих строке холста r
+#define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес длин и визуальных длин строк окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                        // адрес начала anci кода цвета cbi[0..31] - [8][4]
-#define StateWin      (*(GlobalState*)Cdwin)                                  // адрес где организована разбивка холста
+#define Convas        (*(Canalysis*)Cdwin)                                    // адрес где организована разбивка холста
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                         // адрес начала клавиши в буфере n[0..255]
 
 extern V_ VP;
