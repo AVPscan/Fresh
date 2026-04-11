@@ -110,6 +110,7 @@ extern char      *Cpdat;
 extern uint16_t  *Cdwin;
 extern char      *Ckbuf;
 extern char      *Cvdat;
+typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
 typedef struct { int16_t Xrender, Yrender; uint16_t MaxW, MaxBS; int16_t W, H; uint16_t Flags, XCur, YCur, Xconvas, Yconvas, reserved[5]; } WindowData;
 typedef struct { uint16_t MaxN, Wconvas, Hconvas, Xwindow, Ywindow, Xshadow, Yshadow; } GlobalState;
 typedef struct { uint16_t bytes, visual; } VlsPair;
@@ -120,10 +121,9 @@ typedef struct { const char *name; unsigned char id; } KeyIdMap;
 typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
 typedef struct { uint16_t col , row; } T_;
 #define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
-#define ADCell(r, c)  (Cattr + (((r) << ADOC_shift) + (c)) << 1)              // адрес атрибута, данных и смещения ячейки холста
-#define Offset(r, c)  (Cattr + 2 + (((r) << ADOC_shift) + (c)) << 1)          // адрес смещения ячейки холста
+#define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADOC_shift) + (c)) << 1))  // адрес атрибута, данных и смещения ячейки холста
 #define Win(n)        ((WindowData*)(Cwin + ((n) << WinData_shift)))          // адрес начала данных окна n
-#define Vls(r,n)      ((VlsPair*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес визуальных длин строк окна n принадлежащих строке холста r
+#define Wbv(r,n)      ((VlsPair*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес длин и визуальных длин строк окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                        // адрес начала anci кода цвета cbi[0..31] - [8][4]
 #define StateWin      (*(GlobalState*)Cdwin)                                  // адрес где организована разбивка холста
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                         // адрес начала клавиши в буфере n[0..255]

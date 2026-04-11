@@ -98,8 +98,8 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; StateWin.MaxN = 0xFFFF; StateWin.Wconvas = CellLine;
-  StateWin.Hconvas = CellStr; StateWin.Xwindow = 0; StateWin.Ywindow = 0; StateWin.Xshadow = 0; StateWin.Yshadow = 0; }
+  *Parse(LastAttr) = Cdefault; StateWin.MaxN = 0xFFFF; StateWin.Wconvas = CellLine; StateWin.Hconvas = CellStr;
+  StateWin.Xwindow = 0; StateWin.Ywindow = 0; StateWin.Xshadow = 0; StateWin.Yshadow = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
