@@ -98,8 +98,8 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; StateWin->MaxN = 0xFFFF; StateWin->Wconvas = CellLine;
-  StateWin->Hconvas = CellStr; StateWin->Xwindow = 0; StateWin->Ywindow = 0; StateWin->Xshadow = 0; StateWin->Yshadow = 0; }
+  *Parse(LastAttr) = Cdefault; StateWin.MaxN = 0xFFFF; StateWin.Wconvas = CellLine;
+  StateWin.Hconvas = CellStr; StateWin.Xwindow = 0; StateWin.Ywindow = 0; StateWin.Xshadow = 0; StateWin.Yshadow = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -191,7 +191,7 @@ uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
-    if ((uint16_t)(VP.X - 1) < StateWin->Wconvas && (uint16_t)(VP.Y - 1) < StateWin->Hconvas) { 
+    if ((uint16_t)(VP.X - 1) < StateWin.Wconvas && (uint16_t)(VP.Y - 1) < StateWin.Hconvas) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= 4; if (!(VP.Mode & 4)) ForgetKey(); }
       else if (VP.Cod == VP.F3) { VP.Mode ^= 2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= 1; } }
@@ -219,21 +219,21 @@ uint8_t ViewPort(void) {
   return 1; }
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
-  StateWin->MaxN = (StateWin->MaxN + 1) & 0xFF; uint8_t n = StateWin->MaxN;
-  if (!n) { StateWin->Xwindow = 0; StateWin->Ywindow = 0; StateWin->Xshadow = 0; StateWin->Yshadow = 0; }
-  WindowData* w = Win(n); w->Xrender = 0; w->Yrender = 0; w->MaxW = 0; w->MaxH = 0; w->W = c;
-  w->H = (r < 0) ? -r : r; col &= Mcbi; w->Flags = (r < 0) ? (col | 0x1E0) : col; w->XCur = 0; w->YCur = 0;
-  if (r < 0) { w->Xconvas = StateWin->Wconvas - c; StateWin->Ywindow -= r; w->Yconvas = StateWin->Hconvas - StateWin->Ywindow; }
-  else { w->Xconvas = StateWin->Xshadow; w->Yconvas = StateWin->Yshadow ; StateWin->Yshadow += r; }
+  StateWin.MaxN = (StateWin.MaxN + 1) & 0xFF; uint8_t n = StateWin.MaxN; WindowData* w = Win(n);
+  if (!n) { StateWin.Xwindow = 0; StateWin.Ywindow = 0; StateWin.Xshadow = 0; StateWin.Yshadow = 0; }
+  w->Xrender = 0; w->Yrender = 0; w->MaxW = 0; w->MaxBS = 0; w->W = c; w->H = (r < 0) ? -r : r;
+  col &= Mcbi; w->Flags = (r < 0) ? (col | 0x1E0) : col; w->XCur = 0; w->YCur = 0;
+  if (r < 0) { w->Xconvas = StateWin.Wconvas - c; StateWin.Ywindow -= r; w->Yconvas = StateWin.Hconvas - StateWin.Ywindow; }
+  else { w->Xconvas = StateWin.Xshadow; w->Yconvas = StateWin.Yshadow; StateWin.Yshadow += r; }
   return n; }
 void WSet(uint8_t n, int16_t x, int16_t y) {
-  if (StateWin->MaxN == 0xFFFF || n > StateWin->MaxN) return;
+  if (StateWin.MaxN == 0xFFFF || n > StateWin.MaxN) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  if (StateWin->MaxN == 0xFFFF || n > StateWin->MaxN) return;
+  if (StateWin.MaxN == 0xFFFF || n > StateWin.MaxN) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  if (StateWin->MaxN == 0xFFFF || n > StateWin->MaxN) return;
+  if (StateWin.MaxN == 0xFFFF || n > StateWin.MaxN) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
   (void)n; (void)str; (void)args; (void)val; }
