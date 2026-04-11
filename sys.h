@@ -71,7 +71,7 @@ enum {
     SizeWinData = SKey * SizePal,                                     /* Размер данных 256 окон
 ADOCell
 1 info   7 есть изменение, 6 есть данные, 5 есть структура, 432 colour, 10 BI.
-1 [data] 5{1} 7 с начала поля, 6 с конца поля, (76 {00 || 11} по центу) 5-0 длина поля ascii [1-64]
+1 data   5{0} [data] 5{1} 7 с начала поля, 6 с конца поля, (76 {00 || 11} по центу) 5-0 длина поля ascii [1-64]
 2 offset смещение от начала строки холста до начала ячейки на холсте в байтах.
 WinData
 4 X Y    вывод (0 0 не отображается, если (>0) привязка левым верхним углом окна относительно холста иначе (0<) привязка по модулю к вьюпорту)
@@ -111,7 +111,8 @@ extern uint16_t  *Cdwin;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender; uint16_t MaxBS, MaxVS; int16_t W, H; uint16_t Flags, XCur, YCur, Xconvas, Yconvas, reserved[5]; } WindowData;
+typedef struct { int16_t Xrender, Yrender; uint16_t MaxBS, MaxVS; int16_t W, H, Xview, Yview, Xscroll, Yscroll;
+                 uint16_t Flags, reserved, XCur, YCur, Xconvas, Yconvas; } WindowData;
 typedef struct { uint8_t No, MaxN; uint16_t W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
 typedef struct { uint16_t MaxBS, MaxVS; } WConSrt;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
