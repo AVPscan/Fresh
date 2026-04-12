@@ -75,7 +75,7 @@ ADOCell
 2 offset смещение от начала строки холста до начала ячейки на холсте в байтах.
 WinData
 4 X Y    вывод (0 0 не отображается, если (>0) привязка левым верхним углом окна относительно холста иначе (0<) привязка по модулю к вьюпорту)
-4 c lc   максимальная визуальная и реальная длина строки в окне
+4 c lc   максимальное число ячеек и визуальная длина строки в окне
 4 c r    размер ширина и высота (0 безразмерна иначе визуальная ширина окна если r<0 то окно интерфейса, элементы иерархического меню (теневое окно))
 2 Data   8 теневое, 7 запрет авто переноса строк, 6 включить статику окна, 5 отключить отображение курсора окна, 432 colour, 10 BI
 4 Xk Yk  реальные координаты курсора внутри окна, всегда положительные так как это не вьюпорт
@@ -111,10 +111,10 @@ extern uint16_t  *Cdwin;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender; uint16_t MaxBS, MaxVS; int16_t W, H, Xview, Yview, Xscroll, Yscroll;
+typedef struct { int16_t Xrender, Yrender; uint16_t MaxCS, MaxVS; int16_t W, H, Xview, Yview, Xscroll, Yscroll;
                  uint8_t parent, child; uint16_t Flags, XCur, YCur, Xconvas, Yconvas; } WindowData;
 typedef struct { uint8_t No, MaxN; uint16_t W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
-typedef struct { uint16_t MaxBS, MaxVS; } WConSrt;
+typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
@@ -124,7 +124,7 @@ typedef struct { uint16_t col , row; } T_;
 #define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
 #define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADOC_shift) + (c)) << 1))  // адрес атрибута, данных и смещения ячейки холста
 #define Win(n)        ((WindowData*)(Cwin + ((n) << WinData_shift)))          // адрес начала данных окна n
-#define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес длин и визуальных длин строк окна n принадлежащих строке холста r
+#define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                        // адрес начала anci кода цвета cbi[0..31] - [8][4]
 #define Convas        (*(Canalysis*)Cdwin)                                    // адрес где организована разбивка холста
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                         // адрес начала клавиши в буфере n[0..255]
