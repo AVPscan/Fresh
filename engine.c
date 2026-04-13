@@ -218,14 +218,12 @@ uint8_t ViewPort(void) {
   return 1; }
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
-  uint8_t n = ++Convas.MaxN; Convas.No = 0; WindowData* w = Win(n);
+  uint8_t n = ++Convas.MaxN; Convas.No = 0; Convas.WView[n] = n; WindowData* w = Win(n);
   if (!n) { Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = 0; Convas.Yshadow = 0; }
   w->Xrender = 0; w->Yrender = 0; w->MaxCS = 0; w->MaxVS = 0; w->W = c; w->H = (r < 0) ? -r : r;
   w->Xview = w->W; w->Yview = w->H; w->Xscroll = 0; w->Yscroll = 0; w->parent = n; w->child = n;
   col &= Mcbi; w->Flags = (r < 0) ? (col | 0x1E0) : col; w->XCur = 0; w->YCur = 0;
-  if (r < 0) { w->Xconvas = Convas.W - c; Convas.Ywindow -= r; w->Yconvas = Convas.H - Convas.Ywindow; }
-  else { w->Xconvas = Convas.Xshadow; w->Yconvas = Convas.Yshadow; Convas.Yshadow += r; }
-  return n; }
+  w->Xconvas = 0; w->Yconvas = 0; return n; }
 void WSet(uint8_t n, int16_t x, int16_t y) {
   if (Convas.No || n > Convas.MaxN) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
