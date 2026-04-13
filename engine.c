@@ -219,7 +219,7 @@ uint8_t ViewPort(void) {
 
 uint8_t Window(uint8_t col, int16_t c, int16_t r) {
   uint8_t n = ++Convas.N; Convas.No = 0; WindowData* w = Win(n);
-  if (!n) { Convas.Windows = 0; Convas.Shadow = 0; Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = 0; Convas.Yshadow = CellStr; }
+  if (!n) { Convas.Windows = 0xFF; Convas.Shadow = 0xFF; Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = 0; Convas.Yshadow = CellStr; }
   if (r < 0) { r = -r; w->Flags = (col | 0x1E0); uint8_t i = n, l = ++Convas.Shadow, d = 0xFF; Convas.Render[n] = d;
     while(--l) { while(--i || Convas.Render[i] != d) { } if (Convas.Render[i] == d) Convas.Render[i] = --d; } }
   else { w->Flags = col; Convas.Windows++; Convas.Render[n] = n; }
@@ -230,8 +230,8 @@ void WSet(uint8_t n, int16_t x, int16_t y) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void WTop(uint8_t n) {
-  if (Convas.Render[n] >= Convas.Windows) return;
-  uint8_t l = Convas.Windows, d = Convas.Render[n]; while(l) { if (Convas.Render[l] > d) --Convas.Render[l]; --l; }
+  if (Convas.No || n > Convas.N || Convas.Render[n] >= Convas.Windows) return;
+  uint8_t l = Convas.N, d = Convas.Render[n]; while(l) { if (Convas.Render[l] > d && Convas.Render[l] <= Convas.Windows) --Convas.Render[l]; --l; }
   Convas.Render[n] = Convas.Windows; }
 void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;
