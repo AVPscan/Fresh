@@ -175,10 +175,8 @@ uint8_t ViewPort(void);                                               // Пол�
 void WSet(uint8_t n, int16_t y, int16_t x);                           // Привязка окна к рендеру
 void WTop(uint8_t n);                                                 // Установить окно поверх всех кроме окон интерфейса
 uint8_t _Window(uint8_t col, uint8_t count, int16_t *args);           // Определение окна цветом col (r<0 теневое окно), высотой r, визуальной шириной c
-void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args);     // Данные формата str, с позиции курсора в окно n
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна
 #define Window(n, ...) _Window(n, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
-#define WConst(n, str, ...) _WConst(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime

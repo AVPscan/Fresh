@@ -234,10 +234,6 @@ uint8_t _Window(uint8_t col, uint8_t count, int16_t *args) {
   w->Xrender = 0; w->Yrender = 0; w->MaxCS = 0; w->MaxVS = 0; w->W = c; w->H = r;
   w->Xview = w->W; w->Yview = w->H; w->Xscroll = 0; w->Yscroll = 0; col &= Mcbi; w->XCur = 0;
   w->parent = n; w->child = n; w->YCur = 0; w->Xconvas = 0; w->Yconvas = 0; return n; }
-void _WConst(uint8_t n, char *str, uint8_t count, int16_t *args) {
-  if (Convas.No || n > Convas.N) return;
-  int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
-  (void)n; (void)str; (void)args; (void)val; }
 void _WData(uint8_t n, char *str, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;
   int16_t val; uint8_t i = 0; while(count--) { val = args[i++]; } 
