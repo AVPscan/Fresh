@@ -90,7 +90,8 @@ void Print(uint8_t n, char *str) {
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeDCell); Cwin = (uint16_t*)((uint8_t*)Cattr + SizeADCell); Cvlswin = Cwin + SizeWinData;
-  Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Cdwin = (uint16_t*)Parse(WinsData); Ckbuf = Cpdat + SizePalBuff; Cvdat = Ckbuf + SizeKeyBuf;
+  Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Cdwin = (uint16_t*)Parse(WinsData); Cdren = (uint8_t*)(Cpdat + SizePalBuff);
+  Ckbuf = (char*)(Cdren + SizeRenderWin); Cvdat = Ckbuf + SizeKeyBuf;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
   while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
@@ -98,7 +99,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  *Parse(LastAttr) = Cdefault; Convas.No = 0xFF; Convas.N = 0xFF; Convas.W = CellLine; Convas.H = CellStr; }
+  Convas.No = 0xFF; Convas.N = 0xFF; Convas.W = CellLine; Convas.H = CellStr; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return 0;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -221,15 +222,15 @@ void WSet(uint8_t n, int16_t y, int16_t x) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void WTop(uint8_t n) {
-  if (Convas.No || n > Convas.N || Convas.Render[n] >= Convas.Windows) return;
-  uint8_t l = Convas.N, d = Convas.Render[n]; while(l) { if (Convas.Render[l] > d && Convas.Render[l] <= Convas.Windows) --Convas.Render[l]; --l; }
-  Convas.Render[n] = Convas.Windows; }
+  if (Convas.No || n > Convas.N || Render(n) >= Convas.Windows) return;
+  uint8_t l = Convas.N, d = Render(n); while(l) { if (Render(l) > d && Render(l) <= Convas.Windows) --Render(l); --l; }
+  Render(n) = Convas.Windows; }
 uint8_t _Window(int8_t col, uint8_t count, int16_t *args) {
   uint16_t r = 0, c = 0; uint8_t n = ++Convas.N; Convas.No = 0; WindowData* w = Win(n); if (count) { r = args[0]; if (--count) c = args[1]; }
   if (!n) { Convas.Windows = 0xFF; Convas.Shadow = 0xFF; Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = Convas.W; Convas.Yshadow = Convas.H; }
-  if (col < 0) { w->Flags = (((-col) & Mcbi) | 0x1E0); uint8_t i = n, l = ++Convas.Shadow, d = 0xFF; Convas.Render[n] = d;
-    while(--l) { while(--i || Convas.Render[i] != d) { } if (Convas.Render[i] == d) Convas.Render[i] = --d; } }
-  else { w->Flags = col & Mcbi; Convas.Windows++; Convas.Render[n] = n; }
+  if (col < 0) { w->Flags = (((-col) & Mcbi) | 0x1E0); uint8_t i = n, l = ++Convas.Shadow, d = 0xFF; Render(n) = d;
+    while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
+  else { w->Flags = col & Mcbi; Convas.Windows++; Render(n) = n; }
   w->Xrender = 0; w->Yrender = 0; w->MaxCS = 0; w->MaxVS = 0; w->W = c; w->H = r;
   w->Xview = w->W; w->Yview = w->H; w->Xscroll = 0; w->Yscroll = 0; w->parent = n; w->child = n;
   w->XCur = 0; w->YCur = 0; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }

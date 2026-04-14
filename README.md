@@ -12,75 +12,130 @@
 
 <video src="https://github.com/user-attachments/assets/231a6004-a684-45f1-87d9-8ce4f11437bc" controls width="600"></video>
 
-## Fresh
+# Fresh: Больше не «движок для терминала»
 
-Описание в папке проекта **IIAbout**
+**Fresh** — это первая **среда исполнения приложений (Runtime Environment)**, полностью независимая от ОС, процессора, видеокарты и внешних библиотек. Это не фреймворк и не библиотека. Это **новой слой реальности** между данными и наблюдателем.
 
-Вам больше не нужно ничего знать о GTK, Qt и иных слоях в осях в принципе, чтобы творить. А если не программировали до сего момента то достаточно прочесть книгу, сэкономите годы в ВУЗе.
+Одно приложение, собранное с Fresh, работает **одинаково** на Linux, macOS, Windows, в Docker, по SSH и на встраиваемых системах. Без доработок. Без рантаймов. Без виртуализации.
 
-![Forth book](IIAbout/Forth%20book.jpeg)
-
-**P.s.:** СПО и один человек без начальства...
-
-**Fresh** — A high-performance, self-contained terminal engine designed for low-latency system software and embedded applications. Distributed under the **GPLv3** license.
-
-Developed in pure **C** without any external dependencies (no ncurses, no bloated libraries). This makes it an ideal foundation for high-load utilities, embedded systems, and cross-platform system software.
-
-## 🚀 Key Features
-
-* **Zero-Dependency:** Complete independence from third-party libraries. Built exclusively on raw system calls and the C standard library.
-* **RDTSC Precision Timing:** Leverages the hardware timestamp counter for microsecond-accurate hardware-level delays (`Delay_ms`). Features a hybrid sleep mechanism (nanosleep + active pause) for maximum responsiveness.
-* **Virtual VRAM Architecture:** Direct memory addressing for data, attributes, and offsets. Optimized for CPU cache efficiency through Data/Attr/Offset separation.
-* **Native UTF-8 Core:** Built-in UTF-8 parser with support for wide characters (CJK, emojis, combining marks) and RTL (Right-to-Left) directions. Designed for global compatibility.
-* **Smart Viewport Control:** Three navigation modes (Free, Sticky, Locked) with an integrated debounce mechanism for terminal window resizing.
-* **Asynchronous Real-Time Input:** Non-blocking handling of keyboard and mouse (including X10 protocols). Uses an RLE-compressed event buffer to integrate input "weight" and duration (`tic`) without event loss.
-* **Architecture Agnostic:** Decoupled from word size using a `Cell` abstraction, making it ready for 32-bit, 64-bit, and future wide-word architectures.
-
-## 🖱️ Mouse Evolution — Hardware Independence
-
-**Fresh** brings modern scrolling to any mouse — even those without a tilt wheel.
-
-Using the classic X10 protocol, it maps:
-- **96/97** — vertical scroll (native)
-- **100/101** — horizontal scroll (Shift + wheel)
-- **112/113** — delegated to OS/terminal for zoom (Ctrl + wheel)
-
-**No new hardware. No drivers. No tilt mechanisms.**
-
-Just four lines of code that give any 30-year-old mouse capabilities that modern devices market as premium features.
-
-The mouse runs in **real-time** — motion events bypass the buffer completely (`t++`), sharing acceleration with keyboard input (`dXY`), and triggering viewport updates instantly. A mouse from 1995 behaves like it was designed for 2026.
-
-## 📜 Why This Matters
-
-Most terminal engines treat mouse input as an afterthought. **Fresh** integrates it at the core — with real-time priority, acceleration sharing with keyboard, and zero buffering for motion events.
-
-The result? Any mouse. Any era. Horizontal scroll. Four codes. Zero cost.
-
-## 🛠 Technical Stack
-
-* **Language:** C11 / POSIX.
-* **Optimization:** Inline Assembly (RDTSC), bitwise mapping, manual memory layout.
-* **Interface:** Manual construction of ANSI/VT100 escape sequences for atomic `write` operations.
-
-## 📊 Performance
-
-The engine is engineered for resource-constrained environments. By managing output buffers manually and eliminating abstraction layers, the input-to-render latency is pushed to the physical limits of the terminal, even on single-core systems.
-
-**Binary size:** ~16 KB on Linux — a complete terminal engine fitting in less space than a single modern webpage.
-
-## 📂 Project Structure
-
-- `sys.h` — Low-level macros, color palettes, and system constants.
-- `engine.c` — The core: memory management, viewport logic, and event processing.
-- `sys_linux.c` / `sys.macos.c` / `sys_windows.c` — Platform-specific system layers.
-
-## 👨‍💻 Author
-
-**Alexey Pozdnyakov**  
-E-mail: [avp70ru@mail.ru](mailto:avp70ru@mail.ru)  
+**Один статический бинарник (19 КБ)** — и ваш софт работает **везде и навсегда**.
 
 ---
-*This software is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 3.*
 
+## Проблема, которую вы замечали, но не могли сформулировать
 
+Современная разработка требует:
+- Выбрать ОС (и страдать от её ограничений)
+- Выбрать фреймворк (Qt, GTK, Electron...)
+- Тащить за собой мегабайты зависимостей
+- Переписывать под каждую платформу
+- Молиться, чтобы API не устарел через год
+
+**Fresh доказывает: всё это не нужно.**
+
+---
+
+## Что внутри 19 КБ?
+
+- **Графика 16K** — Браэль-символы (UTF-8) = **16K × 20K** точек без видеокарты уже сейчас.  
+
+  ⚡ **Хотите больше?**  
+  Поменяйте константу `13` → `14` → получите **32K × 40.5K**  
+  (32K монитор с запасом в несколько полных экранов и 256 окнами).  
+
+  🚀 **А если технологии шагнут до 64K мониторов** — чуть сложнее:  
+  `13` → `15` и `int8_t/int16_t` → `int16_t/int32_t` — и работает!
+- **Оконная система** — Z-порядок, иерархия, перекрытия, скроллинг
+- **Реальный ввод** — Клава, мышь (X10), горизонт. скролл через Shift, RT-обработка
+- **Навигация** — Вьюпорт с 3 режимами, адаптивное ускорение
+- **Нулевые зависимости** — Никаких библиотек — только чистый C и системные вызовы
+- **Архитектурная свобода** — Код сам подстраивается под 32/64/128 бит через абстракцию Cell
+
+---
+
+## Мышь из 1995-го против «инноваций» 2026-го
+
+Современные мыши продают с «премиальным» горизонтальным скроллом. Fresh даёт его **любой** мыши через Shift + колесо. Без драйверов, без новых устройств.
+
+- 96/97 — вертикаль
+- 100/101 — горизонталь (Shift)
+- 112/113 — зум (Ctrl)
+
+**Четыре кода — и мышь любого года выпуска получает возможности, которые маркетологи называют «прорывом».**
+
+---
+
+## Производительность как вызов
+
+Fresh не просто быстр — он **обходит ограничения железа**:
+
+- Не нужна видеокарта (графика через шрифт терминала)
+- Не нужен X11/Wayland (прямой вывод в терминал)
+- Не нужен GPU для рендеринга (CPU + RDTSC + умный кэш)
+- **Бинарник 19 КБ** — меньше, чем одна иконка в Electron
+
+На одном ядре, в текстовой консоли, по SSH — FPS ограничен только скоростью вашего терминала.
+
+---
+
+## Для кого Fresh?
+
+- **Системные программисты** — создавайте утилиты с GUI, которые работают на сервере без GPU
+- **Игроделы** — пишите ретро-игры с графикой 16K, которые запускаются даже на калькуляторе
+- **Встраиваемщики** — получите полноценный интерфейс на устройстве без framebuffer
+- **Все, кто устал от «докера, npm, сборки 10 минут, а оно не работает»**
+
+---
+
+## Сборка — это копирование одного файла
+git clone https://github.com/AVPscan/Fresh
+cd Fresh
+make
+./fresh
+
+---
+Вас встречает **пустое пространство** и вьюпорт. Данных пока нет — но вы уже можете:
+- Двигаться (стрелки, Ctrl+стрелки — ускорение)
+- Приближаться/отдаляться (F3/F4)
+- Создавать окна (вызов Window())
+- Взаимодействовать с мышью
+
+**Рендер данных и _WData — единственное, что ещё не дописано.** Но архитектура готова.
+
+---
+
+## Что внутри репозитория
+
+- `sys.h` — магия абстракции: цвета, макросы, структуры
+- `engine.c` — сердце движка: VRAM, вьюпорт, события
+- `sys_linux.c` / `sys_macos.c` / `sys_windows.c` — минимальные системные прослойки
+- `IIAbout/` — почитать
+
+---
+
+## Один человек против индустрии
+
+Описание в папке проекта **IIAbout**
+![Forth book](IIAbout/Forth%20book.jpeg)
+Это СПО и один человек без начальства, без грантов, без «экосистем». Только код, который работает.
+
+> «Вам больше не нужно знать GTK, Qt и прочие слои в ОС. А если вы не программировали — прочитайте книгу и сэкономите годы в вузе.»
+
+---
+
+## Лицензия
+
+**GPLv3** — свобода использовать, изменять, распространять.
+Но главная свобода — **не зависеть от производителей ОС, процессоров и стран**.
+
+---
+
+## Если вы это поняли — поставьте звезду
+
+Fresh не нуждается в рекламе. Он нуждается в тех, кто готов **перестать строить софт из кирпичей фреймворков** и начать создавать **вечные, переносимые, честные программы**.
+
+**Fresh — GitHub:** https://github.com/AVPscan/Fresh
+
+---
+
+*P.S. Да, это всё работает даже по SSH. Да, на Raspberry Pi. Да, на 32-битном процессоре. Да, без видеокарты. Нет, это не магия. Это просто C и 35 лет правильного опыта.*
