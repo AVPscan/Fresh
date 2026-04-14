@@ -174,9 +174,9 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Чит�
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WSet(uint8_t n, int16_t y, int16_t x);                           // Привязка окна к рендеру
 void WTop(uint8_t n);                                                 // Установить окно поверх всех кроме окон интерфейса
-uint8_t _Window(uint8_t col, uint8_t count, int16_t *args);           // Определение окна цветом col (r<0 теневое окно), высотой r, визуальной шириной c
-void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна
-#define Window(n, ...) _Window(n, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+uint8_t _Window(int8_t col, uint8_t count, int16_t *args);            // Определение окна цветом col (col<0 теневое окно){ высотой r { визуальной шириной c } ... }
+void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+#define Window(col, ...) _Window(col, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime

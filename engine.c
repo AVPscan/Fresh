@@ -224,11 +224,11 @@ void WTop(uint8_t n) {
   if (Convas.No || n > Convas.N || Convas.Render[n] >= Convas.Windows) return;
   uint8_t l = Convas.N, d = Convas.Render[n]; while(l) { if (Convas.Render[l] > d && Convas.Render[l] <= Convas.Windows) --Convas.Render[l]; --l; }
   Convas.Render[n] = Convas.Windows; }
-uint8_t _Window(uint8_t col, uint8_t count, int16_t *args) {
-  uint8_t n = ++Convas.N; Convas.No = 0; WindowData* w = Win(n); int16_t c = 0, r = 0;
+uint8_t _Window(int8_t col, uint8_t count, int16_t *args) {
+  uint16_t c = 0, r = 0; uint8_t n = ++Convas.N; Convas.No = 0; WindowData* w = Win(n);
   if (!n) { Convas.Windows = 0xFF; Convas.Shadow = 0xFF; Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = 0; Convas.Yshadow = CellStr; }
   if (count) { r = args[0]; if (--count) c = args[1]; }
-  if (r < 0) { r = -r; w->Flags = (col | 0x1E0); uint8_t i = n, l = ++Convas.Shadow, d = 0xFF; Convas.Render[n] = d;
+  if (col < 0) { w->Flags = (-col | 0x1E0); uint8_t i = n, l = ++Convas.Shadow, d = 0xFF; Convas.Render[n] = d;
     while(--l) { while(--i || Convas.Render[i] != d) { } if (Convas.Render[i] == d) Convas.Render[i] = --d; } }
   else { w->Flags = col; Convas.Windows++; Convas.Render[n] = n; }
   w->Xrender = 0; w->Yrender = 0; w->MaxCS = 0; w->MaxVS = 0; w->W = c; w->H = r;
