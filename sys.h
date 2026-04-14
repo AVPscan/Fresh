@@ -98,10 +98,10 @@ enum { K_NO,
     K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10, K_F11,
     K_F12, K_F13, K_F14, K_F15, K_BAC = 127, K_Max = K_F15 + 1 };
 enum {
-    Cdefault, CdefaultI, CdefaultB, CdefaultBI, Cgrey, CgreyI, CgreyB, CgreyBI,
+    Cconvas, Cborder, LastAttr, WinsData , Cgrey, CgreyI, CgreyB, CgreyBI,
     Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
     Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
-    Cgold, CgoldI, CgoldB, CgoldBI, Cborder, Cconvas, LastAttr, WinsData };
+    Cgold, CgoldI, CgoldB, CgoldBI, Cdefault, CdefaultI, CdefaultB, CdefaultBI };
 extern char      *Cdata;
 extern uint16_t  *Cattr;
 extern uint16_t  *Cwin;
