@@ -114,8 +114,8 @@ extern uint16_t  *Cdren;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender; uint16_t MaxCS, MaxVS; int16_t W, H, Xview, Yview;
-                 uint16_t parent, child, Flags, XCur, YCur, Xconvas, Yconvas; } WindowData;
+typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t Flags, parent, child,
+                 MaxCS, MaxVS, XCur, YCur, W, H, Xconvas, Yconvas; } WindowData;
 typedef struct { uint16_t No, N, Windows, Shadow, W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
 typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
