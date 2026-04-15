@@ -53,8 +53,8 @@
 typedef uintptr_t Cell;
 #define SizeCell sizeof(Cell)
 enum {
-    CellPow = 13,                                                     /* Константа определяющая буквально всё (взял 13 чтоб перекрыть сегодняшние потребности с запасом пример 8192*5062 это при графике Браэля 16384*20248 точек это 16к монитор будет желание не переписывая код сделать 32к - возьмите 14 это предел для слова процессора так как у нас utf8, вместо 13) если нужно больше 14 то придётся перейти на 32 битную архитектуру это не сложно. В любом случае это самое быстрое, что сегодня есть в мире с такими возможностями: настоящее время для клавиатуры и мыши, окна с перекрытиями без копирования данных, холст с независимыми окнами и бездна вокруг, свободное перемещение над всем этим с возможностью фиксации - входа в окна, автоматически подхватывается тема пользователя, адаптация к изменению размера терминала и масштаба шрифта (до свиданья костыли современности), при сборке автоматическая адаптация под цветность среды использования, запрашивает у процессора на всё очень мало памяти - просто осознайте 300 метров для поддержки 16к монитора уже сейчас с возможность создания полноценного оконного приложения с огромным числом наложенных окон интерфейса, создавайте быстрый софт не зависящий от процессора, видеокарты и страны - теперь можно написать один раз и сразу для всех, а что именно напишите (игра, ось или программу) зависит от Вас, ограничения отменил. */
-    MaxWin = 256,                                                     // Максимальное число окон
+    CellPow = 13,                                                     /* Константа определяющая буквально всё (взял 13 чтоб перекрыть сегодняшние потребности с запасом пример 8192*4096 это при графике Браэля 16384*16386 точек это 16к монитор будет желание не переписывая код сделать 32к - возьмите 14 это предел для слова процессора так как у нас utf8, вместо 13) если нужно больше 14 то придётся перейти на 32 битную архитектуру это не сложно. В любом случае это самое быстрое, что сегодня есть в мире с такими возможностями: настоящее время для клавиатуры и мыши, окна с перекрытиями без копирования данных, холст с независимыми окнами и бездна вокруг, свободное перемещение над всем этим с возможностью фиксации - входа в окна, автоматически подхватывается тема пользователя, адаптация к изменению размера терминала и масштаба шрифта (до свиданья костыли современности), при сборке автоматическая адаптация под цветность среды использования, запрашивает у процессора на всё очень мало памяти - просто осознайте 300 метров для поддержки 16к монитора уже сейчас с возможность создания полноценного оконного приложения с огромным числом наложенных окон интерфейса, создавайте быстрый софт не зависящий от процессора, видеокарты и страны - теперь можно написать один раз и сразу для всех, а что именно напишите (игра, ось или программу) зависит от Вас, ограничения отменил. */
+    MaxWin = 512,                                                     // Максимальное число окон
     SKey = 256,                                                       // Буфер клавиатуры
     SizePal = 32,                                                     // Размер в байтах одной палитры (len,bytes[len])
     SizeKey = 8,                                                      // Формат ячейки буфера клавиатуры (data1 data2 tic1 tic2 UTF8[2*[1,2]bytes / 1*[3,4]bytes])
@@ -64,9 +64,9 @@ enum {
     WinData_shift = 4,                                                // 2^4 Смещение для данных окон 16 слов - 32 байта на окно.
     Win_shift = SizeKey,                                              // 2^8 Смещение для визуальных длин строк окон
     Parse_shift = WinData_shift + 1,                                  // 2^5 Смещение для 32 палитр
-    KeyBuf_shift = WinData_shift - 1,                                 // 2^3 Смещение для 256 ячеек буфера клавиатуры
+    KeyBuf_shift = WinData_shift - 1,                                 // 2^3 Смещение для ячеек буфера клавиатуры
     CellLine = 1 << CellPow,                                          // 2^(CellPow + 0) Количество ячеек в строке холста (8192)
-    CellStr = CellLine * 987 / 1597,                                  // Количество строк холста (при 8192 - будет 5062)
+    CellStr = CellLine / 2,                                           // Количество строк холста (при 8192 - будет 4096)
     SizeDCell = CellStr * CellLine * Utf8,                            // Размер данных в ячейках холста
     SizeADCell = SizeDCell,                                           // Размер атрибутов, данных, смещения для ячейках холста
     SizeWinData = MaxWin * SizePal,                                   // Размер данных для окон
@@ -83,7 +83,7 @@ WinData
 4 Xo Yo  координаты на холсте левого верхнего угла окна */    
     SizeVlsWin = CellStr * MaxWin * 4,                                // Размер визуальных и реальных длин строк окон - обновляются при наполнении
     SizePalBuff = SizePal * SizePal,                                  // Размер данных 8*4 [32] палитр по 32 байта на каждую
-    SizeRenderWin = MaxWin,                                           // Размер данных окон для рендера 
+    SizeRenderWin = MaxWin * 2,                                       // Размер данных окон для рендера 
     SizeKeyBuf = SKey * SizeKey,                                      // Размер данных кольцевого буфера клавиатуры на 255/510 ячеек
     SizeBuff = 1024,                                                  // Размер буфера
     SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeRenderWin + SizeKeyBuf + SizeBuff };
@@ -110,14 +110,14 @@ extern uint16_t  *Cwin;
 extern uint16_t  *Cvlswin;
 extern char      *Cpdat;
 extern uint16_t  *Cdwin;
-extern uint8_t   *Cdren;
+extern uint16_t  *Cdren;
 extern char      *Ckbuf;
 extern char      *Cvdat;
 typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender; uint16_t MaxCS, MaxVS; int16_t W, H, Xview, Yview, Xscroll, Yscroll;
-                 uint8_t parent, child; uint16_t Flags, XCur, YCur, Xconvas, Yconvas; } WindowData;
-typedef struct { uint8_t No, N, Windows, Shadow; uint16_t W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
-typedef struct { uint8_t Win[MaxWin]; } Render;
+typedef struct { int16_t Xrender, Yrender; uint16_t MaxCS, MaxVS; int16_t W, H, Xview, Yview;
+                 uint16_t parent, child, Flags, XCur, YCur, Xconvas, Yconvas; } WindowData;
+typedef struct { uint16_t No, N, Windows, Shadow, W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
+typedef struct { uint16_t Win[MaxWin]; } Render;
 typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
@@ -131,7 +131,7 @@ typedef struct { uint16_t col , row; } T_;
 #define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                        // адрес начала anci кода цвета cbi[0..31] - [8][4]
 #define Convas        (*(Canalysis*)Cdwin)                                    // адрес где организована разбивка холста
-#define Render(n)     *(Cdren + n)                                             // адрес данных слоя для окна
+#define Render(n)     *(Cdren + (n))                                          // адрес данных слоя для окна
 #define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                         // адрес начала клавиши в буфере n[0..255]
 
 extern V_ VP;
@@ -144,7 +144,7 @@ extern R_ VRam;
     uint16_t  *Cvlswin    = 0; \
     char      *Cpdat      = 0; \
     uint16_t  *Cdwin      = 0; \
-    uint8_t   *Cdren      = 0; \
+    uint16_t  *Cdren      = 0; \
     char      *Ckbuf      = 0; \
     char      *Cvdat      = 0; \
     V_ VP = {1,1,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC}; \
@@ -178,10 +178,10 @@ uint16_t Keys(void);                                                  // Ско�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void WSet(uint8_t n, int16_t y, int16_t x);                           // Привязка окна к рендеру
-void WTop(uint8_t n);                                                 // Установить окно поверх всех кроме окон интерфейса
-uint8_t _Window(int8_t col, uint8_t count, int16_t *args);            // Определение окна цветом col (col<0 теневое окно){ высотой r { визуальной шириной c } ... }
-void _WData(uint8_t n, char *str, uint8_t count, int16_t *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void WSet(uint16_t n, int16_t y, int16_t x);                          // Привязка окна к рендеру
+void WTop(uint16_t n);                                                // Установить окно поверх всех кроме окон интерфейса
+uint16_t _Window(int8_t col, uint8_t count, int16_t *args);           // Определение окна цветом col (col<0 теневое окно){ высотой r { визуальной шириной c } ... }
+void _WData(uint16_t n, char *str, uint8_t count, int16_t *args);     // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
