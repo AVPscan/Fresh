@@ -102,13 +102,42 @@ extern uint16_t  *Cdwin;
 extern uint16_t  *Cdren;
 extern char      *Ckbuf;
 extern char      *Cvdat;
-typedef struct { uint8_t info, data; uint16_t offset; } ADOCell;
-typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t Flags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, Xconvas, Yconvas, WSFirst; } WindowData;
+typedef struct {
+    uint8_t inverse : 1;                                                      // бит 0      инверсия
+    uint8_t bold    : 1;                                                      // бит 1      толстый
+    uint8_t color   : 3;                                                      // бит 432    цвет
+    uint8_t Ctrl    : 1;                                                      // бит 5      {0} Data {1} Struct
+    uint8_t NoFull  : 1;                                                      // бит 6      {0} нет данных {1} есть
+    uint8_t Error   : 1;                                                      // бит 7      {1} изменения {0} нет изменений
+} Info;   
+typedef struct {
+    uint8_t len     : 2;                                                      // бит 10     длина (0-3) + 1
+    uint8_t vis     : 2;                                                      // бит 32     визуальная ширина (0-2)
+    uint8_t Dir     : 1;                                                      // бит 4      направление (0=LTR,1=RTL)
+    uint8_t Ctrl    : 1;                                                      // бит 5      управляющий код
+    uint8_t NoFull  : 1;                                                      // бит 6      не влезло в буфер
+    uint8_t Error   : 1;                                                      // бит 7      не UTF8
+} Data;                                                                       // data UTF8
+typedef struct {
+    uint8_t len     : 6;                                                      // бит 543210 длина (0-63) + 1
+    uint8_t vis     : 2;                                                      // бит 76     {10} к левому {01} к правому {00}/{11} по центру
+} Struct;
+typedef struct {
+    uint8_t inverse : 1;                                                      // бит 0      инверсия
+    uint8_t bold    : 1;                                                      // бит 1      толстый
+    uint8_t color   : 3;                                                      // бит 432    цвет
+    uint8_t cursor  : 1;                                                      // бит 5      отключить курсор окна
+    uint8_t stati   : 1;                                                      // бит 6      статичное окно
+    uint8_t nowrap  : 1;                                                      // бит 7      запрет переноса строк
+    uint8_t shadow  : 1;                                                      // бит 8      теневое окно
+} WinFlags;                                                                   // биты 9-15  зарезервированы
+typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Struct
+typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, Xconvas, Yconvas, WSFirst; } WindowData;
 typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint16_t No, N, Windows, Shadow, W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
-typedef struct { uint8_t data1, data2, tic1, tic2, utf8[4]; } KeyBuf;
+typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
@@ -148,14 +177,13 @@ extern R_ VRam;
         {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
         {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
         {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }
-// [data] = 7 битый, 6 не влезает в буфер, 5 управляющий код, 4 направление письма, 32 визуальная длина [0-2], 10 длина [0-3]+1
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                          // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                        // Сравнение
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
-uint8_t UTFinfo(char *s);                                             // Рассказ об utf8 возвращает [data]
-uint8_t UTFinfoTile(char *s, Cell len);                               // Рассказ об utf8 возвращает [data] с учётом буфера
+uint8_t UTFinfo(char *s);                                             // Рассказ об utf8 возвращает Data
+uint8_t UTFinfoTile(char *s, Cell len);                               // Рассказ об utf8 возвращает Data с учётом буфера
 void Print(uint8_t n, char *str);                                     // Вывод строки в цвете палитры напрямую в терминал минуя Vram.
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
