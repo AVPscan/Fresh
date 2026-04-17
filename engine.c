@@ -152,9 +152,9 @@ uint8_t PopKey(uint8_t *data, uint8_t *count, char *key) {
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
   char *src = KeyBuf(Buf.push--); Buf.tic--;
-  if (*src & b7) { Buf.push++; *src &= 0x7F; } }
+  if (*src & b7) { Buf.push++; *src &= ~b7; } }
 uint16_t Keys(void) {
-  uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & 0x80) s++; }
+  uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & b7) s++; }
   return s; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   uint8_t t = 0; int16_t dx = 0, dy = 0; uint16_t r, c = TermCR(&r); Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
@@ -218,10 +218,10 @@ uint8_t ViewPort(void) {
   else { control--; }
   return 1; }
 
-void WSet(uint16_t n, int16_t y, int16_t x) {
+void WinView(uint16_t n, int16_t y, int16_t x) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
-void WTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.Windows - 1;
+void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.Windows - 1;
   if (Convas.No || n > Convas.N || Render(n) >= m) return;
   while(l) { if (Render(l) > d && Render(l) <= m) --Render(l); --l; }
   Render(n) = m; }
@@ -230,7 +230,7 @@ uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
   WindowData* w = Win(n); if (count) { r = args[0]; if (--count) c = args[1]; }
   if (n >= MaxWin) { n = 0; Convas.N = 0; Convas.Windows = MaxWin; Convas.Shadow = MaxWin;
     Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = Convas.W; Convas.Yshadow = Convas.H; }
-  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | 0x1E0); uint16_t i = n, l = ++Convas.Shadow, d = MaxWin - 1; Render(n) = d;
+  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | 0xE0); uint16_t i = n, l = ++Convas.Shadow, d = MaxWin - 1; Render(n) = d;
     if (l > MaxWin) { l = 1;  Convas.Shadow = 1; }
     while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
   else { w->WinFlags = col & Mcbi; Render(n) = n; if (++Convas.Windows > MaxWin) Convas.Windows = 1; }

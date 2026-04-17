@@ -59,7 +59,7 @@ enum {
     SizePal = 32,                                                     // Размер в байтах одной палитры
     SizeKey = 8,                                                      // Размер ячейки буфера клавиатуры
     Utf8 = 4,                                                         // Максимальная длина utf8
-    Data_shift = CellPow,                                             // Смещение между строк холста / 4
+    Data_shift = CellPow + 2,                                         // Смещение между строк холста
     ADOC_shift = CellPow + 1,                                         // Смещение между атрибутами ячеек / 2
     WinData_shift = 4,                                                // 2^4 Смещение для данных окон 16 слов - 32 байта на окно.
     Win_shift = 9,                                                    // 2^9 Смещение для визуальных длин строк окон
@@ -106,32 +106,32 @@ typedef struct {
     uint8_t inverse : 1;                                                      // бит 0      инверсия
     uint8_t bold    : 1;                                                      // бит 1      толстый
     uint8_t color   : 3;                                                      // бит 432    цвет
-    uint8_t Ctrl    : 1;                                                      // бит 5      {0} Data {1} Struct
-    uint8_t NoFull  : 1;                                                      // бит 6      {0} нет данных {1} есть
-    uint8_t Error   : 1;                                                      // бит 7      {1} изменения {0} нет изменений
+    uint8_t null    : 1;                                                      // бит 5      резерв
+    uint8_t NoFull  : 1;                                                      // бит 6      {1} есть {0} нет данных
+    uint8_t Error   : 1;                                                      // бит 7      {1} есть {0} нет изменений
 } Info;   
-typedef struct {
-    uint8_t len     : 2;                                                      // бит 10     длина (0-3) + 1
-    uint8_t vis     : 2;                                                      // бит 32     визуальная ширина (0-2)
+typedef struct {                                                              //UTFinfo Render 
+    uint8_t len     : 2;                                                      // бит 10 32  длина (0-3) + 1, игнорируем так как размер в байтах через offset
+    uint8_t vis     : 2;                                                      // бит 32 10  визуальная ширина (0-2)
     uint8_t Dir     : 1;                                                      // бит 4      направление (0=LTR,1=RTL)
     uint8_t Ctrl    : 1;                                                      // бит 5      управляющий код
-    uint8_t NoFull  : 1;                                                      // бит 6      не влезло в буфер
-    uint8_t Error   : 1;                                                      // бит 7      не UTF8
+    uint8_t NoFull  : 1;                                                      // бит 6  {0} {1} не влезло в буфер (UTF8infoTile)
+    uint8_t Error   : 1;                                                      // бит 7  {0} (UTF8info) {1} Structure
 } Data;                                                                       // data UTF8
 typedef struct {
-    uint8_t len     : 6;                                                      // бит 543210 длина (0-63) + 1
-    uint8_t vis     : 2;                                                      // бит 76     {10} к левому {01} к правому {00}/{11} по центру
-} Struct;
+    uint8_t len     : 5;                                                      // бит 43210  длина (0-31) + 1 ascii {32...127} визуальная длина равна длине в байтах (числа)
+    uint8_t format  : 2;                                                      // бит 65     {10} к левому {01} к правому {00}/{11} по центру
+    uint8_t str     : 1;                                                      // бит 7      {0} UTF8 {1} Structure
+} Structure;
 typedef struct {
     uint8_t inverse : 1;                                                      // бит 0      инверсия
     uint8_t bold    : 1;                                                      // бит 1      толстый
     uint8_t color   : 3;                                                      // бит 432    цвет
-    uint8_t cursor  : 1;                                                      // бит 5      отключить курсор окна
-    uint8_t stati   : 1;                                                      // бит 6      статичное окно
-    uint8_t nowrap  : 1;                                                      // бит 7      запрет переноса строк
-    uint8_t shadow  : 1;                                                      // бит 8      теневое окно
-} WinFlags;                                                                   // биты 9-15  зарезервированы
-typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Struct
+    uint8_t cursor  : 1;                                                      // бит 5      {0} показывать {1} не показывать - курсор окна
+    uint8_t nowrap  : 1;                                                      // бит 6      {0} авто перенос строк {1} статика - окна
+    uint8_t shadow  : 1;                                                      // бит 7      {0} обычное {1} теневое - окно
+} WinFlags;                                                                   // биты 8-15  зарезервированы
+typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, Xconvas, Yconvas, WSFirst; } WindowData;
 typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
 typedef struct { uint8_t len, data[31]; } PalData;
@@ -144,7 +144,7 @@ typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 typedef struct { uint16_t col, row; } T_;
-#define Data(r, c)    (Cdata + (((r) << Data_shift) + (c)) << 2)              // адрес начала буфера строки холста
+#define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
 #define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADOC_shift) + (c)) << 1))  // адрес атрибута, данных и смещения ячейки холста
 #define Win(n)        ((WindowData*)(Cwin + ((n) << WinData_shift)))          // адрес начала данных окна n
 #define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
@@ -195,12 +195,12 @@ uint16_t Keys(void);                                                  // Ско�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void WSet(uint16_t n, int16_t y, int16_t x);                          // Привязка окна к рендеру
-void WTop(uint16_t n);                                                // Установить окно поверх всех кроме окон интерфейса
+void WinView(uint16_t n, int16_t y, int16_t x);                       // Привязка окна к рендеру
+void WinTop(uint16_t n);                                              // Установить окно поверх всех (игнорирует теневые)
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args);           // Определение окна цветом col (col<0 теневое окно){ высотой r { визуальной шириной c } ... }
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args);     // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
-#define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+#define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                                 // Читаем utf8 из порта
