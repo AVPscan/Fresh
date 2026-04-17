@@ -77,8 +77,8 @@ enum {
     SizeBuff = 1024,                                                  // Размер буфера
     SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeRenderWin + SizeKeyBuf + SizeBuff };
 enum {
-    Minv = 0x01, Mbol = 0x02, Mcol = 0x1C, Mcbi = 0x1F, Msmem = 0x20,
-    Mdata = 0x40, Fresh = 0x80, Free = 0x14, On = 1, Off = 0 };
+    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80,
+    Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
 enum { K_NO,
     K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G, K_DEL,
     K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O, K_Ctrl_P,
