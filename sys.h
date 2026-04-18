@@ -128,13 +128,13 @@ typedef struct {
     uint8_t bold    : 1;                                                      // бит 1      толстый
     uint8_t color   : 3;                                                      // бит 432    цвет
     uint8_t cursor  : 1;                                                      // бит 5      {0} показывать {1} не показывать - курсор окна
-    uint8_t nowrap  : 1;                                                      // бит 6      {0} авто перенос строк {1} статика - окна
+    uint8_t nowrap  : 1;                                                      // бит 6      {0} включен {1} выключен авто перенос строк окна
     uint8_t shadow  : 1;                                                      // бит 7      {0} обычное {1} теневое - окно
 } WinFlags;                                                                   // биты 8-15  зарезервированы
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
-typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, Xconvas, Yconvas, WSFirst; } WindowData;
-typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;
-typedef struct { uint8_t len, data[31]; } PalData;
+typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, WFirstSR, Xconvas, Yconvas; } WindowData;
+typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
+typedef struct { uint8_t len, data[31]; } PalData;                            //            иначе указывает на первую строку для отображения управляем через вьюпорт
 typedef struct { uint16_t No, N, Windows, Shadow, W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
 typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
