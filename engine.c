@@ -203,7 +203,7 @@ uint8_t ViewPort(void) {
       else if (VP.Cod == VP.ri || VP.Cod == VP.cri) VP.X += VP.dXY;
       else if (VP.Cod == VP.up || VP.Cod == VP.cup) VP.Y -= VP.dXY;
       else if (VP.Cod == VP.ud || VP.Cod == VP.cdo) VP.Y += VP.dXY;
-      if (VP.Mode & 6) {
+      if (VP.Mode & b21) {
         VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
         VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
       else {
@@ -230,13 +230,18 @@ uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
   WindowData* w = Win(n); if (count) { r = args[0]; if (--count) c = args[1]; }
   if (n >= MaxWin) { n = 0; Convas.N = 0; Convas.Windows = MaxWin; Convas.Shadow = MaxWin;
     Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = Convas.W; Convas.Yshadow = Convas.H; }
-  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | 0xE0); uint16_t i = n, l = ++Convas.Shadow, d = MaxWin - 1; Render(n) = d;
+  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | b7); uint16_t i = n, l = ++Convas.Shadow, d = MaxWin - 1; Render(n) = d;
     if (l > MaxWin) { l = 1;  Convas.Shadow = 1; }
     while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
-  else { w->WinFlags = col & Mcbi; Render(n) = n; if (++Convas.Windows > MaxWin) Convas.Windows = 1; }
+  else { w->WinFlags = ((col & Mcbi) | b65); Render(n) = n; if (++Convas.Windows > MaxWin) Convas.Windows = 1; }
   w->Xrender = 0; w->Yrender = 0; w->Xview = 0; w->Yview = 0; w->parent = n; w->child = n;
   w->MaxCS = 0; w->MaxVS = 0; w->XCur = 1; w->YCur = 1; w->W = c; w->H = r;
   w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args) {
+  if (Convas.No || n > Convas.N) return;
+  WindowData* w = Win(n); if (w->WinFlags & b7) return;
+  w->WinFlags &= ~b5; if (cur) w->WinFlags &= b5;
+  if (count) { w->WinFlags &= ~b6; if (args[0]) w->WinFlags &= b6; } }
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); if (w->Xconvas == Convas.W) { uint16_t c = w->W, r = w->H;

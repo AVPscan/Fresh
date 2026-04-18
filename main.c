@@ -13,13 +13,13 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
       if (flag) { Print(Cdefault,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 7.90 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 7.91 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { uint16_t data = Window(Cgreen), control = Window(-Cgold);
               WinData(data, "Память под Vram %03cdMbytes\n", Corange, (uint16_t)((SizeVram + 1048575)/1048576));
-              WinData(control, " %3 %06c:%06c ", Cblue, Cblue); WinView(data, 1, 1); WinView(control, -2, -2);
+              WinData(control, " %3 %06c:%06c ", Cblue, Cblue); WinView(data, 1, 1); WinSet(data, Off); WinView(control, -2, -2);
               while (ViewPort()) { WinData(control, "bdd", VP.Mode, VP.X, VP.Y); WinData(data, "k"); Delay_ms(Fps); } }
   return (int)SystemSwitch(); }

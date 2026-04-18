@@ -77,7 +77,7 @@ enum {
     SizeBuff = 1024,                                                  // Размер буфера
     SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeRenderWin + SizeKeyBuf + SizeBuff };
 enum {
-    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80,
+    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b21 = 0x06, b65 = 0x60,
     Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
 enum { K_NO,
     K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G, K_DEL,
@@ -127,9 +127,9 @@ typedef struct {
     uint8_t inverse : 1;                                                      // бит 0      инверсия
     uint8_t bold    : 1;                                                      // бит 1      толстый
     uint8_t color   : 3;                                                      // бит 432    цвет
-    uint8_t cursor  : 1;                                                      // бит 5      {0} показывать {1} не показывать - курсор окна
-    uint8_t nowrap  : 1;                                                      // бит 6      {0} включен {1} выключен авто перенос строк окна
-    uint8_t shadow  : 1;                                                      // бит 7      {0} обычное {1} теневое - окно
+    uint8_t cursor  : 1;                                                      // бит 5      {1} показывать {0} не показывать - курсор окна
+    uint8_t nowrap  : 1;                                                      // бит 6      {1} включен {0} выключен авто перенос строк окна
+    uint8_t shadow  : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
 } WinFlags;                                                                   // биты 8-15  зарезервированы
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, WFirstSR, Xconvas, Yconvas; } WindowData;
@@ -197,9 +197,11 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Чит�
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WinView(uint16_t n, int16_t y, int16_t x);                       // Привязка окна к рендеру
 void WinTop(uint16_t n);                                              // Установить окно поверх всех (игнорирует теневые)
-uint16_t _Window(int8_t col, uint8_t count, int16_t *args);           // Определение окна цветом col (col<0 теневое окно){ высотой r { визуальной шириной c } ... }
+uint16_t _Window(int8_t col, uint8_t count, int16_t *args);           // Определение цвета окна col при col<0 статичное окно
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args);    // Управление отображением курсора и авто переносом строк в окне
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args);     // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
+#define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
