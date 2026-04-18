@@ -221,19 +221,19 @@ uint8_t ViewPort(void) {
 void WinView(uint16_t n, int16_t y, int16_t x) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
-void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.Windows - 1;
+void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.win - 1;
   if (Convas.No || n > Convas.N || Render(n) >= m) return;
   while(l) { if (Render(l) > d && Render(l) <= m) --Render(l); --l; }
   Render(n) = m; }
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
   uint16_t r = 0, c = 0; uint16_t n = ++Convas.N; Convas.No = 0;
   WindowData* w = Win(n); if (count) { r = args[0]; if (--count) c = args[1]; }
-  if (n >= MaxWin) { n = 0; Convas.N = 0; Convas.Windows = MaxWin; Convas.Shadow = MaxWin;
-    Convas.Xwindow = 0; Convas.Ywindow = 0; Convas.Xshadow = Convas.W; Convas.Yshadow = Convas.H; }
-  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | b7); uint16_t i = n, l = ++Convas.Shadow, d = MaxWin - 1; Render(n) = d;
-    if (l > MaxWin) { l = 1;  Convas.Shadow = 1; }
+  if (n >= MaxWin) { n = 0; Convas.N = 0; Convas.win = MaxWin; Convas.stat = MaxWin;
+    Convas.Xwin = 0; Convas.Ywin = 0; Convas.Xstat = Convas.W; Convas.Ystat = Convas.H; }
+  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | b7); uint16_t i = n, l = ++Convas.stat, d = MaxWin - 1; Render(n) = d;
+    if (l > MaxWin) { l = 1;  Convas.stat = 1; }
     while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
-  else { w->WinFlags = ((col & Mcbi) | b65); Render(n) = n; if (++Convas.Windows > MaxWin) Convas.Windows = 1; }
+  else { w->WinFlags = ((col & Mcbi) | b65); Render(n) = n; if (++Convas.win > MaxWin) Convas.win = 1; }
   w->Xrender = 0; w->Yrender = 0; w->Xview = 0; w->Yview = 0; w->parent = n; w->child = n;
   w->MaxCS = 0; w->MaxVS = 0; w->XCur = 1; w->YCur = 1; w->W = c; w->H = r;
   w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }

@@ -129,13 +129,13 @@ typedef struct {
     uint8_t color   : 3;                                                      // бит 432    цвет
     uint8_t cursor  : 1;                                                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                                                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t shadow  : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
+    uint8_t stat    : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
 } WinFlags;                                                                   // биты 8-15  зарезервированы
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, WFirstSR, Xconvas, Yconvas; } WindowData;
 typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
 typedef struct { uint8_t len, data[31]; } PalData;                            //            иначе указывает на первую строку для отображения управляем через вьюпорт
-typedef struct { uint16_t No, N, Windows, Shadow, W, H, Xwindow, Ywindow, Xshadow, Yshadow; } Canalysis;
+typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
 typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
