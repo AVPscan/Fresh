@@ -224,7 +224,7 @@ void WinView(uint16_t n, int16_t x, int16_t y) {
 void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.win - 1;
   if (Convas.No || n > Convas.N || Render(n) >= m) return;
   while(l) { if (Render(l) > d && Render(l) <= m) --Render(l); --l; }
-  Render(n) = m; }
+  WindowData* w = Win(n); w->Layer = m; Render(n) = m; }
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
   uint16_t c = 0, h = 0; uint16_t n = ++Convas.N; Convas.No = 0;
   WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
@@ -234,8 +234,8 @@ uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
     if (l > MaxWin) { l = 1;  Convas.stat = 1; }
     while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
   else { w->WinFlags = ((col & Mcbi) | b65); Render(n) = n; if (++Convas.win > MaxWin) Convas.win = 1; }
-  w->Xrender = 0; w->Yrender = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
-  w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }
+  w->Xrender = 0; w->Yrender = 0; w->W = c; w->H = h; w->Layer = Render(n); w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0;
+  w->MaxH = 0; w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); if (w->WinFlags & b7) return;

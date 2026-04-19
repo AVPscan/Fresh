@@ -132,7 +132,7 @@ typedef struct {
     uint8_t stat    : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
 } WinFlags;                                                                   // биты 8-15  зарезервированы
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
-typedef struct { int16_t Xrender, Yrender; uint16_t W, H, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData;
+typedef struct { int16_t Xrender, Yrender; uint16_t W, H, Layer, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData;
 typedef struct { uint16_t MaxCs, MaxVs; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
 typedef struct { uint8_t len, data[31]; } PalData;                            //            иначе указывает на первую строку для отображения управляем через вьюпорт
 typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
