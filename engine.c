@@ -16,37 +16,37 @@ Cell StrLen(char *s) { if (!s) return 0;
   return (--f - s); }
 void MemSet(void* buf, uint8_t val, Cell len) {
   uint8_t *p = (uint8_t *)buf;
-  while (len && ((Cell)p & (SizeCell - 1))) { len--; *p++ = val; }
-  if (len >= SizeCell) {
+  while (len && ((Cell)p & (SCell - 1))) { len--; *p++ = val; }
+  if (len >= SCell) {
     Cell vW = val * (((Cell) - 1) / 255); Cell *pW = (Cell *)p;
-    Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *pW++ = vW;
+    Cell i = len / SCell; len &= (SCell - 1); while (i--) *pW++ = vW;
     p = (uint8_t *)pW; }
   while (len--) *p++ = val; }
 void MemCpy(void* dst, void* src, Cell len) {
   uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src;
-  while (len && ((Cell)d & (SizeCell - 1))) { *d++ = *s++; len--; }
-  if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
+  while (len && ((Cell)d & (SCell - 1))) { *d++ = *s++; len--; }
+  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
     Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
-    Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *dW++ = *sW++;
+    Cell i = len / SCell; len &= (SCell - 1); while (i--) *dW++ = *sW++;
     d = (uint8_t *)dW; s = (uint8_t *)sW; }
   while (len--) *d++ = *s++ ; }
 void MemMove(void* dst, void* src, Cell len) {
   if (dst > src) { 
     uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src; d += len; s += len;
-    while (len && ((Cell)d & (SizeCell - 1))) { len--; *--d = *--s; }
-    if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
+    while (len && ((Cell)d & (SCell - 1))) { len--; *--d = *--s; }
+    if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
       Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
-      Cell i = len / SizeCell; len &= (SizeCell - 1); while (i--) *--dW = *--sW;
+      Cell i = len / SCell; len &= (SCell - 1); while (i--) *--dW = *--sW;
       d = (uint8_t *)dW; s = (uint8_t *)sW; }
     while (len--) *--d = *--s ; }
   else if (dst < src ) MemCpy(dst, src, len); }
 int8_t MemCmp(void* dst, void* src, Cell len) {
   uint8_t *d = (uint8_t *)dst; uint8_t *s = (uint8_t *)src;
-  while (len && ((Cell)d & (SizeCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
-  if (len >= SizeCell && ((Cell)s & (SizeCell - 1)) == 0) {
+  while (len && ((Cell)d & (SCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
+  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
     Cell *dW = (Cell *)d; Cell *sW = (Cell *)s;
-    Cell i = len / SizeCell; len %= (SizeCell - 1); while (i-- && (*dW++ == *sW++));
-    if (i + 1) { --dW; --sW; len += SizeCell; }
+    Cell i = len / SCell; len %= (SCell - 1); while (i-- && (*dW++ == *sW++));
+    if (i + 1) { --dW; --sW; len += SCell; }
     d = (uint8_t *)dW; s = (uint8_t *)sW; }
   while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
   return 0; }
@@ -83,21 +83,22 @@ uint8_t UTFinfoTile(char *s, Cell len) {
   return UTFinfo(s); }
 
 void Print(uint8_t n, char *str) {
-  char *dst = Cvdat + 512, *sav; uint16_t len; n &= Mcbi; if (!str) return;
+  char *dst = Cdbuf + 512, *sav; uint16_t len; n &= Mcbi; if (!str) return;
   sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  if (n != Cdefault) { sav = Parse(Cdefault); len = *sav++; MemCpy(dst, sav, len); dst += len; }
-  SysWrite(Cvdat + 512, (dst - Cvdat - 512)); }
+  if (n != Cconvas) { sav = Parse(Cconvas); len = *sav++; MemCpy(dst, sav, len); dst += len; }
+  SysWrite(Cdbuf + 512, (dst - Cdbuf - 512)); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
-  Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeDCell); Cwin = (uint16_t*)((uint8_t*)Cattr + SizeADCell); Cvlswin = Cwin + SizeWinData;
-  Cpdat = (char*)((uint8_t*)Cvlswin + SizeVlsWin); Cdwin = (uint16_t*)Parse(WinsData); Cdren = (uint16_t*)(Cpdat + SizePalBuff);
-  Ckbuf = (char*)(Cdren + SizeRenderWin); Cvdat = Ckbuf + SizeKeyBuf;
+  Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = (uint16_t*)((uint8_t*)Cattr + SizeADOCell);
+  Cdwin = (uint16_t*)((uint8_t*)Cvlswin + SizeVlsWin); Cdlay = (uint16_t*)((uint8_t*)Cdwin + SizeDataWin);
+  Cdcon = (uint16_t*)((uint8_t*)Cdlay + SizeDataLayer); Cdpal = (char*)((uint8_t*)Cdcon + SizeDataConvas);
+  Cdkey = Cdpal + SizeBufPal; Cdbuf = Cdkey + SizeBufKey;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
-  while (i--) { ac = (Cvdat + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
+  while (i--) { ac = (Cdbuf + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
-    while(c) { ac = (Cvdat + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
+    while(c) { ac = (Cdbuf + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
   Convas.No = MaxWin; Convas.N = MaxWin; Convas.W = CellLine; Convas.H = CellStr; }
 Cell SystemSwitch(void) {
@@ -221,20 +222,20 @@ uint8_t ViewPort(void) {
 void WinView(uint16_t n, int16_t x, int16_t y) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
-void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Render(n), m = Convas.win - 1;
-  if (Convas.No || n > Convas.N || Render(n) >= m) return;
-  while(l) { if (Render(l) > d && Render(l) <= m) --Render(l); --l; }
-  WindowData* w = Win(n); w->Layer = m; Render(n) = m; }
+void WinTop(uint16_t n) { uint16_t l = Convas.N, d = Layer(n), m = Convas.win - 1;
+  if (Convas.No || n > Convas.N || Layer(n) >= m) return;
+  while(l) { if (Layer(l) > d && Layer(l) <= m) --Layer(l); --l; }
+  WindowData* w = Win(n); w->Layer = m; Layer(n) = m; }
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
   uint16_t c = 0, h = 0; uint16_t n = ++Convas.N; Convas.No = 0;
   WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
   if (n >= MaxWin) { n = 0; Convas.N = 0; Convas.win = MaxWin; Convas.stat = MaxWin;
     Convas.Xwin = 0; Convas.Ywin = 0; Convas.Xstat = Convas.W; Convas.Ystat = Convas.H; }
-  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | b7); uint16_t i = n, l = ++Convas.stat, d = MaxWin - 1; Render(n) = d;
+  if (col < 0) { w->WinFlags = (((-col) & Mcbi) | b7); uint16_t i = n, l = ++Convas.stat, d = MaxWin - 1; Layer(n) = d;
     if (l > MaxWin) { l = 1;  Convas.stat = 1; }
-    while(--l) { while(--i || Render(i) != d) { } if (Render(i) == d) Render(i) = --d; } }
-  else { w->WinFlags = ((col & Mcbi) | b65); Render(n) = n; if (++Convas.win > MaxWin) Convas.win = 1; }
-  w->Xrender = 0; w->Yrender = 0; w->W = c; w->H = h; w->Layer = Render(n); w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0;
+    while(--l) { while(--i || Layer(i) != d) { } if (Layer(i) == d) Layer(i) = --d; } }
+  else { w->WinFlags = ((col & Mcbi) | b65); Layer(n) = n; if (++Convas.win > MaxWin) Convas.win = 1; }
+  w->Xrender = 0; w->Yrender = 0; w->W = c; w->H = h; w->Layer = Layer(n); w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0;
   w->MaxH = 0; w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;

@@ -12,14 +12,14 @@
 
 #include <stdint.h>
 
-#define Reset       "\033[0m"                                         // СБРОСИТЬ ВСЁ (и цвета, и режимы)
-#define Cls         "\033[2J\033[H"                                   // Очистить экран и в начало
-#define Home        "\033[H"                                          // В начало экрана
-#define HideCur     "\033[?25l"                                       // Скрыть курсор
-#define ShowCur     "\033[?25h"                                       // Показать курсор
-#define WrapOn      "\033[?7h"                                        // Включить перенос длинных строк
-#define WrapOff     "\033[?7l"                                        // Выключить перенос строк
-#define MouseX10on  "\033[?1000h"                                     // Включаем мышь
+#define Reset       "\033[0m"                 // СБРОСИТЬ ВСЁ (и цвета, и режимы)
+#define Cls         "\033[2J\033[H"           // Очистить экран и в начало
+#define Home        "\033[H"                  // В начало экрана
+#define HideCur     "\033[?25l"               // Скрыть курсор
+#define ShowCur     "\033[?25h"               // Показать курсор
+#define WrapOn      "\033[?7h"                // Включить перенос длинных строк
+#define WrapOff     "\033[?7l"                // Выключить перенос строк
+#define MouseX10on  "\033[?1000h"             // Включаем мышь
 #define MouseX10off "\033[?1000l"
 #define AltBufOn    "\033[?1049h"
 #define AltBufOff   "\033[?1049l"
@@ -35,12 +35,12 @@
   #define Gold    ""
 #else
   #ifdef USE_RGB
-    #define Grey    "\033[38;2;120;120;120m"                          // Бледный нейтральный
-    #define Green   "\033[38;2;34;139;34m"                            // Глубокий лесной
-    #define Red     "\033[38;2;220;20;60m"                            // Насыщенный малиновый
-    #define Blue    "\033[38;2;30;144;255m"                           // Яркий небесный
-    #define Orange  "\033[38;2;210;105;30m"                           // Сочный оранжевый
-    #define Gold    "\033[38;2;184;134;11m"                           // Светящийся золотой
+    #define Grey    "\033[38;2;120;120;120m"  // Бледный нейтральный
+    #define Green   "\033[38;2;34;139;34m"    // Глубокий лесной
+    #define Red     "\033[38;2;220;20;60m"    // Насыщенный малиновый
+    #define Blue    "\033[38;2;30;144;255m"   // Яркий небесный
+    #define Orange  "\033[38;2;210;105;30m"   // Сочный оранжевый
+    #define Gold    "\033[38;2;184;134;11m"   // Светящийся золотой
   #else
     #define Grey    "\033[38;5;244m"
     #define Green   "\033[38;5;28m"
@@ -51,31 +51,32 @@
   #endif
 #endif
 typedef uintptr_t Cell;
-#define SizeCell sizeof(Cell)
+#define SCell sizeof(Cell)
 enum {
-    CellPow = 13,                                                     // Масштаб 13 для 16к (14 для 32к)
-    MaxWin = 512,                                                     // Максимальное число окон
-    SKey = 256,                                                       // Буфер клавиатуры
-    SizePal = 32,                                                     // Размер в байтах одной палитры
-    SizeKey = 8,                                                      // Размер ячейки буфера клавиатуры
-    Utf8 = 4,                                                         // Максимальная длина utf8
-    Data_shift = CellPow + 2,                                         // Смещение между строк холста
-    ADOC_shift = CellPow + 1,                                         // Смещение между атрибутами ячеек / 2
-    WinData_shift = 4,                                                // 2^4 Смещение для данных окон 16 слов - 32 байта на окно.
-    Win_shift = 9,                                                    // 2^9 Смещение для визуальных длин строк окон
-    Parse_shift = 5,                                                  // 2^5 Смещение для 32 палитр
-    KeyBuf_shift = 3,                                                 // 2^3 Смещение для ячеек буфера клавиатуры
-    CellLine = 1 << CellPow,                                          // Определение ширины холста 2^CellPow
-    CellStr = CellLine / 2,                                           // Определение высоты холста
-    SizeDCell = CellStr * CellLine * Utf8,                            // Размер данных в ячейках холста
-    SizeADCell = SizeDCell,                                           // Размер атрибутов, данных, смещения для ячейках холста
-    SizeWinData = MaxWin * SizePal,                                   // Размер данных для окон   
-    SizeVlsWin = CellStr * MaxWin * 4,                                // Размер визуальных и реальных длин строк окон - обновляются при наполнении
-    SizePalBuff = SizePal * SizePal,                                  // Размер данных 8*4 [32] палитр по 32 байта на каждую
-    SizeRenderWin = MaxWin * 2,                                       // Размер данных окон для рендера 
-    SizeKeyBuf = SKey * SizeKey,                                      // Размер данных кольцевого буфера клавиатуры на 255/510 ячеек
-    SizeBuff = 1024,                                                  // Размер буфера
-    SizeVram = SizeDCell + SizeADCell + SizeWinData + SizeVlsWin + SizePalBuff + SizeRenderWin + SizeKeyBuf + SizeBuff };
+    CellPow = 13,                             // Масштаб 13 для 16к*16к запрашивается 264 Мбайт (14 для 32к)
+    MaxWin = 512,                             // Максимальное число окон
+    SKey = 256,                               // Буфер клавиатуры на 255 {3..4 байта на UTF8} / 510 {1..2 байта на UTF8} клавиш с автоповторами
+    SizePal = 32,                             // Размер в байтах одной палитры
+    SizeKey = 8,                              // Размер ячейки буфера клавиатуры
+    Utf8 = 4,                                 // Максимальная длина utf8
+    Data_shift = CellPow + 2,                 // Смещение между строк холста в байтах
+    ADO_shift = CellPow + 1,                  // Смещение между атрибутами ячеек в словах
+    CVWin_shift = 9,                          // 2^9 512 Смещение для числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
+    Win_shift = 4,                            // 2^4  16 Смещение для данных окон в словах - 32 байта на окно.
+    Palette_shift = 5,                        // 2^5  32 Смещение для палитр
+    Key_shift = 3,                            // 2^3   8 Смещение для ячеек буфера клавиатуры
+    CellLine = 1 << CellPow,                  // Определение ширины холста 2^CellPow по 4 байта на ячейку
+    CellStr = CellLine / 2,                   // Определение высоты холста
+    SizeCell = CellStr * CellLine * Utf8,     // Размер данных в ячейках холста
+    SizeADOCell = SizeCell,                   // Размер атрибутов, данных, смещения для ячейках холста
+    SizeVlsWin = CellStr * MaxWin * 4,        // Размер визуальных и реальных длин строк окон - обновляются при наполнении
+    SizeDataWin = MaxWin * SizePal,           // Размер данных для окон
+    SizeDataLayer = MaxWin * 2,               // Размер данных для организации слоёв окон
+    SizeDataConvas = 20,                      // Размер данных под разбивку холста для организации окон
+    SizeBufPal = SizePal * SizePal,           // Размер данных 32 палитр по 32 байта на каждую
+    SizeBufKey = SKey * SizeKey,              // Размер данных кольцевого буфера клавиатуры
+    SizeBuf = 1024,                           // Размер буфера
+    SizeVram = SizeCell + SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataLayer + SizeDataConvas + SizeBufPal + SizeBufKey + SizeBuf };
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b21 = 0x06, b65 = 0x60,
     Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
@@ -89,82 +90,83 @@ enum { K_NO,
     K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10, K_F11,
     K_F12, K_F13, K_F14, K_F15, K_BAC = 127, K_Max = K_F15 + 1 };
 enum {
-    Cconvas, Cborder, WinsData, WinsExt , Cgrey, CgreyI, CgreyB, CgreyBI,
-    Cgreen, CgreenI, CgreenB, CgreenBI, Cred, CredI, CredB, CredBI,
-    Cblue, CblueI, CblueB, CblueBI, Corange, CorangeI, CorangeB, CorangeBI,
-    Cgold, CgoldI, CgoldB, CgoldBI, Cdefault, CdefaultI, CdefaultB, CdefaultBI };
+    Cconvas, Cborder, CconvasB, CborderB, Cgrey, CgreyI, CgreyB, CgreyIB,
+    Cgreen, CgreenI, CgreenB, CgreenIB, Cred, CredI, CredB, CredIB,
+    Cblue, CblueI, CblueB, CblueIB, Corange, CorangeI, CorangeB, CorangeIB,
+    Cgold, CgoldI, CgoldB, CgoldIB, Cdefault, CdefaultI, CdefaultB, CdefaultIB };
 extern char      *Cdata;
 extern uint16_t  *Cattr;
-extern uint16_t  *Cwin;
 extern uint16_t  *Cvlswin;
-extern char      *Cpdat;
 extern uint16_t  *Cdwin;
-extern uint16_t  *Cdren;
-extern char      *Ckbuf;
-extern char      *Cvdat;
+extern uint16_t  *Cdlay;
+extern uint16_t  *Cdcon;
+extern char      *Cdpal;
+extern char      *Cdkey;
+extern char      *Cdbuf;
 typedef struct {
-    uint8_t inverse : 1;                                                      // бит 0      инверсия
-    uint8_t bold    : 1;                                                      // бит 1      толстый
-    uint8_t color   : 3;                                                      // бит 432    цвет
-    uint8_t null    : 1;                                                      // бит 5      резерв
-    uint8_t NoFull  : 1;                                                      // бит 6      {1} есть {0} нет данных
-    uint8_t Error   : 1;                                                      // бит 7      {1} есть {0} нет изменений
+    uint8_t inverse : 1;                      // бит 0      инверсия
+    uint8_t bold    : 1;                      // бит 1      толстый
+    uint8_t color   : 3;                      // бит 432    цвет
+    uint8_t null    : 1;                      // бит 5      резерв
+    uint8_t NoFull  : 1;                      // бит 6      {1} есть {0} нет данных
+    uint8_t Error   : 1;                      // бит 7      {1} есть {0} нет изменений
 } Info;   
-typedef struct {                                                              //UTFinfo Render 
-    uint8_t len     : 2;                                                      // бит 10 32  длина (0-3) + 1, игнорируем так как размер в байтах через offset
-    uint8_t vis     : 2;                                                      // бит 32 10  визуальная ширина (0-2)
-    uint8_t Dir     : 1;                                                      // бит 4      направление (0=LTR,1=RTL)
-    uint8_t Ctrl    : 1;                                                      // бит 5      управляющий код
-    uint8_t NoFull  : 1;                                                      // бит 6  {0} {1} не влезло в буфер (UTF8infoTile)
-    uint8_t Error   : 1;                                                      // бит 7  {0} (UTF8info) {1} Structure
-} Data;                                                                       // data UTF8
+typedef struct {                              //UTFinfo Render 
+    uint8_t len     : 2;                      // бит 10 32  длина (0-3) + 1, игнорируем так как размер в байтах через offset
+    uint8_t vis     : 2;                      // бит 32 10  визуальная ширина (0-2)
+    uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
+    uint8_t Ctrl    : 1;                      // бит 5      управляющий код
+    uint8_t NoFull  : 1;                      // бит 6  {0} {1} не влезло в буфер (UTF8infoTile)
+    uint8_t Error   : 1;                      // бит 7  {0} (UTF8info) {1} Structure
+} Data;
 typedef struct {
-    uint8_t len     : 5;                                                      // бит 43210  длина (0-31) + 1 ascii {32...127} визуальная длина равна длине в байтах (числа)
-    uint8_t format  : 2;                                                      // бит 65     {10} к левому {01} к правому {00}/{11} по центру
-    uint8_t str     : 1;                                                      // бит 7      {0} UTF8 {1} Structure
+    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...127} визуальная длина равна длине в байтах (числа)
+    uint8_t format  : 2;                      // бит 65     {10} к левому {01} к правому {00}/{11} по центру
+    uint8_t str     : 1;                      // бит 7      {0} UTF8 {1} Structure
 } Structure;
 typedef struct {
-    uint8_t inverse : 1;                                                      // бит 0      инверсия
-    uint8_t bold    : 1;                                                      // бит 1      толстый
-    uint8_t color   : 3;                                                      // бит 432    цвет
-    uint8_t cursor  : 1;                                                      // бит 5      {1} показывать {0} не показывать - курсор окна
-    uint8_t nowrap  : 1;                                                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t stat    : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
-} WinFlags;                                                                   // биты 8-15  зарезервированы
-typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
+    uint8_t inverse : 1;                      // бит 0      инверсия
+    uint8_t bold    : 1;                      // бит 1      толстый
+    uint8_t color   : 3;                      // бит 432    цвет
+    uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
+    uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
+    uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется на холсте в байтах) {0} динамичное окно
+    uint8_t reserve : 8;                      // бит 15..8  зарезервированы
+} WinFlags;
+typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                  // ds         Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { int16_t Xrender, Yrender; uint16_t W, H, Layer, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData;
-typedef struct { uint16_t MaxCs, MaxVs; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
-typedef struct { uint8_t len, data[31]; } PalData;                            //            иначе указывает на первую строку для отображения управляем через вьюпорт
+typedef struct { uint16_t MaxCs, MaxVs; } WConSrt;                              // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
+typedef struct { uint8_t len, data[31]; } PalData;                              //            иначе указывает на первую строку для отображения управляем через вьюпорт
 typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
-typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
+typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;        // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4, es; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 typedef struct { uint16_t col, row; } T_;
-#define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
-#define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADOC_shift) + (c)) << 1))  // адрес атрибута, данных и смещения ячейки холста
-#define Win(n)        ((WindowData*)(Cwin + ((n) << WinData_shift)))          // адрес начала данных окна n
-#define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << Win_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
-#define Parse(cbi)    (Cpdat + ((cbi) << Parse_shift))                        // адрес начала anci кода цвета colBI[0..31]
-#define Convas        (*(Canalysis*)Cdwin)                                    // адрес где организована разбивка холста
-#define Render(n)     *(Cdren + (n))                                          // адрес данных слоя для окна
-#define KeyBuf(n)     (Ckbuf + ((n) << KeyBuf_shift))                         // адрес начала ячейки в буфере клавиатуры
+#define Data(r)       (Cdata + ((r) << Data_shift))                             // адрес начала буфера строки холста
+#define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADO_shift) + (c)) << 1))     // адрес атрибута, данных и смещения ячейки холста
+#define Wbv(r,n)      ((WConSrt*)(Cvlswin + (((r) << CVWin_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
+#define Win(n)        ((WindowData*)(Cdwin + ((n) << Win_shift)))               // адрес начала данных окна n
+#define Layer(n)      *(Cdlay + (n))                                            // адрес данных слоя для окна
+#define Convas        (*(Canalysis*)Cdcon)                                      // адрес где организована разбивка холста
+#define Parse(cbi)    (Cdpal + ((cbi) << Palette_shift))                        // адрес начала anci кода цвета colBI[0..31]
+#define KeyBuf(n)     (Cdkey + ((n) << Key_shift))                              // адрес начала ячейки в буфере клавиатуры
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint16_t  *Cattr      = 0; \
-    uint16_t  *Cwin       = 0; \
     uint16_t  *Cvlswin    = 0; \
-    char      *Cpdat      = 0; \
     uint16_t  *Cdwin      = 0; \
-    uint16_t  *Cdren      = 0; \
-    char      *Ckbuf      = 0; \
-    char      *Cvdat      = 0; \
+    uint16_t  *Cdlay      = 0; \
+    uint16_t  *Cdcon      = 0; \
+    char      *Cdpal      = 0; \
+    char      *Cdkey      = 0; \
+    char      *Cdbuf      = 0; \
     V_ VP = {1,1,0,0,0,1,0,0,0,12,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4,K_ESC}; \
     B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     R_ VRam = {0,0,1}

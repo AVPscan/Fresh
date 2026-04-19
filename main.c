@@ -12,8 +12,8 @@
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?",2) == 0 || MemCmp(argv[1], "-h",2) == 0 || MemCmp(argv[1], "-help",5) == 0) {
-      if (flag) { Print(Cdefault,AltBufOff); Print(CorangeBI," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 7.94 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+      if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
+                  Print(Corange," in 07.02.2026 version 7.95 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 int main(int argc, char *argv[]) {
