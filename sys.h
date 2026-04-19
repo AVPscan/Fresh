@@ -132,8 +132,8 @@ typedef struct {
     uint8_t stat    : 1;                                                      // бит 7      {0} обычное {1} статичное (не изменяется на холсте в байтах) окно
 } WinFlags;                                                                   // биты 8-15  зарезервированы
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                // ds         Data/Structure, offset смещение данных от начала строки в байтах
-typedef struct { int16_t Xrender, Yrender, Xview, Yview; uint16_t WinFlags, parent, child, MaxCS, MaxVS, XCur, YCur, W, H, WFirstSR, Xconvas, Yconvas; } WindowData;
-typedef struct { uint16_t MaxCS, MaxVS; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
+typedef struct { int16_t Xrender, Yrender; uint16_t W, H, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData;
+typedef struct { uint16_t MaxCs, MaxVs; } WConSrt;                            // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - авто
 typedef struct { uint8_t len, data[31]; } PalData;                            //            иначе указывает на первую строку для отображения управляем через вьюпорт
 typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
 typedef struct { uint16_t Win[MaxWin]; } Render;
@@ -195,7 +195,7 @@ uint16_t Keys(void);                                                  // Ско�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void WinView(uint16_t n, int16_t y, int16_t x);                       // Привязка окна к рендеру
+void WinView(uint16_t n, int16_t x, int16_t y);                       // Привязка окна к рендеру
 void WinTop(uint16_t n);                                              // Установить окно поверх всех (игнорирует теневые)
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args);           // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args);    // Управление отображением курсора и авто переносом строк в окне
