@@ -57,22 +57,22 @@ void GetKey(char *b) {
             s1 = p; while (*++s1 == *++s2 && *s2);
             if (!*s2) { *p = NameId[j].id; break; } }
         if (j < 0) *p = 0;
-        if (*p++ == K_Mouse) { len = 4; while(--len) _read(0, p++, 1); } }
+        if (*p++ == K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
-size_t GetRam(size_t *size) { if (!*size) return 0;
-    size_t l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+Cell GetRam(Cell *size) { if (!*size) return 0;
+    Cell l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     if (!r) l = 0;
-    *size = l; return (size_t)r; }
+    *size = l; return (Cell)r; }
     
-void FreeRam(size_t addr, size_t size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
+void FreeRam(Cell addr, Cell size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
 
-void SWD(size_t addr) { if (!addr) return;
+void SWD(Cell addr) { if (!addr) return;
     char *path = (char *)(addr); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
     for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
 
-int16_t SyncSize(size_t addr) {
+int16_t SyncSize(Cell addr) {
     if (!addr) return 0;
     static HANDLE hOut = NULL; 
     if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);

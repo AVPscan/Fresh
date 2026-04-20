@@ -84,22 +84,21 @@ uint8_t UTFinfoTile(char *s, Cell len) {
 
 void Print(uint8_t n, char *str) {
   char *dst = Cdbuf + 512, *sav; uint16_t len; n &= Mcbi; if (!str) return;
-  sav = Parse(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  if (n != Cconvas) { sav = Parse(Cconvas); len = *sav++; MemCpy(dst, sav, len); dst += len; }
+  sav = Palette(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
+  if (n != Cconvas) { sav = Palette(Cconvas); len = *sav++; MemCpy(dst, sav, len); dst += len; }
   SysWrite(Cdbuf + 512, (dst - Cdbuf - 512)); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
-  Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = (uint16_t*)((uint8_t*)Cattr + SizeADOCell);
-  Cdwin = (uint16_t*)((uint8_t*)Cvlswin + SizeVlsWin); Cdlay = (uint16_t*)((uint8_t*)Cdwin + SizeDataWin);
-  Cdcon = (uint16_t*)((uint8_t*)Cdlay + SizeDataLayer); Cdpal = (char*)((uint8_t*)Cdcon + SizeDataConvas);
-  Cdkey = Cdpal + SizeBufPal; Cdbuf = Cdkey + SizeBufKey;
+  Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
+  Cdwin = Cvlswin + SizeVlsWin; Cdlay = Cdwin + SizeDataWin; Cdcon = Cdlay + SizeDataLayer;
+  Cdpal = (char*)(Cdcon + SizeDataConvas); Cdkey = Cdpal + SizeBufPal; Cdbuf = Cdkey + SizeBufKey;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
   while (i--) { ac = (Cdbuf + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cdbuf + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
-      dst = Parse(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
+      dst = Palette(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
   Convas.No = MaxWin; Convas.N = MaxWin; Convas.W = CellLine; Convas.H = CellStr; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
