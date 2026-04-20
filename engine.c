@@ -234,8 +234,8 @@ uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
     if (l > MaxWin) { l = 1;  Convas.stat = 1; }
     while(--l) { while(--i || Layer(i) != d) { } if (Layer(i) == d) Layer(i) = --d; } }
   else { w->WinFlags = ((col & Mcbi) | b65); Layer(n) = n; if (++Convas.win > MaxWin) Convas.win = 1; }
-  w->Xrender = 0; w->Yrender = 0; w->W = c; w->H = h; w->Layer = Layer(n); w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0;
-  w->MaxH = 0; w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; return n; }
+  w->W = c; w->H = h; w->Layer = Layer(n); w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
+  w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.H; w->Xconvas = Convas.W; w->Yconvas = Convas.H; w->Xrender = 0; w->Yrender = 0; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args) {
   if (Convas.No || n > Convas.N) return;
   WindowData* w = Win(n); if (w->WinFlags & b7) return;

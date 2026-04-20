@@ -80,12 +80,12 @@ typedef struct {
     uint8_t color   : 3;                      // бит 432    цвет
     uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется на холсте в байтах) {0} динамичное окно
+    uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
     uint8_t reserve : 8;                      // бит 15..8  зарезервированы
 } WinFlags;
 typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;            // ds         Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { uint16_t MaxCs, MaxVs; } ConWinStr;
-typedef struct { int16_t Xrender, Yrender; uint16_t W, H, Layer, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData;
+typedef struct { uint16_t W, H, Layer, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; int16_t Xrender, Yrender; } WindowData;
 typedef struct { uint16_t Win[MAX_WIN]; } Layer;                          // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - автоскролл
 typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;                        //            иначе указывает на первую строку для отображения управляем через вьюпорт
@@ -94,8 +94,6 @@ enum {
     CellPow = 13,                                           // Масштаб 13 для 16к*16к запрашивается 264 Мбайт (14 для 32к)
     MaxWin = MAX_WIN,                                       // Максимальное число окон
     SKey = 256,                                             // Буфер клавиатуры на 255 {3..4 байта на UTF8} / 510 {1..2 байта на UTF8} клавиш с автоповторами
-    SizePal = sizeof(PalData),                              // Размер в байтах одной палитры
-    SizeKey = sizeof(KeyBuf),                               // Размер ячейки буфера клавиатуры
     Utf8 = 4,                                               // Максимальная длина utf8
     Data_shift = CellPow + 2,                               // Смещение между строк холста в байтах
     ADO_shift = CellPow + 1,                                // Смещение между атрибутами ячеек в словах
