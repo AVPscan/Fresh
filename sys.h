@@ -81,15 +81,14 @@ typedef struct {
     uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-    uint8_t reserve : 8;                      // бит 15..8  зарезервированы
 } WinFlags;
-typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;            // ds         Data/Structure, offset смещение данных от начала строки в байтах
+typedef struct { uint8_t Info, ds; uint16_t offset; } ADOCell;                        // ds Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { uint16_t MaxCs, MaxVs; } ConWinStr;
-typedef struct { uint16_t W, H, Layer, WinFlags, parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; int16_t Xrender, Yrender; } WindowData;
-typedef struct { uint16_t Win[MAX_WIN]; } Layer;                          // WFirstSR   если равен Convas.H то окно вьюпорт не приземлён в это окно - автоскролл
-typedef struct { uint16_t No, N, win, stat, W, H, Xwin, Ywin, Xstat, Ystat; } Canalysis;
-typedef struct { uint8_t len, data[31]; } PalData;                        //            иначе указывает на первую строку для отображения управляем через вьюпорт
-typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;  // Поля data1,data2 соответствуют структуре Data
+typedef struct { int16_t Xrender, Yrender; uint8_t Flags, Key; uint16_t W, H, Layer,  // WFirstSR если равен Convas.H то окно вьюпорт не приземлён в это окно - автоскролл
+                 parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData; //   иначе указывает на первую строку для отображения
+typedef struct { uint16_t No, N, Dwin, Swin, Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; } Canalysis;
+typedef struct { uint8_t len, data[31]; } PalData;
+typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;              // Поля data1,data2 соответствуют структуре Data
 enum {
     CellPow = 13,                                           // Масштаб 13 для 16к*16к запрашивается 264 Мбайт (14 для 32к)
     MaxWin = MAX_WIN,                                       // Максимальное число окон
@@ -107,12 +106,11 @@ enum {
     SizeADOCell = CellStr * CellLine * sizeof(ADOCell) / 2, // Размер атрибутов, данных, смещения для ячейках холста
     SizeVlsWin = CellStr * MaxWin * sizeof(ConWinStr) / 2,  // Размер визуальных и реальных длин строк окон - обновляются при наполнении
     SizeDataWin = MaxWin * sizeof(WindowData) / 2,          // Размер данных для окон
-    SizeDataLayer = MaxWin * sizeof(uint16_t) / 2,          // Размер данных для организации слоёв окон
     SizeDataConvas = sizeof(Canalysis) / 2,                 // Размер данных под разбивку холста для организации окон
     SizeBufPal = 32 * sizeof(PalData),                      // Размер данных 32 палитр по 32 байта на каждую
     SizeBufKey = SKey * sizeof(KeyBuf),                     // Размер данных кольцевого буфера клавиатуры
     SizeBuf = 1024,                                         // Размер буфера
-    SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataLayer + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBuf };
+    SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBuf };
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b21 = 0x06, b65 = 0x60,
     Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
@@ -134,7 +132,6 @@ extern char      *Cdata;
 extern uint16_t  *Cattr;
 extern uint16_t  *Cvlswin;
 extern uint16_t  *Cdwin;
-extern uint16_t  *Cdlay;
 extern uint16_t  *Cdcon;
 extern char      *Cdpal;
 extern char      *Cdkey;
@@ -143,7 +140,6 @@ extern char      *Cdbuf;
 #define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADO_shift) + (c)) << 1))       // адрес атрибута, данных и смещения ячейки холста
 #define Wbv(r,n)      ((ConWinStr*)(Cvlswin + (((r) << CVWin_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Win(n)        ((WindowData*)(Cdwin + ((n) << Win_shift)))                 // адрес начала данных окна n
-#define Layer(n)      *(Cdlay + (n))                                              // адрес данных слоя для окна
 #define Convas        (*(Canalysis*)Cdcon)                                        // адрес где организована разбивка холста
 #define Palette(cbi)  (Cdpal + ((cbi) << Palette_shift))                          // адрес начала anci кода цвета colBI[0..31]
 #define KeyBuf(n)     (Cdkey + ((n) << Key_shift))                                // адрес начала ячейки в буфере клавиатуры
@@ -161,7 +157,6 @@ extern R_ VRam;
     uint16_t  *Cattr      = 0; \
     uint16_t  *Cvlswin    = 0; \
     uint16_t  *Cdwin      = 0; \
-    uint16_t  *Cdlay      = 0; \
     uint16_t  *Cdcon      = 0; \
     char      *Cdpal      = 0; \
     char      *Cdkey      = 0; \
