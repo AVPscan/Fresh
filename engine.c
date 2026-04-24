@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2026 Поздняков Алексей Васильевич
+ * Fresh (C) 2026 A.Pozdnyakov GPLv3 - see LICENSE
  * E-mail: avp70ru@mail.ru
  * 
  * Данная программа является свободным программным обеспечением: вы можете 
@@ -91,7 +91,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = Cdpal + SizeBufPal; Cdbuf = Cdkey + SizeBufKey;
+  Cdkey = Cdpal + SizeBufPal; Cdevent = Cdkey + SizeBufKey; Cdbuf = Cdevent + SizeBufEvent;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
   char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
   while (i--) { ac = (Cdbuf + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
@@ -99,8 +99,8 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cdbuf + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
       dst = Palette(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
-  Convas.No = MaxWin; Convas.N = Convas.No; Convas.Dwin = Convas.N; Convas.Swin = Convas.N;
-  Convas.Wmax = CellLine; Convas.Hmax = CellStr; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
+  Convas.Flag = MaxWin; Convas.WinCurrent = Convas.Flag; Convas.WinMax = Convas.Flag; Convas.Dwin = Convas.Flag; Convas.Swin = Convas.Flag;
+  Convas.Wmax = CellLine; Convas.Xswin = Convas.Wmax; Convas.Hmax = CellStr; Convas.Yswin = Convas.Hmax; Convas.Dwin = 0; Convas.Xdwin = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
@@ -220,24 +220,25 @@ uint8_t ViewPort(void) {
   return 1; }
 
 void WinView(uint16_t n, int16_t x, int16_t y) {
-  if (Convas.No || (n > Convas.Dwin && n < Convas.Swin)) return;
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void WinTop(uint16_t n) {
-  if (Convas.No || (n > Convas.Dwin && n < Convas.Swin)) return; }
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return; }
 uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
-  uint16_t c = 0, h = 0, n = ++Convas.Dwin; Convas.No = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
+  uint16_t c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
   if (col < 0) { w->Flags = (((-col) & Mcbi) | b7); n = --Convas.Swin;
-    if (n < 1) { Convas.Swin = Convas.N - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; } }
-  else { w->Flags = ((col & Mcbi) | b65); if (n >= Convas.Swin) { Convas.Dwin = 0; n = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } }
+    if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; } }
+  else { w->Flags = ((col & Mcbi) | b65); if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } }
   w = Win(n); w->Key = 0; w->W = c; w->H = h; w->Layer = n; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
   w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
-void _WSet(uint16_t n, uint8_t cur, uint8_t count, int16_t *args) {
-  if (Convas.No || (n > Convas.Dwin && n < Convas.Swin)) return;
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, EH *args) {
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); if (w->Flags & b7) { w->Key = cur; return; }
   w->Flags &= ~b5; if (cur) w->Flags &= b5;
-  if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } }
+  if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } 
+  (void)count; (void)args; }
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args) {
-  if (Convas.No || (n > Convas.Dwin && n < Convas.Swin)) return;
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { uint16_t c = w->W, r = w->H; (void)r;
     if (!c) { } } 
   (void)*str; (void)count; (void)*args; }

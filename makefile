@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2026 Поздняков Алексей Васильевич
+# Fresh (C) 2026 A.Pozdnyakov GPLv3 - see LICENSE
 # E-mail: avp70ru@mail.ru
 # 
 # Данная программа является свободным программным обеспечением: вы можете 
@@ -30,8 +30,6 @@ else
 endif
 
 SOURCES = main.c engine.c $(SYS_SRC)
-
-# Оптимизация размера
 BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra -flto
 
 ifneq ($(OS),Windows_NT)
@@ -42,23 +40,15 @@ endif
 
 BASE_LDFLAGS = -flto $(LIBS)
 
-# Разделяем флаги линкера по операционным системам
 ifeq ($(UNAME_S),Darwin)
-	# macOS: только мертвый код
 	BASE_LDFLAGS += -Wl,-dead_strip
 else ifeq ($(OS),Windows_NT)
-	# Windows (MinGW): стандартная зачистка без -z флагов
 	BASE_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all -s
 else
-	# Linux: полный фарш оптимизаций
 	BASE_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all -Wl,-s -Wl,--build-id=none -Wl,-z,norelro -Wl,-z,pack-relative-relocs
 endif
 
-CFLAGS_TINY = $(BASE_CFLAGS) \
-			  -ffunction-sections -fdata-sections \
-			  -fno-unwind-tables -fno-asynchronous-unwind-tables \
-			  -fno-ident -fomit-frame-pointer -fno-stack-protector
-
+CFLAGS_TINY = $(BASE_CFLAGS) -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident -fomit-frame-pointer -fno-stack-protector
 LDFLAGS_TINY = $(BASE_LDFLAGS)
 
 .PHONY: all tiny clean run size help g c musl g-musl mac
@@ -68,17 +58,10 @@ tiny: $(SOURCES)
 	@echo "🎯 Сборка: $(SYS_SRC) -> $(TARGET)$(EXT) ($(UNAME_S))"
 	@$(CC) $(CFLAGS_TINY) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS_TINY)
 
-	@if [ "$(OS)" != "Windows_NT" ] && [ "$(UNAME_S)" != "Darwin" ]; then \
-		strip --strip-all \
-		--remove-section=.note.gnu.build-id \
-		--remove-section=.note.ABI-tag \
-		--remove-section=.comment \
-		--remove-section=.eh_frame \
-		--remove-section=.eh_frame_hdr $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(UNAME_S)" = "Darwin" ]; then \
-		strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(OS)" = "Windows_NT" ]; then \
-		strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
+	@if [ "$(OS)" != "Windows_NT" ] && [ "$(UNAME_S)" != "Darwin" ]; then strip --strip-all --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
+		--remove-section=.comment --remove-section=.eh_frame --remove-section=.eh_frame_hdr $(TARGET)$(EXT) 2>/dev/null || true; \
+	elif [ "$(UNAME_S)" = "Darwin" ]; then strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
+	elif [ "$(OS)" = "Windows_NT" ]; then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
 	fi
 	@$(MAKE) --no-print-directory size
 
@@ -91,11 +74,11 @@ c: tiny
 
 musl: g-musl
 g-musl: 
-	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment."; else $(MAKE) tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
-
+	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment.";
+	else $(MAKE) tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
 mac:
-	@if [ "$(UNAME_S)" != "Darwin" ]; then echo "⚠️  'make mac' target only runs on macOS (Darwin)."; else $(MAKE) tiny; fi
-
+	@if [ "$(UNAME_S)" != "Darwin" ]; then echo "⚠️  'make mac' target only runs on macOS (Darwin).";
+	else $(MAKE) tiny; fi
 size:
 	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); \
 	echo "📏 Размер бинарника: $$SIZE байт"; \
@@ -105,7 +88,6 @@ size:
 	elif [ $$SIZE -gt 0 ]; then \
 	    echo "⚠️  Превышение на $$((SIZE - TARGET_SIZE)) байт"; \
 	fi
-
 clean:
 	rm -f $(TARGET) $(TARGET).exe
 	@echo "🧹 Очищено"
