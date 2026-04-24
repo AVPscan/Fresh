@@ -77,8 +77,7 @@ g-musl:
 	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment."; \
 	else $(MAKE) tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
 mac:
-	@if [ "$(UNAME_S)" != "Darwin" ]; then echo "⚠️  'make mac' target only runs on macOS (Darwin).";
-	else $(MAKE) tiny; fi
+	@$(MAKE) tiny UNAME_S=Darwin SYS_SRC=sys_macos.c
 size:
 	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); \
 	echo "📏 Размер бинарника: $$SIZE байт"; \
