@@ -114,41 +114,41 @@ uint8_t PushKey(char *key) {
   if (Buf.pop == Buf.push) {
     dst = KeyBuf(++Buf.push); *dst++ = data | b6; dst++; *dst++ = 1; dst++;
     if (Buf.pop == Buf.push) ++Buf.pop;
-    l = 1 + (data & 0x03);
+    l = 1 + (data & b10);
     if (c) *dst = c;
     else while(l--) *(dst + l) = *(key + l); }
   else {
     dst = KeyBuf(Buf.push); d = *dst; sav = dst + 2; dst += 4;
     if (d & b7) { sav++; dst += 2; }
-    l = 1 + (data & 0x03);
-    if ((d & 0x3F) == data) {
-      if (c) { if (*dst == c) l = 0xFF; }
+    l = 1 + (data & b10);
+    if ((d & ~b76) == data) {
+      if (c) { if (*dst == c) l = ~Off; }
       else while(l--) { if (*(dst + l) != *(key + l)) break; } }
-    if (l == 0xFF) { if (!(*sav += 1)) *sav = 0xFF; }
-    else { l = 1 + (data & 0x03);
-      if ((d & 0x03) < 2 && ((data & 0x03) < 2 && !(d & b7))) {
+    if (l == (uint8_t)~Off) { if (!(*sav += 1)) *sav = ~Off; }
+    else { l = 1 + (data & b10);
+      if ((d & b10) < 2 && ((data & b10) < 2 && !(d & b7))) {
         dst = KeyBuf(Buf.push); *dst |= b7; *(dst + 1) = data; *(dst + 3) = 1; dst += 6; }
       else {
         dst = KeyBuf(++Buf.push); *dst = data | b6; *(dst + 2) = 1; dst += 4;
         if (Buf.pop == Buf.push) ++Buf.pop; }
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
-  if (!c) c = 0xFF;
+  if (!c) c = ~Off;
   return c; }
 uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key) {
   uint8_t d; char *dst; if (Buf.pop == Buf.push) { *data = 0; *count = 0; return 0; }
   dst = KeyBuf(Buf.push); d = *dst; *count = *(dst + 2); dst += 4;
   if (d & b7) { d = *(dst - 3); *count = *(dst - 1); dst += 2; }
-  *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
+  *data = (d & ~b76); d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
   return 1; }
 uint8_t PopKey(uint8_t *data, uint8_t *count, char *key) {
   char *dst; uint8_t d, n = 1;
-  while(!((d = *(dst = KeyBuf(Buf.pop))) & 0xC0) && (Buf.pop != Buf.push)) Buf.pop++;
-  if (!(d & 0xC0)) { *data = 0; *count = 0; return 0; }
-  if (Buf.pop == Buf.push) { n--; Buf.pop--; if ((d & 0xC0) == 0xC0) n++; }
-  if (d & b6) { *count = *(dst + 2); if (n) *dst &= 0xBF; }
-  else { dst += 2; d = *(dst - 1); *count = *(dst + 1); if (n) *(dst - 2) &= 0x3F; }
-  dst += 4; *data = (d & 0x3F); d = 1 + (d & 0x03); while(d--) *(key + d) = *(dst + d);
+  while(!((d = *(dst = KeyBuf(Buf.pop))) & b76) && (Buf.pop != Buf.push)) Buf.pop++;
+  if (!(d & b76)) { *data = 0; *count = 0; return 0; }
+  if (Buf.pop == Buf.push) { n--; Buf.pop--; if ((d & b76) == b76) n++; }
+  if (d & b6) { *count = *(dst + 2); if (n) *dst &= ~b6; }
+  else { dst += 2; d = *(dst - 1); *count = *(dst + 1); if (n) *(dst - 2) &= ~b76; }
+  dst += 4; *data = (d & ~b76); d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
   return n; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
@@ -191,12 +191,12 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
+  Event* e = Event(0); if (e->Addr) ((EH)e->Addr)();
   if (control && VP.Cod != K_Mouse) {
     if ((uint16_t)(VP.X - 1) < Convas.Wmax && (uint16_t)(VP.Y - 1) < Convas.Hmax) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= b3; if (!(VP.Mode & b3)) ForgetKey(); }
       else if (VP.Cod == VP.F3) { VP.Mode ^= b2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= b1; } }
-    if (VP.Cod == VP.es) return 0;
     if (VP.Cod != VP.oCod) { VP.dXY = 1; VP.oCod = VP.Cod; }
     if (VP.Cod & b5) {
       if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 128)) VP.dXY <<= 1;
@@ -211,32 +211,40 @@ uint8_t ViewPort(void) {
         x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
         if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
         if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
+  e = Event(VP.Cod); if (e->Addr) ((EH)e->Addr)();
   if (SyncSize(VRam.addr)) {
     c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
     VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
   if (control > 1) { control--; }
   else { control--; }
-  return 1; }
+  return VP.Loop; }
 
 void WinView(uint16_t n, int16_t x, int16_t y) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void WinTop(uint16_t n) {
-  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return; }
-uint16_t _Window(int8_t col, uint8_t count, int16_t *args) {
-  uint16_t c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
-  if (col < 0) { w->Flags = (((-col) & Mcbi) | b7); n = --Convas.Swin;
-    if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; } }
-  else { w->Flags = ((col & Mcbi) | b65); if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } }
-  w = Win(n); w->Key = 0; w->W = c; w->H = h; w->Layer = n; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
+  uint16_t l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - 1;
+  WindowData* w = Win(n); w->Layer = l; l += 1 - n;
+  while(--l) { w = Win(n + l); --w->Layer; } }
+uint16_t _Window(int8_t col, uint8_t count, uint16_t *args) {
+  uint16_t l, c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
+  if (col < 0) { n = --Convas.Swin; --Convas.Dwin;
+    if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
+    w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - 1; l = Convas.WinMax - n;
+    while(--l) { WindowData* d = Win(n + l); --d->Layer; } }
+  else { if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
+  w->Key = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
   w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, EH *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); if (w->Flags & b7) { w->Key = cur; return; }
+  WindowData* w = Win(n); 
+  if (w->Flags & b7) { if (cur) w->Key = cur;
+    if (count--) { Event* e = Event(cur); e->Addr = (Cell)args[0]; e->Win = n;
+      if (e->Max && count) {  } } return; }
   w->Flags &= ~b5; if (cur) w->Flags &= b5;
-  if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } 
-  (void)count; (void)args; }
+  if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } }
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { uint16_t c = w->W, r = w->H; (void)r;
