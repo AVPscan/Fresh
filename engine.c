@@ -173,7 +173,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   else if (Buf.Mkey == Buf.cRd) { dx--; t++; }
   if (dx || dy) {
     VP.Y += dy * VP.dXY; VP.X += dx * VP.dXY;
-    if (VP.Mode & 6) {
+    if (VP.Mode & b21) {
       VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
       VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
     else {
@@ -183,7 +183,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
-  if (*Buf.key == 27) { c = *(Buf.key + 1); if (c == K_NO) return c; }
+  if (*Buf.key == K_ESC) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) { *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
   if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
@@ -200,7 +200,7 @@ uint8_t ViewPort(void) {
       else if (VP.Cod == VP.F3) { VP.Mode ^= b2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= b1; } }
     if (VP.Cod != VP.oCod) { VP.dXY = 1; VP.oCod = VP.Cod; }
-    if (VP.Cod & b5) {
+    if (VP.Cod > (uint8_t)K_BAC && VP.Cod < (uint8_t)K_Mouse) {
       if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 128)) VP.dXY <<= 1;
       if (VP.Cod == VP.le || VP.Cod == VP.cle) VP.X -= VP.dXY;
       else if (VP.Cod == VP.ri || VP.Cod == VP.cri) VP.X += VP.dXY;

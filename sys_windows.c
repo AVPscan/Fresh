@@ -57,7 +57,7 @@ void GetKey(char *b) {
             s1 = p; while (*++s1 == *++s2 && *s2);
             if (!*s2) { *p = NameId[j].id; break; } }
         if (j < 0) *p = 0;
-        if (*p++ == K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
+        if ((uint8_t)*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
 Cell GetRam(Cell *size) { if (!*size) return 0;
     Cell l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
