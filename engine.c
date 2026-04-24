@@ -87,6 +87,7 @@ void Print(uint8_t n, char *str) {
   sav = Palette(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { sav = Palette(Cconvas); len = *sav++; MemCpy(dst, sav, len); dst += len; }
   SysWrite(Cdbuf + 512, (dst - Cdbuf - 512)); }
+void ext(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
@@ -98,12 +99,13 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
   i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
     while(c) { ac = (Cdbuf + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
-      dst = Palette(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } } 
+      dst = Palette(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } }
+  Event* e = Event(K_ESC); e->Addr = (Cell)ext;
   Convas.Flag = MaxWin; Convas.WinCurrent = Convas.Flag; Convas.WinMax = Convas.Flag; Convas.Dwin = Convas.Flag; Convas.Swin = Convas.Flag;
   Convas.Wmax = CellLine; Convas.Xswin = Convas.Wmax; Convas.Hmax = CellStr; Convas.Yswin = Convas.Hmax; Convas.Dwin = 0; Convas.Xdwin = 0; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
-    VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(0);
+    VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
     SyncSize(VRam.addr); Print(Cdefault,AltBufOn Reset HideCur WrapOff Cls MouseX10on); }
   else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off);
     FreeRam(VRam.addr, VRam.size); } }
@@ -191,7 +193,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
-  Event* e = Event(0); if (e->Addr) ((EH)e->Addr)();
+  Event* e = Event(Off); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
   if (control && VP.Cod != K_Mouse) {
     if ((uint16_t)(VP.X - 1) < Convas.Wmax && (uint16_t)(VP.Y - 1) < Convas.Hmax) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= b3; if (!(VP.Mode & b3)) ForgetKey(); }
@@ -211,7 +213,7 @@ uint8_t ViewPort(void) {
         x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
         if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
         if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
-  e = Event(VP.Cod); if (e->Addr) ((EH)e->Addr)();
+  e = Event(VP.Cod); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
   if (SyncSize(VRam.addr)) {
     c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;

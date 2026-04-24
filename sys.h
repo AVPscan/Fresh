@@ -196,6 +196,7 @@ void MemMove(void* dst, void* src, Cell len);                         // Пер�
 uint8_t UTFinfo(char *s);                                             // Рассказ об utf8 возвращает Data
 uint8_t UTFinfoTile(char *s, Cell len);                               // Рассказ об utf8 возвращает Data с учётом буфера
 void Print(uint8_t n, char *str);                                     // Вывод строки в цвете палитры напрямую в терминал минуя Vram.
+void ext(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 uint8_t PushKey(char *key);                                           // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
