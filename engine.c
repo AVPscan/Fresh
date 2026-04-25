@@ -83,24 +83,24 @@ uint8_t UTFinfoTile(char *s, Cell len) {
   return UTFinfo(s); }
 
 void Print(uint8_t n, char *str) {
-  char *dst = Cdbuf + 512, *sav; uint16_t len; n &= Mcbi; if (!str) return;
-  sav = Palette(n); len = *sav++; MemCpy(dst, sav, len); dst += len; len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  if (n != Cconvas) { sav = Palette(Cconvas); len = *sav++; MemCpy(dst, sav, len); dst += len; }
-  SysWrite(Cdbuf + 512, (dst - Cdbuf - 512)); }
+  char *dst = Cdbuf + 512; n &= Mcbi; if (!str) return;
+  PalData* pal =  Palette(n); MemCpy(dst, pal->data, pal->len); dst += pal->len;
+  uint16_t len = StrLen(str); MemCpy(dst, str, len); dst += len;
+  if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
+  SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
 void ext(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  uint8_t lm, cbi, ca, c = StrLen(Reset), i = 8; char *ac, *dst; uint8_t* base = (uint8_t*)addr;
+  uint8_t cbi, ca, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr;
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = Cdpal + SizeBufPal; Cdevent = Cdkey + SizeBufKey; Cdbuf = Cdevent + SizeBufEvent;
+  Cdkey = Cdpal + SizeBufPal; Cdevent = Cdkey + SizeBufKey; Cdbuf = Cdevent + SizeBufEvent; Event(K_ESC)->Addr = (Cell)ext;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
-  char* modes[] = { "\007;22;27m", "\006;22;7m", "\006;1;27m", "\005;1;7m" };
-  while (i--) { ac = (Cdbuf + ((i) << 5)); dst = ac; *dst++ = c; MemCpy(dst, Reset, c);
-    ca = StrLen(colors[i]); if (ca) { *ac++ = ca; MemCpy(ac, colors[i], ca); } }
-  i = 4; while(i) { char* mode = modes[--i]; lm = *mode++, c = 8; 
-    while(c) { ac = (Cdbuf + ((--c) << 5)); cbi = (c << 2) + i; ca = (*ac++ - 1);
-      dst = Palette(cbi); *dst++ = (lm + ca); MemCpy(dst, ac, ca); MemCpy(dst + ca, mode, lm); } }
-  Event* e = Event(K_ESC); e->Addr = (Cell)ext;
+  PalData *pal, *mode, *src, modes[] = { {7, ";22;27m"}, {6, ";22;7m"}, {6, ";1;27m"}, {5, ";1;7m"} };
+  while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, c);
+    ca = StrLen(colors[i]); if (ca) { pal->len = ca; MemCpy(pal->data, colors[i], ca); } }
+  i = 4; while(i) { mode = &modes[--i]; c = 8; 
+    while(c) { src = (PalData*)(Cdbuf + ((--c) << 5)); ca = src->len - 1; cbi = (c << 2) + i; 
+      pal = Palette(cbi); pal->len = mode->len + ca; MemCpy(pal->data, src->data, ca); MemCpy(pal->data + ca, mode->data, mode->len); } }
   Convas.Flag = MaxWin; Convas.WinCurrent = Convas.Flag; Convas.WinMax = Convas.Flag; Convas.Dwin = Convas.Flag; Convas.Swin = Convas.Flag;
   Convas.Wmax = CellLine; Convas.Xswin = Convas.Wmax; Convas.Hmax = CellStr; Convas.Yswin = Convas.Hmax; Convas.Dwin = 0; Convas.Xdwin = 0; }
 Cell SystemSwitch(void) {
@@ -193,7 +193,6 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
 uint8_t ViewPort(void) {
   uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
-  Event* e = Event(Off); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
   if (control && VP.Cod != K_Mouse) {
     if ((uint16_t)(VP.X - 1) < Convas.Wmax && (uint16_t)(VP.Y - 1) < Convas.Hmax) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= b3; if (!(VP.Mode & b3)) ForgetKey(); }
@@ -213,11 +212,12 @@ uint8_t ViewPort(void) {
         x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
         if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
         if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
-  e = Event(VP.Cod); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
   if (SyncSize(VRam.addr)) {
     c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
     VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
+  Event* e = Event(Off); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
+  e = Event(VP.Cod); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
   if (control > 1) { control--; }
   else { control--; }
   return VP.Loop; }

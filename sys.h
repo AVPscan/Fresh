@@ -144,9 +144,9 @@ extern char      *Cdbuf;
 #define Wbv(r,n)      ((ConWinStr*)(Cvlswin + (((r) << CVWin_shift) + (n)) << 1)) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Win(n)        ((WindowData*)(Cdwin + ((n) << Win_shift)))                 // адрес начала данных окна n
 #define Convas        (*(Canalysis*)Cdcon)                                        // адрес где организована разбивка холста
-#define Palette(cbi)  (Cdpal + ((cbi) << Palette_shift))                          // адрес начала anci кода цвета colBI[0..31]
-#define KeyBuf(n)     (Cdkey + ((n) << Key_shift))                                // адрес начала ячейки в буфере клавиатуры
-#define Event(n)      (&((Event*)Cdevent)[n])                                     // адрес начала структуры события
+#define Palette(cbi)  ((PalData*)(Cdpal + ((cbi) << Palette_shift)))              // адрес начала anci кода цвета colBI[0..31]
+#define KeyBuf(n)     ((Cdkey + ((n) << Key_shift)))                              // адрес начала ячейки в буфере клавиатуры
+#define Event(n)      ((Event*)(Cdevent + ((n) * sizeof(Event))))                 // адрес начала структуры события
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, Loop, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
