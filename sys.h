@@ -51,12 +51,12 @@
   #endif
 #endif
 
-#define CellPow 13                            // Масштаб холста
+#define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN 512                           // Максимально число окон на холсте
-#if CellPow <= 16
+#if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
-#elif CellPow <= 32
+#elif CellPow < 31
     typedef uint32_t ugoc;
     typedef int32_t  goc;
 #else
@@ -123,12 +123,12 @@ typedef struct {
 } WinFlags;
 typedef struct { uint8_t Info, ds; ugoc offset; } ADOCell;                    // ds Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { ugoc MaxCs, MaxVs; } ConWinStr;
-typedef struct { goc Xrender, Yrender; uint8_t Flags, Key; ugoc W, H, Layer,  // WFirstSR если равен Convas.H то окно вьюпорт не приземлён в это окно - автоскролл
-                 parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData; //   иначе указывает на первую строку для отображения
-typedef struct { ugoc WinCurrent, Flag, WinMax, Dwin, Swin, Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; } Canalysis;
+typedef struct { goc Xrender, Yrender; uint8_t Flags, Key; uint16_t Layer; ugoc W, H, // WFirstSR если равен Convas.H то окно вьюпорт не приземлён в это окно
+                 parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData; // - автоскролл иначе указывает на первую строку для отображения
+typedef struct { uint16_t WinCurrent, Flag, WinMax, Dwin, Swin, Wmax, Hmax; ugoc Xdwin, Ydwin, Xswin, Yswin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
-typedef struct { uint8_t CountMenu, NumberMenu; ugoc Win; } Menus;            // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
+typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;        // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
 enum {
     MaxWin = MAX_WIN,                                                         // Максимальное число окон
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -224,9 +224,9 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Чит�
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WinView(ugoc n, goc x, goc y);                                   // Привязка окна к рендеру
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
-ugoc _Window(int8_t col, uint8_t count, ugoc *args);                  // Определение цвета окна col при col<0 статичное окно
-void _WSet(ugoc n, uint8_t cur, uint8_t count, AFunction *args);      // Управление отображением курсора и авто переносом строк в окне
-void _WData(ugoc n, char *str, uint8_t count, goc *args);             // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
+void _WData(uint16_t n, char *str, uint8_t count, goc *args);         // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                                 // Читаем utf8 из порта
@@ -234,7 +234,7 @@ Cell GetRam(Cell *size);                                              // Взя�
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
 void SWD(Cell addr);                                                  // Установить рабочую директорию
 ugoc TermCR(ugoc *r);                                                 // Считать рамки терминала
-goc SyncSize(Cell addr);                                              // Получить рамки терминала при необходимости стабилизировать
+uint8_t SyncSize(Cell addr);                                          // Получить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала

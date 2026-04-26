@@ -214,22 +214,22 @@ uint8_t ViewPort(void) {
     c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
     VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-  if (Vector(Off)) { Menus* e = Menu(Off); Convas.WinCurrent = e->Win; Vector(Off)(); }
-  if (Vector(VP.Cod)) { Menus* e = Menu(VP.Cod); Convas.WinCurrent = e->Win; Vector(VP.Cod)(); }
+  if (Vector(Off)) { Convas.WinCurrent = Menu(Off)->Win; Vector(Off)(); }
+  if (Vector(VP.Cod)) { Convas.WinCurrent = Menu(VP.Cod)->Win; Vector(VP.Cod)(); }
   if (control > 1) { control--; }
   else { control--; }
   return VP.Loop; }
 
-void WinView(ugoc n, goc x, goc y) {
+void WinView(uint16_t n, goc x, goc y) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
-void WinTop(ugoc n) {
+void WinTop(uint16_t n) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - 1;
   WindowData* w = Win(n); w->Layer = l; l += 1 - n;
   while(--l) { w = Win(n + l); --w->Layer; } }
-ugoc _Window(int8_t col, uint8_t count, ugoc *args) {
-  ugoc l, c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
+uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
+  ugoc l, c = 0, h = 0; uint16_t n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
   if (col < 0) { n = --Convas.Swin; --Convas.Dwin;
     if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
     w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - 1; l = Convas.WinMax - n;
@@ -237,15 +237,14 @@ ugoc _Window(int8_t col, uint8_t count, ugoc *args) {
   else { if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
   w->Key = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
   w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
-void _WSet(ugoc n, uint8_t cur, uint8_t count, AFunction *args) {
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); 
-  if (w->Flags & b7) { if (cur) w->Key = cur;
+  WindowData* w = Win(n); if (w->Flags & b7) { if (cur) w->Key = cur;
     if (count--) { Menus* e = Menu(cur); Vector(cur) = args[0]; e->Win = n;
       if (e->CountMenu && count) {  } } return; }
   w->Flags &= ~b5; if (cur) w->Flags &= b5;
   if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } }
-void _WData(ugoc n, char *str, uint8_t count, goc *args) {
+void _WData(uint16_t n, char *str, uint8_t count, goc *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { ugoc c = w->W, r = w->H; (void)r;
     if (!c) { } } 

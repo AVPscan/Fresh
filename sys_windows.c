@@ -70,9 +70,9 @@ void SWD(Cell addr) { if (!addr) return;
     char *path = (char *)(addr); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
     for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
-uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
+ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
 
-int16_t SyncSize(Cell addr) {
+uint8_t SyncSize(Cell addr) {
     if (!addr) return 0;
     static HANDLE hOut = NULL; 
     if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);

@@ -63,9 +63,9 @@ void SWD(Cell addr) { if (!addr) return;
     return; }
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
   
-uint16_t TermCR(uint16_t *r) { *r = TS.row; return TS.col; }
+ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
 
-int16_t SyncSize(Cell addr) { if (!addr) return 0;
+uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
   if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
   if (Flag.SyncSize) { uint8_t stable = 3; if (ws.ws_col < TS.col || ws.ws_row < TS.row) Print(Cconvas,Cls);
