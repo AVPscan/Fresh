@@ -13,13 +13,13 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.04 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.05 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 void show(void) { static uint8_t flag = Off;
   if (flag) { WinView(Convas.WinCurrent, -2, -2); --flag; }
   else { WinView(Convas.WinCurrent, 0, 0); ++flag; } }
-void body(void) { WinData(Convas.WinCurrent, "\2fbdd", VP.Mode, VP.X, VP.Y); }
+void body(void) { WinData(Convas.WinCurrent, "%2fbdd", VP.Mode, VP.X, VP.Y); }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);

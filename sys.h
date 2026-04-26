@@ -52,7 +52,7 @@
 #endif
 
 #define MAX_WIN     512
-typedef void (*AF)(void);
+typedef void (*AFunction)(void);
 typedef uintptr_t Cell;
 #define SCell sizeof(Cell)
 extern char      *Cdata;
@@ -62,8 +62,9 @@ extern uint16_t  *Cdwin;
 extern uint16_t  *Cdcon;
 extern char      *Cdpal;
 extern char      *Cdkey;
-extern char      *Cdevent;
+extern char      *Cdmenu;
 extern char      *Cdbuf;
+extern char      *Cvector;
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0,
     Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
@@ -116,7 +117,7 @@ typedef struct { int16_t Xrender, Yrender; uint8_t Flags, Key; uint16_t W, H, La
 typedef struct { uint16_t WinCurrent, Flag, WinMax, Dwin, Swin, Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;              // Поля data1,data2 соответствуют структуре Data
-typedef struct { AF Addr; uint8_t Max, Nmenu; uint16_t Win; } Event;                  // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
+typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;                // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
 enum {
     CellPow = 13,                                                                     // Масштаб холста
     MaxWin = MAX_WIN,                                                                 // Максимальное число окон
@@ -128,6 +129,7 @@ enum {
     Win_shift = 4,                                                                    //  16 Смещение для данных окон в словах - 32 байта на окно.
     Palette_shift = 5,                                                                //  32 Смещение для палитр
     Key_shift = 3,                                                                    //   8 Смещение для ячеек буфера клавиатуры
+    Menu_shift = 2,                                                                   //   4 Смещение для организации меню
     CellLine = 1 << CellPow,                                                          // Определение ширины холста
     CellStr = CellLine / 2,                                                           // Определение высоты холста
     SizeCell = CellStr * CellLine * Utf8,                                             // Размер данных в ячейках холста
@@ -137,17 +139,19 @@ enum {
     SizeDataConvas = sizeof(Canalysis) / 2,                                           // Размер данных под разбивку холста для организации окон
     SizeBufPal = 32 * sizeof(PalData),                                                // Размер данных 32 палитр по 32 байта на каждую
     SizeBufKey = SKey * sizeof(KeyBuf),                                               // Размер данных кольцевого буфера клавиатуры
-    SizeBufEvent = SKey * sizeof(Event),                                              // Размер данных для событий (привязка вызова функций к событиям)
+    SizeBufMenu = SKey * sizeof(Menus),                                               // Размер данных для событий (привязка вызова функций к событиям)
     SizeBuf = 1024,                                                                   // Размер буфера
-    SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBufEvent + SizeBuf };
+    SizeVector = SKey * sizeof(AFunction),                                            // Размер вектора прерываний
+    SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBufMenu + SizeBuf + SizeVector};
 #define Data(r)       (Cdata + ((r) << Data_shift))                                   // адрес начала буфера строки холста
-#define IDO(r, c)     ((ADOCell*)(Cattr + (((r) << ADO_shift) + (c)) << 1))           // адрес атрибута, данных и смещения ячейки холста
-#define Wbv(r,n)      ((ConWinStr*)(Cvlswin + (((r) << CVWin_shift) + (n)) << 1))     // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
+#define IDO(r, c)     ((ADOCell*)(Cattr + ((((r) << ADO_shift) + (c)) << 1)))         // адрес атрибута, данных и смещения ячейки холста
+#define Wbv(r,n)      ((ConWinStr*)(Cvlswin + ((((r) << CVWin_shift) + (n)) << 1)))   // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Win(n)        ((WindowData*)(Cdwin + ((n) << Win_shift)))                     // адрес начала данных окна n
 #define Convas        (*(Canalysis*)Cdcon)                                            // адрес где организована разбивка холста
 #define Palette(cbi)  ((PalData*)(Cdpal + ((cbi) << Palette_shift)))                  // адрес начала кода цвета colBI[0..31]
 #define KeyBuf(n)     ((Cdkey + ((n) << Key_shift)))                                  // адрес начала ячейки в буфере клавиатуры
-#define Event(n)      ((Event*)(Cdevent + ((n) * sizeof(Event))))                     // адрес начала структуры события
+#define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                        // адрес начала структуры события
+#define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                           // адрес вектора прерывания события
 typedef struct { uint16_t tic; int16_t LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { int16_t X, Y, viewX, viewY; uint8_t Mode, Loop, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
@@ -165,8 +169,9 @@ extern R_ VRam;
     uint16_t  *Cdcon      = 0; \
     char      *Cdpal      = 0; \
     char      *Cdkey      = 0; \
-    char      *Cdevent    = 0; \
+    char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
+    char      *Cvector    = 0; \
     V_ VP = {1,1,0,0,0,1,1,0,0,0,11,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4}; \
     B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     R_ VRam = {0,0,1}
@@ -210,11 +215,8 @@ uint8_t ViewPort(void);                                               // Пол�
 void WinView(uint16_t n, int16_t x, int16_t y);                       // Привязка окна к рендеру
 void WinTop(uint16_t n);                                              // Установить окно поверх всех (игнорирует теневые)
 uint16_t _Window(int8_t col, uint8_t count, uint16_t *args);          // Определение цвета окна col при col<0 статичное окно
-void _WSet(uint16_t n, uint8_t cur, uint8_t count, AF *args);         // Управление отображением курсора и авто переносом строк в окне
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
 void _WData(uint16_t n, char *str, uint8_t count, int16_t *args);     // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-#define Window(col, ...) _Window(col, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
-#define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((AF[]){0, ##__VA_ARGS__}) / sizeof(AF)) - 1), (AF[]){0, ##__VA_ARGS__} + 1)
-#define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / 2) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(char *b);                                                 // Читаем utf8 из порта
@@ -226,4 +228,7 @@ int16_t SyncSize(Cell addr);                                          // Пол�
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
+#define Window(col, ...) _Window(col, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
+#define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((int16_t[]){0, ##__VA_ARGS__}) / sizeof(int16_t)) - 1), (int16_t[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */

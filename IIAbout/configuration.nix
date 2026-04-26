@@ -89,10 +89,10 @@
     gnomeExtensions.gradient-top-bar gnomeExtensions.burn-my-windows gnomeExtensions.weather-oclock
     gnomeExtensions.dash-to-dock gnomeExtensions.user-themes gnomeExtensions.vitals
     gnome-tweaks gnome-graphs gnome-font-viewer gnome-sound-recorder gnome-extension-manager
-    gnome-chess stockfish brave thunderbird speedcrunch vitetris denaro qbittorrent
+    gnome-chess stockfish brave thunderbird speedcrunch vitetris qbittorrent
     hunspell hunspellDicts.ru_RU libreoffice-fresh onlyoffice-desktopeditors koreader
     cavalier museeks clementine soundconverter netease-cloud-music-gtk sacd mpv papers avidemux
-    file-roller p7zip gthumb gparted ntfs3g btrfs-progs wget git gnumake clang gcc geany sakura amdgpu_top
+    file-roller p7zip gthumb gparted ntfs3g btrfs-progs wget git gnumake clang gcc sakura
     iputils traceroute pkg-config curl orchis-theme graphite-cursors arc-icon-theme
     (pkgs.makeDesktopItem {
       name = "продукты"; desktopName = "Моя программа для жены";
