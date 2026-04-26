@@ -90,17 +90,15 @@ void Print(uint8_t n, char *str) {
   SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
 void ext(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  uint8_t cbi, ca, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr;
+  uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
+  char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
   Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = Cdpal + SizeBufPal; Cdevent = Cdkey + SizeBufKey; Cdbuf = Cdevent + SizeBufEvent; Event(K_ESC)->Addr = (Cell)ext;
-  char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset };
-  PalData *pal, *mode, *src, modes[] = { {7, ";22;27m"}, {6, ";22;7m"}, {6, ";1;27m"}, {5, ";1;7m"} };
-  while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, c);
-    ca = StrLen(colors[i]); if (ca) { pal->len = ca; MemCpy(pal->data, colors[i], ca); } }
-  i = 4; while(i) { mode = &modes[--i]; c = 8; 
-    while(c) { src = (PalData*)(Cdbuf + ((--c) << 5)); ca = src->len - 1; cbi = (c << 2) + i; 
-      pal = Palette(cbi); pal->len = mode->len + ca; MemCpy(pal->data, src->data, ca); MemCpy(pal->data + ca, mode->data, mode->len); } }
+  Cdkey = Cdpal + SizeBufPal; Cdevent = Cdkey + SizeBufKey; Cdbuf = Cdevent + SizeBufEvent; Event(K_ESC)->Addr = ext;
+  while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
+    if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
+  i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
+      pal->len = src->len + mode->len - 1; MemCpy(pal->data, src->data, src->len - 1); MemCpy(pal->data + src->len - 1, mode->data, mode->len); } }
   Convas.Flag = MaxWin; Convas.WinCurrent = Convas.Flag; Convas.WinMax = Convas.Flag; Convas.Dwin = Convas.Flag; Convas.Swin = Convas.Flag;
   Convas.Wmax = CellLine; Convas.Xswin = Convas.Wmax; Convas.Hmax = CellStr; Convas.Yswin = Convas.Hmax; Convas.Dwin = 0; Convas.Xdwin = 0; }
 Cell SystemSwitch(void) {
@@ -216,8 +214,8 @@ uint8_t ViewPort(void) {
     c = TermCR(&r); control++;
     VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
     VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-  Event* e = Event(Off); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
-  e = Event(VP.Cod); if (e->Addr) { Convas.WinCurrent = e->Win; ((EH)e->Addr)(); }
+  Event* e = Event(Off); if (e->Addr) { Convas.WinCurrent = e->Win; (e->Addr)(); }
+  e = Event(VP.Cod); if (e->Addr) { Convas.WinCurrent = e->Win; (e->Addr)(); }
   if (control > 1) { control--; }
   else { control--; }
   return VP.Loop; }
@@ -239,11 +237,11 @@ uint16_t _Window(int8_t col, uint8_t count, uint16_t *args) {
   else { if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
   w->Key = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
   w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
-void _WSet(uint16_t n, uint8_t cur, uint8_t count, EH *args) {
+void _WSet(uint16_t n, uint8_t cur, uint8_t count, AF *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); 
   if (w->Flags & b7) { if (cur) w->Key = cur;
-    if (count--) { Event* e = Event(cur); e->Addr = (Cell)args[0]; e->Win = n;
+    if (count--) { Event* e = Event(cur); e->Addr = args[0]; e->Win = n;
       if (e->Max && count) {  } } return; }
   w->Flags &= ~b5; if (cur) w->Flags &= b5;
   if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } }
