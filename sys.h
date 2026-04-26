@@ -123,9 +123,9 @@ typedef struct {
 } WinFlags;
 typedef struct { uint8_t Info, ds; ugoc offset; } ADOCell;                    // ds Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { ugoc MaxCs, MaxVs; } ConWinStr;
-typedef struct { goc Xrender, Yrender; uint8_t Flags, Key; uint16_t Layer; ugoc W, H, // WFirstSR если равен Convas.H то окно вьюпорт не приземлён в это окно
-                 parent, child, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; } WindowData; // - автоскролл иначе указывает на первую строку для отображения
-typedef struct { uint16_t WinCurrent, Flag, WinMax, Dwin, Swin, Wmax, Hmax; ugoc Xdwin, Ydwin, Xswin, Yswin; } Canalysis;
+typedef struct { goc Xrender, Yrender; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; // WFirstSR если равен Convas.Hmax то вьюпорт не
+                 uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
+typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t Current, Flag, WinMax, Dwin, Swin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;        // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
@@ -162,10 +162,10 @@ enum {
 #define KeyBuf(n)     ((Cdkey + ((n) << Key_shift)))                          // адрес начала ячейки в буфере клавиатуры
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
-typedef struct { ugoc tic; goc LkX, LkY, MkX, MkY, RkX, RkY; char key[6]; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y, viewX, viewY; uint8_t Mode, Loop, dXY, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4; } V_;
+typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; char key[6]; } B_;
+typedef struct { goc X, Y, viewX, viewY; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F2, F3, F4; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
-typedef struct { uint8_t SwitchRaw, SyncSize; Cell Delay_ms; } F_;
+typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern V_ VP;
@@ -182,12 +182,12 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {1,1,0,0,0,1,1,0,0,0,11,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4}; \
-    B_ Buf = {0,0,0,0,0,0,0,{0,0,0,0,0,0},0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
+    V_ VP = {1,1,0,0,1,1,1,0,0,0,11,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F2,K_F3,K_F4}; \
+    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
-    static F_ Flag = {1,0,0}; \
+    static F_ Flag = {0,1,0}; \
     static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, \
         {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
@@ -195,13 +195,14 @@ extern R_ VRam;
         {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
         {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }
 
-_Static_assert(SizeCell == CellStr * CellLine * 4, "SizeCell mismatch");
+_Static_assert(SizeCell == CellLine * CellStr * 4, "SizeCell mismatch");
 _Static_assert((1 << Data_shift) == CellLine * Utf8, "Data_shift mismatch");
 _Static_assert((1 << ADO_shift) == CellLine * sizeof(ADOCell) / 2, "ADO_shift mismatch");
 _Static_assert((1 << CVWin_shift) == MaxWin, "CVWin_shift must equal MaxWin");
 _Static_assert((1 << Win_shift) == sizeof(WindowData) / 2, "Win_shift mismatch");
 _Static_assert((1 << Palette_shift) == sizeof(PalData), "Palette_shift mismatch");
 _Static_assert((1 << Key_shift) == sizeof(KeyBuf), "Key_shift mismatch");
+_Static_assert((1 << Menu_shift) == sizeof(Menus), "Menu_shift mismatch");
 
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val

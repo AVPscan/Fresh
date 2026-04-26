@@ -7,19 +7,40 @@
  * лицензии GNU (GPLv3).
  */
 
+#include <stdio.h>
 #include "sys.h"
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.10 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.11 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
+void how(void) {
+  char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
+  s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
+  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d           ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
+  Print(Cdefault,Home); Print(Corange,Cdbuf); if (r < 2) return;
+  snprintf(Cdbuf, 100, "\nx%d y%d wx%d wy%d                      ", VP.X, VP.Y, VP.X + VP.viewX, VP.Y + VP.viewY); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
+  Print(CredB,Cdbuf); if (r < 3) return;
+  if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+    p = Cdbuf; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
+    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
+    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
+    p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10, "    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
+    if (r > 2) Print(Cgreen,Cdbuf); } }
+  else { i = ShowKey(&w,&q,Buf.key); if (q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+    p = Cdbuf; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
+    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
+    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
+    p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10,"    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
+    if (r > 2) Print(Cgreen,Cdbuf); } } }
+    
 void show(void) { static uint8_t flag = Off;
-  if (flag) { WinView(Convas.WinCurrent, -2, -2); --flag; }
-  else { WinView(Convas.WinCurrent, 0, 0); ++flag; } }
-void body(void) { WinData(Convas.WinCurrent, "%2fbdd", VP.Mode, VP.X, VP.Y); }
+  if (flag) { WinView(Convas.Current, -2, -2); --flag; }
+  else { WinView(Convas.Current, 0, 0); ++flag; } }
+void body(void) { how(); } //WinData(Convas.Current, "%2fbdd", VP.Mode, VP.X, VP.Y); }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
