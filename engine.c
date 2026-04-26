@@ -85,14 +85,14 @@ uint8_t UTFinfoTile(char *s, Cell len) {
 void Print(uint8_t n, char *str) {
   char *dst = Cdbuf + 512; n &= Mcbi; if (!str) return;
   PalData* pal =  Palette(n); MemCpy(dst, pal->data, pal->len); dst += pal->len;
-  uint16_t len = StrLen(str); MemCpy(dst, str, len); dst += len;
+  ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
   SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
 void ext(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
-  Cdata = (char*)base; Cattr = (uint16_t*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
+  Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
   Cdkey = Cdpal + SizeBufPal; Cdmenu = Cdkey + SizeBufKey; Cdbuf = Cdmenu + SizeBufMenu; Cvector = Cdbuf + SizeBuf; Vector(K_ESC) = ext;
   while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
@@ -154,11 +154,11 @@ void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
   char *src = KeyBuf(Buf.push--); Buf.tic--;
   if (*src & b7) { Buf.push++; *src &= ~b7; } }
-uint16_t Keys(void) {
-  uint16_t s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & b7) s++; }
+ugoc Keys(void) {
+  ugoc s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & b7) s++; }
   return s; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t t = 0; int16_t dx = 0, dy = 0; uint16_t r, c = TermCR(&r); Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
+  uint8_t t = 0; goc dx = 0, dy = 0; ugoc r, c = TermCR(&r); Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
   if (Buf.Mkey == Buf.Lk) {
     VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
   else if (Buf.Mkey == Buf.Mk) {
@@ -189,10 +189,10 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   return c; }
 
 uint8_t ViewPort(void) {
-  uint16_t r, c = TermCR(&r); int16_t x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
+  ugoc r, c = TermCR(&r); goc x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
-    if ((uint16_t)(VP.X - 1) < Convas.Wmax && (uint16_t)(VP.Y - 1) < Convas.Hmax) { 
+    if ((ugoc)(VP.X - 1) < Convas.Wmax && (ugoc)(VP.Y - 1) < Convas.Hmax) { 
       if (VP.Cod == VP.F2) { VP.Mode ^= b3; if (!(VP.Mode & b3)) ForgetKey(); }
       else if (VP.Cod == VP.F3) { VP.Mode ^= b2; }
       else if (VP.Cod == VP.F4) { VP.Mode ^= b1; } }
@@ -220,16 +220,16 @@ uint8_t ViewPort(void) {
   else { control--; }
   return VP.Loop; }
 
-void WinView(uint16_t n, int16_t x, int16_t y) {
+void WinView(ugoc n, goc x, goc y) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
-void WinTop(uint16_t n) {
+void WinTop(ugoc n) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  uint16_t l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - 1;
+  ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - 1;
   WindowData* w = Win(n); w->Layer = l; l += 1 - n;
   while(--l) { w = Win(n + l); --w->Layer; } }
-uint16_t _Window(int8_t col, uint8_t count, uint16_t *args) {
-  uint16_t l, c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
+ugoc _Window(int8_t col, uint8_t count, ugoc *args) {
+  ugoc l, c = 0, h = 0, n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
   if (col < 0) { n = --Convas.Swin; --Convas.Dwin;
     if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
     w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - 1; l = Convas.WinMax - n;
@@ -237,7 +237,7 @@ uint16_t _Window(int8_t col, uint8_t count, uint16_t *args) {
   else { if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
   w->Key = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
   w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
-void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
+void _WSet(ugoc n, uint8_t cur, uint8_t count, AFunction *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   WindowData* w = Win(n); 
   if (w->Flags & b7) { if (cur) w->Key = cur;
@@ -245,8 +245,8 @@ void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
       if (e->CountMenu && count) {  } } return; }
   w->Flags &= ~b5; if (cur) w->Flags &= b5;
   if (count) { w->Flags &= ~b6; if (args[0]) w->Flags &= b6; } }
-void _WData(uint16_t n, char *str, uint8_t count, int16_t *args) {
+void _WData(ugoc n, char *str, uint8_t count, goc *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { uint16_t c = w->W, r = w->H; (void)r;
+  WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { ugoc c = w->W, r = w->H; (void)r;
     if (!c) { } } 
   (void)*str; (void)count; (void)*args; }

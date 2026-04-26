@@ -23,7 +23,7 @@ void body(void) { WinData(Convas.WinCurrent, "%2fbdd", VP.Mode, VP.X, VP.Y); }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
-  if (flag) { uint16_t size = (uint16_t)((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB);
+  if (flag) { ugoc size = (ugoc)((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB);
               WinData(control, " %-3dMb %3 %06c:%06c ", size, CblueB, CblueB); WinView(control, -2, -2); WinSet(control, K_Ctrl_K, show);
               WinData(menu, "%0mCreate\nLoad\nSave\nExit", K_Ctrl_C, K_Ctrl_L, K_Ctrl_S, K_Ctrl_E); WinSet(menu, K_ESC);
               WinSet(control, Off, body);
