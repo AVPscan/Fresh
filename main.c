@@ -14,7 +14,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.11 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.12 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 void how(void) {
@@ -24,16 +24,16 @@ void how(void) {
   Print(Cdefault,Home); Print(Corange,Cdbuf); if (r < 2) return;
   snprintf(Cdbuf, 100, "\nx%d y%d wx%d wy%d                      ", VP.X, VP.Y, VP.X + VP.viewX, VP.Y + VP.viewY); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
   Print(CredB,Cdbuf); if (r < 3) return;
-  if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+  if (Buf.pop > Buf.push) { i = PopKey(&w,&q,Buf.key); if (i || q) { l = 1 + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? 1 : 0;
     p = Cdbuf; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
     if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
     else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
     p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10, "    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
     if (r > 2) Print(Cgreen,Cdbuf); } }
-  else { i = ShowKey(&w,&q,Buf.key); if (q) { l = 1 + (w & 0x03); v = ((w>>2) & 0x03); w = (w & 0x10) ? 1 : 0;
+  else { i = ShowKey(&w,&q,Buf.key); if (q) { l = 1 + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? 1 : 0;
     p = Cdbuf; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
-    if (v != 3) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
-    else { v = *Buf.key; snprintf(p, 10, "{%d}", v); }
+    if (!(w)) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
+    else { w = *Buf.key; snprintf(p, 10, "{%d}", w); }
     p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10,"    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
     if (r > 2) Print(Cgreen,Cdbuf); } } }
     

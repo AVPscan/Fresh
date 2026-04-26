@@ -61,7 +61,7 @@ uint8_t UTFinfo(char *s) {
   else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
     { d = 0x03; cp = ((c & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
   else return (d |= b7);
-  if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) return (d = b5);
+  if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) return (d |= b5);
   if (cp < 0x100) return (d |= b2);
   if (cp >= 0x0590 && cp <= 0x08FF) d |= b4;
   if (((d & 0x03) == 0x01 && cp < 0x80) || ((d & 0x03) == 0x02 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
@@ -110,7 +110,7 @@ Cell SystemSwitch(void) {
   return On; }
 
 uint8_t PushKey(char *key) {
-  char *sav, *dst; uint8_t d, l, c, data = UTFinfo(key); c = (data == b5) ? *(key + 1) : 0; if (data & b7) return 0;
+  char *sav, *dst; uint8_t d, l, c, data = UTFinfo(key); c = (data & b5) ? *(key + 1) : 0; if (data & b7) return 0;
   if (Buf.pop == Buf.push) {
     dst = KeyBuf(++Buf.push); *dst++ = data | b6; dst++; *dst++ = 1; dst++;
     if (Buf.pop == Buf.push) ++Buf.pop;
@@ -133,7 +133,7 @@ uint8_t PushKey(char *key) {
         if (Buf.pop == Buf.push) ++Buf.pop; }
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
-  if (!c) if ((uint8_t)*key < (uint8_t)b7) c = *key;
+  if (!c) if (!(*key & b7)) c = *key;
   return c; }
 uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key) {
   uint8_t d; char *dst; if (Buf.pop == Buf.push) { *data = 0; *count = 0; return 0; }
@@ -181,7 +181,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
-  if ((uint8_t)*Buf.key < (uint8_t)b7) c = *Buf.key;
+  if (!(*Buf.key & b7)) c = *Buf.key;
   if (*Buf.key == K_ESC) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) { *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
   if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
