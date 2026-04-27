@@ -53,6 +53,7 @@
 
 #define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN 512                           // Максимально число окон на холсте
+#define MaxSpeed 512                          // Максимальное ускорение курсора
 #if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
@@ -166,7 +167,7 @@ enum {
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; char key[6]; } B_;
-typedef struct { goc X, Y, viewX, viewY; ugoc MX, MY; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F12; } V_;
+typedef struct { goc X, Y, viewX, viewY; ugoc Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F12; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { const char *name; unsigned char id; } KeyIdMap;
@@ -185,7 +186,7 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,9,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F12}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_F12}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
