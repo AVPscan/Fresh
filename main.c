@@ -14,10 +14,10 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.12 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.13 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
-void how(void) {
+void how(void) {  // костыль, пока не дописано WinData и Render!
   char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d           ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
@@ -38,9 +38,9 @@ void how(void) {
     if (r > 2) Print(Cgreen,Cdbuf); } } }
     
 void show(void) { static uint8_t flag = Off;
-  if (flag) { WinView(Convas.Current, -2, -2); --flag; }
-  else { WinView(Convas.Current, 0, 0); ++flag; } }
-void body(void) { how(); } //WinData(Convas.Current, "%2fbdd", VP.Mode, VP.X, VP.Y); }
+  if (flag) { WinView(Convas.W, -2, -2); --flag; }
+  else { WinView(Convas.W, 0, 0); ++flag; } }
+void body(void) { how(); } //WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);

@@ -99,8 +99,9 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
   i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
       pal->len = src->len + mode->len - 1; MemCpy(pal->data, src->data, src->len - 1); MemCpy(pal->data + src->len - 1, mode->data, mode->len); } }
-  Convas.Flag = MaxWin; Convas.Current = Convas.Flag; Convas.WinMax = Convas.Flag; Convas.Dwin = Convas.Flag; Convas.Swin = Convas.Flag;
-  Convas.Wmax = CellLine; Convas.Xswin = Convas.Wmax; Convas.Hmax = CellStr; Convas.Yswin = Convas.Hmax; Convas.Dwin = 0; Convas.Xdwin = 0; }
+  VP.Mode = 1; VP.Loop = 1; VP.MX = CellLine; VP.MY = CellStr;
+  Convas.W = MaxWin; Convas.Flag = Convas.W; Convas.WinMax = Convas.W; Convas.Dwin = Convas.W; Convas.Swin = Convas.W;
+  Convas.Wmax = CellLine; Convas.Hmax = CellStr; Convas.Xdwin = 0; Convas.Ydwin = 0; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
@@ -157,27 +158,30 @@ void ForgetKey(void) {
 ugoc Keys(void) {
   ugoc s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & b7) s++; }
   return s; }
+uint8_t Move(goc dx, goc dy) {
+  ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx; VP.Y += dy; (void) c;
+  if (VP.Mode & b1) {
+    if ((ugoc)VP.X > VP.MX) { if (VP.X < 0) VP.X = 0;
+                              else VP.X = VP.MX - 1; }
+    if ((ugoc)VP.Y > VP.MY) { if (VP.Y < 0) VP.Y = 0;
+                              else VP.Y = VP.MY - 1; } }
+  else {
+    if ((x < -512 || x > 512) && ((x ^ VP.X) & GOC_MIN)) { if (VP.X < 0) VP.X = GOC_MAX;
+                                                           else VP.X = GOC_MIN; }
+    if ((y < -512 || y > 512) && ((y ^ VP.Y) & GOC_MIN)) { if (VP.Y < 0) VP.Y = GOC_MAX;
+                                                           else VP.Y = GOC_MIN; } }  
+  return 0; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t t = 0; goc dx = 0, dy = 0; ugoc r, c = TermCR(&r); Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
-  if (Buf.Mkey == Buf.Lk) {
-    VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.LkX = VP.X; Buf.LkY = VP.Y; t++; }
-  else if (Buf.Mkey == Buf.Mk) {
-    VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.MkX = VP.X; Buf.MkY = VP.Y; t++; }
-  else if (Buf.Mkey == Buf.Rk) {
-    VP.X = Buf.MX - VP.viewX; VP.Y = Buf.MY - VP.viewY; Buf.RkX = VP.X; Buf.RkY = VP.Y; t++; }
-  if (Buf.Mkey == Buf.Ru) { dy--; t++; }
-  else if (Buf.Mkey == Buf.Rd) { dy++; t++; }
-  else if (Buf.Mkey == Buf.cRu) { dx++; t++; }
-  else if (Buf.Mkey == Buf.cRd) { dx--; t++; }
-  if (dx || dy) {
-    VP.Y += dy * VP.dXY; VP.X += dx * VP.dXY;
-    if (VP.Mode & b21) {
-      VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
-      VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-    else {
-      dx = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; dy = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
-      if (VP.viewX != dx*c) { VP.viewX = dx*c; t++; }
-      if (VP.viewY != dy*r) { VP.viewY = dy*r; t++; } } }
+  uint8_t t = 0, p = 0; goc dx = 0, dy = 0; Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
+  if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
+  else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
+  else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
+  if (Buf.Mkey == Buf.Ru) dy--;
+  else if (Buf.Mkey == Buf.Rd) dy++;
+  else if (Buf.Mkey == Buf.cRu) dx++;
+  else if (Buf.Mkey == Buf.cRd) dx--;
+  if (dx || dy) t = Move(dx * VP.dXY,dy * VP.dXY);
+  if (p) {  }
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
@@ -189,33 +193,22 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   *tic = ++Buf.tic; return c; }
 
 uint8_t ViewPort(void) {
-  ugoc r, c = TermCR(&r); goc x, y; uint8_t control, s = Buf.mode; Buf.mode |= 1; if (VP.Mode & 4) Buf.mode--;
+  uint8_t control, s = Buf.mode; goc dx = 0, dy = 0; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
-    if ((ugoc)(VP.X - 1) < Convas.Wmax && (ugoc)(VP.Y - 1) < Convas.Hmax) { 
-      if (VP.Cod == VP.F2) { VP.Mode ^= b3; if (!(VP.Mode & b3)) ForgetKey(); }
-      else if (VP.Cod == VP.F3) { VP.Mode ^= b2; }
-      else if (VP.Cod == VP.F4) { VP.Mode ^= b1; } }
+    if (VP.Cod == VP.F12) { VP.Mode ^= b1; if (!(VP.Mode & b1)) ForgetKey(); }
     if (VP.Cod != VP.oCod) { VP.dXY = 1; VP.oCod = VP.Cod; }
-    if (VP.Cod > (uint8_t)K_BAC && VP.Cod < (uint8_t)K_Mouse) {
+    if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud || VP.Cod == VP.cle || VP.Cod == VP.cri || VP.Cod == VP.cup || VP.Cod == VP.cdo) {
       if ((VP.Tic > 7) && !(VP.Tic & 3) && (VP.dXY < 512)) VP.dXY <<= 1;
-      if (VP.Cod == VP.le || VP.Cod == VP.cle) VP.X -= VP.dXY;
-      else if (VP.Cod == VP.ri || VP.Cod == VP.cri) VP.X += VP.dXY;
-      else if (VP.Cod == VP.up || VP.Cod == VP.cup) VP.Y -= VP.dXY;
-      else if (VP.Cod == VP.ud || VP.Cod == VP.cdo) VP.Y += VP.dXY;
-      if (VP.Mode & b21) {
-        VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
-        VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-      else {
-        x = (VP.X > 0) ? (1 - VP.X)/c : (c - VP.X)/c; y = (VP.Y > 0) ? (1 - VP.Y)/r : (r - VP.Y)/r;
-        if (VP.viewX != x*c) { VP.viewX = x*c; control++; }
-        if (VP.viewY != y*r) { VP.viewY = y*r; control++; } } } }
-  if (SyncSize(VRam.addr)) {
-    c = TermCR(&r); control++;
-    VP.X = ((VP.X + VP.viewX < 1) ? 1 : (VP.X + VP.viewX > c) ? c : VP.X + VP.viewX) - VP.viewX;
-    VP.Y = ((VP.Y + VP.viewY < 1) ? 1 : (VP.Y + VP.viewY > r) ? r : VP.Y + VP.viewY) - VP.viewY; }
-  if (Vector(Off)) { Convas.Current = Menu(Off)->Win; Vector(Off)(); }
-  if (Vector(VP.Cod)) { Convas.Current = Menu(VP.Cod)->Win; Vector(VP.Cod)(); }
+      if (VP.Cod == VP.le || VP.Cod == VP.cle) dx--;
+      else if (VP.Cod == VP.ri || VP.Cod == VP.cri) dx++;
+      else if (VP.Cod == VP.up || VP.Cod == VP.cup) dy--;
+      else dy++;
+      if (dx || dy) control += Move(dx * VP.dXY,dy * VP.dXY); } }
+  if (SyncSize(VRam.addr)) { control++;
+    }
+  if (Vector(Off)) { Convas.W = Menu(Off)->Win; Vector(Off)(); }
+  if (Vector(VP.Cod)) { Convas.W = Menu(VP.Cod)->Win; Vector(VP.Cod)(); }
   if (control > 1) { control--; }
   else { control--; }
   return VP.Loop; }
