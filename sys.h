@@ -131,7 +131,7 @@ typedef struct { goc Xrender, Yrender; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur
                  uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
 typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t W, Flag, WinMax, Dwin, Swin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
-typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeyBuf;      // Поля data1,data2 соответствуют структуре Data
+typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;    // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;        // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
 enum {
     MaxWin = MAX_WIN,                                                         // Максимальное число окон
@@ -152,7 +152,7 @@ enum {
     SizeDataWin = MaxWin * sizeof(WindowData) / 2,                            // Размер данных для окон
     SizeDataConvas = sizeof(Canalysis) / 2,                                   // Размер данных под разбивку холста для организации окон
     SizeBufPal = 32 * sizeof(PalData),                                        // Размер данных 32 палитр по 32 байта на каждую
-    SizeBufKey = SKey * sizeof(KeyBuf),                                       // Размер данных кольцевого буфера клавиатуры
+    SizeBufKey = SKey * sizeof(KeysBuff),                                     // Размер данных кольцевого буфера клавиатуры
     SizeBufMenu = MaxWin * sizeof(Menus),                                     // Размер данных для событий (привязка вызова функций к событиям)
     SizeBuf = 1024,                                                           // Размер буфера
     SizeVector = SKey * sizeof(AFunction),                                    // Размер вектора прерываний
@@ -205,7 +205,7 @@ _Static_assert((1 << ADO_shift) == CellLine * sizeof(ADOCell) / 2, "ADO_shift mi
 _Static_assert((1 << CVWin_shift) == MaxWin, "CVWin_shift must equal MaxWin");
 _Static_assert((1 << Win_shift) == sizeof(WindowData) / 2, "Win_shift mismatch");
 _Static_assert((1 << Palette_shift) == sizeof(PalData), "Palette_shift mismatch");
-_Static_assert((1 << Key_shift) == sizeof(KeyBuf), "Key_shift mismatch");
+_Static_assert((1 << Key_shift) == sizeof(KeysBuff), "Key_shift mismatch");
 _Static_assert((1 << Menu_shift) == sizeof(Menus), "Menu_shift mismatch");
 
 Cell StrLen(char *s);                                                 // Длина строки

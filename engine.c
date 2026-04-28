@@ -111,52 +111,47 @@ Cell SystemSwitch(void) {
 
 uint8_t PushKey(uint8_t *key) {
   uint8_t *sav, *dst, d, l, c, data = UTFinfo(key); c = (data & b5) ? *(key + 1) : 0; if (data & b7) return 0;
-  if (Buf.pop == Buf.push) {
-    dst = KeyBuf(++Buf.push); *dst++ = data | b6; dst++; *dst++ = 1; dst++;
-    if (Buf.pop == Buf.push) ++Buf.pop;
-    l = 1 + (data & b10);
+  if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push);
+    *dst++ = data | b7; *dst = On; dst += 3; l = 1 + (data & b10);
     if (c) *dst = c;
     else while(l--) *(dst + l) = *(key + l); }
   else {
-    dst = KeyBuf(Buf.push); d = *dst; sav = dst + 2; dst += 4;
-    if (d & b7) { sav++; dst += 2; }
-    l = 1 + (data & b10);
+    dst = KeyBuf(Buf.push); d = *dst++; sav = dst; dst += 3; l = 1 + (data & b10);
+    if (d & b6) { d = *++sav; sav++; dst += 2; }
     if ((d & ~b76) == data) {
       if (c) { if (*dst == c) l = ~Off; }
       else while(l--) { if (*(dst + l) != *(key + l)) break; } }
     if (l == (uint8_t)~Off) { if (!(*sav += 1)) *sav = ~Off; }
-    else { l = 1 + (data & b10);
-      if ((d & b10) < 2 && ((data & b10) < 2 && !(d & b7))) {
-        dst = KeyBuf(Buf.push); *dst |= b7; *(dst + 1) = data; *(dst + 3) = 1; dst += 6; }
-      else {
-        dst = KeyBuf(++Buf.push); *dst = data | b6; *(dst + 2) = 1; dst += 4;
-        if (Buf.pop == Buf.push) ++Buf.pop; }
+    else { dst = KeyBuf(Buf.push); d = *dst;
+      if (!(d & b6) && (d & b10) < 2 && (data & b10) < 2) { *dst |= b6; dst += 2; }
+      else { dst = KeyBuf(++Buf.push); if (Buf.pop == Buf.push) ++Buf.pop; }
+      *dst++ = data | b7; *dst = On; dst += 3; l = 1 + (data & b10);
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
   if (!c && !(*key & b7)) c = *key;
   return c; }
 uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key) {
-  uint8_t d, *dst; if (Buf.pop == Buf.push) { *data = 0; *count = 0; return 0; }
-  dst = KeyBuf(Buf.push); d = *dst; *count = *(dst + 2); dst += 4;
-  if (d & b7) { d = *(dst - 3); *count = *(dst - 1); dst += 2; }
-  *data = (d & ~b76); d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
-  return 1; }
+  if (Buf.pop == Buf.push) { *data = Off; *count = Off; return Off; }
+  uint8_t d, *dst; dst = KeyBuf(Buf.push); d = *dst++; 
+  if (d & b6) { dst++; d = *dst++; }
+  *count = *dst; *data = (d & ~b76); dst += 3; d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
+  return On; }
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key) {
-  uint8_t *dst, d, n = 1;
+  uint8_t *dst, d;
   while(!((d = *(dst = KeyBuf(Buf.pop))) & b76) && (Buf.pop != Buf.push)) Buf.pop++;
-  if (!(d & b76)) { *data = 0; *count = 0; return 0; }
-  if (Buf.pop == Buf.push) { n--; Buf.pop--; if ((d & b76) == b76) n++; }
-  if (d & b6) { *count = *(dst + 2); if (n) *dst &= ~b6; }
-  else { dst += 2; d = *(dst - 1); *count = *(dst + 1); if (n) *(dst - 2) &= ~b76; }
-  dst += 4; *data = (d & ~b76); d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
-  return n; }
+  if (!(d & b76)) { *data = Off; *count = Off; return Off; }
+  if (Buf.pop == Buf.push) Buf.pop--;
+  if (d & b7) *dst &= ~b7;
+  else { *dst &= ~b6; dst += 2; d = *dst; }
+  *count = *++dst; *data = (d & ~b76); dst += 3; d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
+  return On; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
-  uint8_t *src = KeyBuf(Buf.push--); Buf.tic--;
-  if (*src & b7) { Buf.push++; *src &= ~b7; } }
+  uint8_t *dst = KeyBuf(Buf.push--); Buf.tic--; if (*dst & b6) { Buf.push++; *dst &= ~b6; } }
 ugoc Keys(void) {
-  ugoc s = 0; uint8_t c = Buf.push; while (c != Buf.pop) { s++; if (*KeyBuf(c--) & b7) s++; }
+  ugoc s = 0; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
+
 uint8_t Move(goc dx, goc dy) {
   uint8_t t = 0; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;// (void) c;
   if (VP.Mode & b1) { WindowData* w = Win(VP.Win);
@@ -185,7 +180,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
   if (!(*Buf.key & b7)) c = *Buf.key;
   if (*Buf.key == K_ESC) { c = *(Buf.key + 1); if (c == K_NO) return c; }
-  if (c == K_Mouse) { *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4)); return c; }
+  if (c == K_Mouse) *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4));
   if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
   if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
   *tic = ++Buf.tic; return c; }
