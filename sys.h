@@ -53,7 +53,7 @@
 
 #define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN 512                           // Максимально число окон на холсте
-#define MaxSpeed 512                          // Максимальное ускорение курсора
+#define MaxSpeed (1 << (CellPow - 4))         // Максимальное ускорение курсора
 #if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
@@ -76,7 +76,7 @@ extern ugoc     *Cvlswin;
 extern ugoc     *Cdwin;
 extern ugoc     *Cdcon;
 extern char     *Cdpal;
-extern char     *Cdkey;
+extern uint8_t  *Cdkey;
 extern char     *Cdmenu;
 extern char     *Cdbuf;
 extern char     *Cvector;
@@ -166,11 +166,11 @@ enum {
 #define KeyBuf(n)     ((Cdkey + ((n) << Key_shift)))                          // адрес начала ячейки в буфере клавиатуры
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
-typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd; char key[6]; } B_;
+typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd, key[6]; } B_;
 typedef struct { goc X, Y, viewX, viewY; ugoc Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, cup, cdo, cle, cri, F12; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
-typedef struct { const char *name; unsigned char id; } KeyIdMap;
+typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern V_ VP;
 extern B_ Buf;
@@ -182,7 +182,7 @@ extern R_ VRam;
     ugoc      *Cdwin      = 0; \
     ugoc      *Cdcon      = 0; \
     char      *Cdpal      = 0; \
-    char      *Cdkey      = 0; \
+    uint8_t   *Cdkey      = 0; \
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
@@ -213,15 +213,15 @@ void MemSet(void* buf, uint8_t val, Cell len);                        // Зап�
 void MemCpy(void* dst, void* src, Cell len);                          // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                        // Сравнение
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
-uint8_t UTFinfo(char *s);                                             // Рассказ об utf8 возвращает Data
-uint8_t UTFinfoTile(char *s, Cell len);                               // Рассказ об utf8 возвращает Data с учётом буфера
+uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
+uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
 void Print(uint8_t n, char *str);                                     // Вывод строки в цвете палитры напрямую в терминал минуя Vram.
 void ext(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
-uint8_t PushKey(char *key);                                           // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
-uint8_t ShowKey(uint8_t *data, uint8_t *count, char *key);            // Показать ожидаемую/получаемую клавишу
-uint8_t PopKey(uint8_t *data, uint8_t *count, char *key);             // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
+uint8_t PushKey(uint8_t *key);                                        // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
+uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
@@ -231,10 +231,10 @@ void WinView(ugoc n, goc x, goc y);                                   // При�
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
-void _WData(uint16_t n, char *str, uint8_t count, goc *args);         // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void _WData(uint16_t n, char    *str, uint8_t count, goc *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
-void GetKey(char *b);                                                 // Читаем utf8 из порта
+void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
 Cell GetRam(Cell *size);                                              // Взять память
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
 void SWD(Cell addr);                                                  // Установить рабочую директорию

@@ -28,24 +28,24 @@ void SwitchRaw(void) {
         tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
     else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
 
-void GetKey(char *b) {
-  unsigned char *p = (unsigned char *)b; uint8_t len = 6; while (len--) b[len] = 0;
-  if (read(0, p, 1) <= 0) { *p = 27; return; }
-  unsigned char c = *p; if (c > 127) {
+void GetKey(uint8_t *b) {
+  uint8_t *p = b, c, len = 6; while (len--) b[len] = 0;
+  if (read(0, p, 1) <= 0) { *p = K_ESC; return; }
+  c = *p; if (c > 127) {
     len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
     while (--len) read(0, ++p, 1);
     return; }
   if (c > 31 && c < 127) return;
-  *p++ = 27; *p = c; if (c != 27) return; 
-  unsigned char *s1; const unsigned char *s2; int8_t j = (uint8_t)(sizeof(NameId)/sizeof(KeyIdMap));
+  *p++ = K_ESC; *p = c; if (c != K_ESC) return; 
+  uint8_t *s1, *s2, j = (uint8_t)(sizeof(NameId)/sizeof(KeyIdMap));
   if (read(0, p, 1) > 0) { s1 = p; while (((s1 - p) < 5) && (read(0, ++s1, 1) > 0)) if (*s1 > 63) break;
     if (*s1 < 64) while((read(0,&c,1) > 0) && (c < 64));
-    while(j--) { s2 = (const unsigned char*)NameId[j].name;
+    while(j--) { s2 = (uint8_t*)NameId[j].name;
       if (*p != *s2) continue;
       s1 = p; while (*++s1 == *++s2 && *s2);
       if (!*s2) { *p = NameId[j].id; break; } }
-    if (j < 0) *p = 0;
-    if ((uint8_t)*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
+    if (j == (uint8_t)~Off) *p = Off;
+    if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
 
 Cell GetRam(Cell *size) { if (!*size) return 0;
     Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);

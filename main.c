@@ -14,7 +14,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > 1) {
     if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.14 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.15 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 void how(void) {  // костыль, пока не дописано WinData и Render!
