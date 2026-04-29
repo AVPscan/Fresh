@@ -154,15 +154,12 @@ ugoc Keys(void) {
 
 uint8_t Move(goc dx, goc dy) {
   uint8_t t = 0; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;
-  if (VP.Mode & b1) { WindowData* w = Win(VP.Win);
-    if (VP.X < Off) VP.X = Off; else if (VP.X >= w->W) VP.X = w->W - On; 
-    if (VP.Y < Off) VP.Y = Off; else if (VP.Y >= w->H) VP.Y = w->H - On; }
+  if (VP.Mode & b1) {  }
   else {
-    if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) { if (VP.X < Off) VP.X = GOC_MAX; else VP.X = -(GOC_MAX / c) * (c - On); }
-    if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) { if (VP.Y < Off) VP.Y = GOC_MAX; else VP.Y = -(GOC_MAX / r) * (r - On); }
-    if ((ugoc)(VP.X + VP.viewX) > c - On) { if (VP.X < Off) VP.viewX = c - (VP.X / c) * c; else VP.viewX = -(VP.X / c) * c; }
-    if ((ugoc)(VP.Y + VP.viewY) > r - On) { if (VP.Y < Off) VP.viewY = r - (VP.Y / r) * r; else VP.viewY = -(VP.Y / r) * r; } }
-  
+    if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) VP.X = (VP.X < Off) ? GOC_MAX : GOC_MIN;
+    if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) VP.Y = (VP.Y < Off) ? GOC_MAX : GOC_MIN;
+    if ((ugoc)VP.X % c != VP.Xs || (ugoc)VP.Y % r != VP.Ys) t++;
+    VP.Xs = (ugoc)VP.X % c; VP.Ys = (ugoc)VP.Y % r; }
   return t; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   uint8_t t = 0, p = 0; goc dx = 0, dy = 0; Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
@@ -174,7 +171,8 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p) {  }
+  if (p) { VP.X += (goc)Buf.MX - On - (goc)VP.Xs; VP.Y += (goc)Buf.MY - On - (goc)VP.Ys;
+    VP.Xs = Buf.MX - On; VP.Ys = Buf.MY - On; t++; }
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
