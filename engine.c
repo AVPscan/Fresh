@@ -153,15 +153,15 @@ ugoc Keys(void) {
   return s; }
 
 uint8_t Move(goc dx, goc dy) {
-  uint8_t t = 0; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;// (void) c;
+  uint8_t t = 0; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;
   if (VP.Mode & b1) { WindowData* w = Win(VP.Win);
     if (VP.X < Off) VP.X = Off; else if (VP.X >= w->W) VP.X = w->W - On; 
     if (VP.Y < Off) VP.Y = Off; else if (VP.Y >= w->H) VP.Y = w->H - On; }
   else {
-    if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) {
-      if (VP.X < Off) { VP.X = GOC_MAX; VP.viewX = GOC_MIN + c; } else { VP.X = GOC_MIN + On; VP.viewX = GOC_MAX; } }
-    if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) { 
-      if (VP.Y < Off) { VP.Y = GOC_MAX; VP.viewY = GOC_MIN + r; } else { VP.Y = GOC_MIN + On; VP.viewX = GOC_MAX; } } }
+    if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) { if (VP.X < Off) VP.X = GOC_MAX; else VP.X = -(GOC_MAX / c) * (c - On); }
+    if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) { if (VP.Y < Off) VP.Y = GOC_MAX; else VP.Y = -(GOC_MAX / r) * (r - On); }
+    if ((ugoc)(VP.X + VP.viewX) > c - On) { if (VP.X < Off) VP.viewX = c - (VP.X / c) * c; else VP.viewX = -(VP.X / c) * c; }
+    if ((ugoc)(VP.Y + VP.viewY) > r - On) { if (VP.Y < Off) VP.viewY = r - (VP.Y / r) * r; else VP.viewY = -(VP.Y / r) * r; } }
   
   return t; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
@@ -181,15 +181,15 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if (!(*Buf.key & b7)) c = *Buf.key;
   if (*Buf.key == K_ESC) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4));
-  if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = 1; break; } }
-  if (!(*control && (Buf.mode & 1))) c = PushKey(Buf.key);
+  if (c && *num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
+  if (!(*control && (Buf.mode & b0))) c = PushKey(Buf.key);
   *tic = ++Buf.tic; return c; }
 
 uint8_t ViewPort(void) {
   uint8_t control, s = Buf.mode; goc dx = 0, dy = 0; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control && VP.Cod != K_Mouse) {
-    if (VP.Cod == VP.F12) { VP.Mode ^= b1;
+    if (VP.Cod == VP.F11) { VP.Mode ^= b1;
       if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
     if (VP.Cod != VP.oCod) { VP.dXY = On; VP.oCod = VP.Cod; }
     if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud || VP.Cod == VP.cle || VP.Cod == VP.cri || VP.Cod == VP.cup || VP.Cod == VP.cdo) {
