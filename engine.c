@@ -153,16 +153,17 @@ ugoc Keys(void) {
   return s; }
 
 uint8_t Move(goc dx, goc dy) {
-  uint8_t t = 0; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;
+  uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;
   if (VP.Mode & b1) {  }
   else {
     if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) VP.X = (VP.X < Off) ? GOC_MAX : GOC_MIN;
     if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) VP.Y = (VP.Y < Off) ? GOC_MAX : GOC_MIN;
-    if ((ugoc)VP.X % c != VP.Xs || (ugoc)VP.Y % r != VP.Ys) t++;
-    VP.Xs = (ugoc)VP.X % c; VP.Ys = (ugoc)VP.Y % r; }
+    x = ((VP.X < Off) ? (c + (VP.X % c)) : (VP.X % c)) + On; y = ((VP.Y < Off) ? (r + (VP.Y % r)) : (VP.Y % r)) + On;
+    if (x != VP.Xs || y != VP.Ys) t++;
+    VP.Xs = x; VP.Ys = y; }
   return t; }
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t t = 0, p = 0; goc dx = 0, dy = 0; Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
+  uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
   if (Buf.Mkey == Buf.Ru) dy--;
   else if (Buf.Mkey == Buf.Rd) dy++;
   else if (Buf.Mkey == Buf.cRu) dx++;
@@ -171,11 +172,12 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p) { VP.X += (goc)Buf.MX - On - (goc)VP.Xs; VP.Y += (goc)Buf.MY - On - (goc)VP.Ys;
-    VP.Xs = Buf.MX - On; VP.Ys = Buf.MY - On; t++; }
+  if (p) { dx = VP.X + (goc)Buf.MX - (goc)VP.Xs; dy = VP.Y + (goc)Buf.MY - (goc)VP.Ys;
+    if (!((dx ^ VP.X) & GOC_MIN)) { VP.X = dx; VP.Xs = Buf.MX; }
+    if (!((dy ^ VP.Y) & GOC_MIN)) { VP.Y = dy; VP.Ys = Buf.MY; } }
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
-  uint8_t t, c = 0; *control = 0; *tic = Buf.tic; GetKey(Buf.key);
+  uint8_t t, c = Off; *control = Off; *tic = Buf.tic; GetKey(Buf.key);
   if (!(*Buf.key & b7)) c = *Buf.key;
   if (*Buf.key == K_ESC) { c = *(Buf.key + 1); if (c == K_NO) return c; }
   if (c == K_Mouse) *control = Mouse(*(Buf.key + 2),*(Buf.key + 3),*(Buf.key + 4));
