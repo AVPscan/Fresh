@@ -131,7 +131,7 @@ typedef struct { goc Xrender, Yrender; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur
                  uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
 typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t W, Flag, WinMax, Dwin, Swin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
-typedef struct { uint8_t data1, data2, tic1, tic2, utf8[2][2]; } KeysBuff;    // Поля data1,data2 соответствуют структуре Data
+typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;    // Поля data1,data2 соответствуют структуре Data
 typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;        // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
 enum {
     MaxWin = MAX_WIN,                                                         // Максимальное число окон
