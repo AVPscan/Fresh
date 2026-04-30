@@ -159,10 +159,10 @@ uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
   *cx = x; *cy = y; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
   if (x != *sx || y != *sy) t++;
   *sx = x; *sy = y; return t; }
-void StepScreen(goc *cx, goc *cy, ugoc *sx, ugoc *sy, uint8_t mx, uint8_t my) {
-  goc dx = *cx + (goc)mx - (goc)*sx, dy = *cy + (goc)my - (goc)*sy;
-  if (!((dx ^ *cx) & GOC_MIN)) { *cx = dx; *sx = mx; }
-  if (!((dy ^ *cy) & GOC_MIN)) { *cy = dy; *sy = my; } }
+void MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my) {
+  goc dx = *cx - mx, dy = *cy - my;
+  if (!((dx ^ *cx) & GOC_MIN)) { *cx = dx; *sx -= mx; }
+  if (!((dy ^ *cy) & GOC_MIN)) { *cy = dy; *sy -= my; } }
 
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
@@ -174,7 +174,7 @@ uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p) StepScreen(&VP.X, &VP.Y, &VP.Xs, &VP.Ys, Buf.MX, Buf.MY);
+  if (p) MoveScreen(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, VP.Xs - Buf.MX, VP.Ys - Buf.MY);
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = Off; *control = Off; *tic = Buf.tic; GetKey(Buf.key);

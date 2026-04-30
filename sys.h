@@ -224,8 +224,8 @@ uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Пок�
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
-uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy);       // Взаимосвязь перемещения по холсту и экранных координат
-void StepScreen(goc *cx, goc *cy, ugoc *sx, ugoc *sy, uint8_t mx, uint8_t my);  // Взаимосвязь изменения экранных координат(мышью) и холста
+uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
+void MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my);// Взаимосвязь изменения экранных координат(мышью) и холста
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
