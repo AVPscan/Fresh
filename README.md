@@ -1,5 +1,7 @@
 
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
+---
+Добавил диалог с deepseek в папку о сути поэкта (для тех кто умеет читать но не понимает код). Теперь, когда достал из структуры всё, осознал ДНК, и сделал удобную обёртку пора писать WinData и Render. 
 
 Неделя потеряна в Департаменте (а по сути руководство "Работа России" в нашем регионе), ну ничего всё равно допишу проект!
 
