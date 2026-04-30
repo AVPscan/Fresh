@@ -152,29 +152,29 @@ ugoc Keys(void) {
   ugoc s = 0; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-uint8_t Move(goc dx, goc dy) {
-  uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = VP.X, y = VP.Y; VP.X += dx * VP.dXY; VP.Y += dy * VP.dXY;
-  if (VP.Mode & b1) {  }
-  else {
-    if ((x < -MaxSpeed || x > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) VP.X = (VP.X < Off) ? GOC_MAX : GOC_MIN;
-    if ((y < -MaxSpeed || y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) VP.Y = (VP.Y < Off) ? GOC_MAX : GOC_MIN;
-    x = ((VP.X < Off) ? (c + (VP.X % c)) : (VP.X % c)) + On; y = ((VP.Y < Off) ? (r + (VP.Y % r)) : (VP.Y % r)) + On;
-    if (x != VP.Xs || y != VP.Ys) t++;
-    VP.Xs = x; VP.Ys = y; }
-  return t; }
+uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
+  uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = *cx, y = *cy; x += dx; y += dy;
+  if ((*cx < -MaxSpeed || *cx > MaxSpeed) && ((x ^ *cx) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
+  if ((*cy < -MaxSpeed || *cy > MaxSpeed) && ((y ^ *cy) & GOC_MIN)) y = (y < Off) ? GOC_MAX : GOC_MIN;
+  *cx = x; *cy = y; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
+  if (x != *sx || y != *sy) t++;
+  *sx = x; *sy = y; return t; }
+void StepScreen(goc *cx, goc *cy, ugoc *sx, ugoc *sy, uint8_t mx, uint8_t my) {
+  goc dx = *cx + (goc)mx - (goc)*sx, dy = *cy + (goc)my - (goc)*sy;
+  if (!((dx ^ *cx) & GOC_MIN)) { *cx = dx; *sx = mx; }
+  if (!((dy ^ *cy) & GOC_MIN)) { *cy = dy; *sy = my; } }
+
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 32; Buf.MY = y - 32;
+  uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
   if (Buf.Mkey == Buf.Ru) dy--;
   else if (Buf.Mkey == Buf.Rd) dy++;
   else if (Buf.Mkey == Buf.cRu) dx++;
   else if (Buf.Mkey == Buf.cRd) dx--;
-  if (dx || dy) t = Move(dx,dy);
+  if (dx || dy) t = MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY);
   if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p) { dx = VP.X + (goc)Buf.MX - (goc)VP.Xs; dy = VP.Y + (goc)Buf.MY - (goc)VP.Ys;
-    if (!((dx ^ VP.X) & GOC_MIN)) { VP.X = dx; VP.Xs = Buf.MX; }
-    if (!((dy ^ VP.Y) & GOC_MIN)) { VP.Y = dy; VP.Ys = Buf.MY; } }
+  if (p) StepScreen(&VP.X, &VP.Y, &VP.Xs, &VP.Ys, Buf.MX, Buf.MY);
   return t; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c = Off; *control = Off; *tic = Buf.tic; GetKey(Buf.key);
@@ -198,8 +198,9 @@ uint8_t ViewPort(void) {
       else if (VP.Cod == VP.ri || VP.Cod == VP.cri) dx++;
       else if (VP.Cod == VP.up || VP.Cod == VP.cup) dy--;
       else dy++;
-      control += Move(dx,dy); } }
-  if (SyncSize(VRam.addr)) control += Move(Off,Off);
+      if (VP.Mode & b1) {  }
+      else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); } }
+  if (SyncSize(VRam.addr)) s = MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, Off, Off);
   if (Vector(Off)) { Convas.W = Menu(Off)->Win; Vector(Off)(); }
   if (Vector(VP.Cod)) { Convas.W = Menu(VP.Cod)->Win; Vector(VP.Cod)(); }
   if (control > 1) { control--; }
