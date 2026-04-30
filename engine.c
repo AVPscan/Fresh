@@ -156,13 +156,14 @@ uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
   uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = *cx, y = *cy; x += dx; y += dy;
   if ((*cx < -MaxSpeed || *cx > MaxSpeed) && ((x ^ *cx) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
   if ((*cy < -MaxSpeed || *cy > MaxSpeed) && ((y ^ *cy) & GOC_MIN)) y = (y < Off) ? GOC_MAX : GOC_MIN;
-  *cx = x; *cy = y; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
-  if (x != *sx || y != *sy) t++;
+  *cx = x; *cy = y; dx = x / c; dy = y / r; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
+  if ((x / c) != dx || (y / r) != dy) t++;
   *sx = x; *sy = y; return t; }
 void MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my) {
   goc dx = *cx - mx, dy = *cy - my;
-  if (!((dx ^ *cx) & GOC_MIN)) { *cx = dx; *sx -= mx; }
-  if (!((dy ^ *cy) & GOC_MIN)) { *cy = dy; *sy -= my; } }
+  if ((dx ^ *cx) & GOC_MIN) return;
+  if ((dy ^ *cy) & GOC_MIN) return;
+  *cx = dx; *sx -= mx; *cy = dy; *sy -= my; }
 
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y) {
   uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
