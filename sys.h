@@ -153,7 +153,7 @@ enum {
     SizeDataConvas = sizeof(Canalysis) / 2,                                   // Размер данных под разбивку холста для организации окон
     SizeBufPal = 32 * sizeof(PalData),                                        // Размер данных 32 палитр по 32 байта на каждую
     SizeBufKey = SKey * sizeof(KeysBuff),                                     // Размер данных кольцевого буфера клавиатуры
-    SizeBufMenu = MaxWin * sizeof(Menus),                                     // Размер данных для событий (привязка вызова функций к событиям)
+    SizeBufMenu = SKey * sizeof(Menus),                                       // Размер данных для событий (привязка вызова функций к событиям)
     SizeBuf = 1024,                                                           // Размер буфера
     SizeVector = SKey * sizeof(AFunction),                                    // Размер вектора прерываний
     SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBufMenu + SizeBuf + SizeVector};
@@ -219,14 +219,14 @@ void Print(uint8_t pal, char *str);                                   // Выв�
 void ext(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
-uint8_t PushKey(uint8_t *key);                                        // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
 uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
-void MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my);// Взаимосвязь изменения экранных координат(мышью) и холста
-uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
+uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
+uint8_t Mouse(uint8_t *c, uint8_t key, uint8_t x, uint8_t y);         // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
