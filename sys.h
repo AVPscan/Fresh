@@ -127,7 +127,7 @@ typedef struct {
 } WinFlags;
 typedef struct { uint8_t Info, ds; ugoc offset; } ADOCell;                    // ds Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { ugoc MaxCs, MaxVs; } ConWinStr;
-typedef struct { goc Xrender, Yrender; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xconvas, Yconvas; // WFirstSR если равен Convas.Hmax то вьюпорт не
+typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; // WFirstSR если равен Convas.Hmax то вьюпорт не
                  uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
 typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t W, Flag, WinMax, Dwin, Swin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
@@ -215,7 +215,7 @@ int8_t MemCmp(void* dst, void* src, Cell len);                        // Сра�
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
 uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
-void Print(uint8_t n, char *str);                                     // Вывод строки в цвете палитры напрямую в терминал минуя Vram.
+void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void ext(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
@@ -229,11 +229,11 @@ void MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my);// Вза�
 uint8_t Mouse(uint8_t key, uint8_t x, uint8_t y);                     // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void WinView(ugoc n, goc x, goc y);                                   // Привязка окна к рендеру
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
+void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязка окна к рендеру
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
-void _WData(uint16_t n, char    *str, uint8_t count, goc *args);      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void _WData(uint16_t n, char *str, uint8_t count, goc *args);         // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
@@ -245,6 +245,7 @@ uint8_t SyncSize(Cell addr);                                          // Пол�
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
+#define WinView(n, ...) _WinView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)

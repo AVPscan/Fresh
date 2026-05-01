@@ -88,13 +88,16 @@ void Print(uint8_t n, char *str) {
   ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
   SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
-void ext(void) { VP.Loop = Off; }
+void show(void) { static uint8_t flag = Off;
+  if (flag) { WinView(Convas.W); --flag; }
+  else { WinView(Convas.W, Off); ++flag; } }
+void bye(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
   Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu; Cvector = Cdbuf + SizeBuf; Vector(K_ESC) = ext;
+  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu; Cvector = Cdbuf + SizeBuf; Vector(K_F12) = bye;
   while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
     if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
   i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
@@ -110,31 +113,32 @@ Cell SystemSwitch(void) {
   return On; }
 
 uint8_t PushKey(uint8_t *key) {
-  uint8_t *sav, *dst, d, l, c, data = UTFinfo(key); c = (data & b5) ? *(key + 1) : 0; if (data & b7) return 0;
+  uint8_t *sav, *dst, d, l, c, data = UTFinfo(key); c = (data & b5) ? *(key + On) : (!(*key & b7)) ? *key : Off; if (data & b7) return Off;
+  if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); return c; }
   if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push);
-    *dst++ = data | b7; *dst = On; dst += 3; l = 1 + (data & b10);
+    *dst++ = data | b7; *dst = On; dst += b10; l = On + (data & b10);
     if (c) *dst = c;
     else while(l--) *(dst + l) = *(key + l); }
   else {
-    dst = KeyBuf(Buf.push); d = *dst++; sav = dst; dst += 3; l = 1 + (data & b10);
-    if (d & b6) { d = *++sav; sav++; dst += 2; }
+    dst = KeyBuf(Buf.push); d = *dst++; sav = dst; dst += b10; l = On + (data & b10);
+    if (d & b6) { d = *++sav; sav++; dst += b1; }
     if ((d & ~b76) == data) {
       if (c) { if (*dst == c) l = ~Off; }
       else while(l--) { if (*(dst + l) != *(key + l)) break; } }
-    if (l == (uint8_t)~Off) { if (!(*sav += 1)) *sav = ~Off; }
+    if (l == (uint8_t)~Off) { if (!(*sav += On)) *sav = ~Off; }
     else { dst = KeyBuf(Buf.push); d = *dst;
-      if (!(d & b6) && (d & b10) < 2 && (data & b10) < 2) { *dst |= b6; dst += 2; }
+      if (!(d & b6) && (d & b10) < b1 && (data & b10) < b1) { *dst |= b6; dst += 2; }
       else { dst = KeyBuf(++Buf.push); if (Buf.pop == Buf.push) ++Buf.pop; }
-      *dst++ = data | b7; *dst = On; dst += 3; l = 1 + (data & b10);
+      *dst++ = data | b7; *dst = On; dst += b10; l = On + (data & b10);
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
-  if (!c && !(*key & b7)) c = *key;
+  if (!c) c = ~Off;
   return c; }
 uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key) {
   if (Buf.pop == Buf.push) { *data = Off; *count = Off; return Off; }
   uint8_t d, *dst; dst = KeyBuf(Buf.push); d = *dst++; 
   if (d & b6) { dst++; d = *dst++; }
-  *count = *dst; *data = (d & ~b76); dst += 3; d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
+  *count = *dst; *data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(key + d) = *(dst + d);
   return On; }
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key) {
   uint8_t *dst, d;
@@ -142,14 +146,14 @@ uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key) {
   if (!(d & b76)) { *data = Off; *count = Off; return Off; }
   if (Buf.pop == Buf.push) Buf.pop--;
   if (d & b7) *dst &= ~b7;
-  else { *dst &= ~b6; dst += 2; d = *dst; }
-  *count = *++dst; *data = (d & ~b76); dst += 3; d = 1 + (d & b10); while(d--) *(key + d) = *(dst + d);
+  else { *dst &= ~b6; dst += b1; d = *dst; }
+  *count = *++dst; *data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(key + d) = *(dst + d);
   return On; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
   uint8_t *dst = KeyBuf(Buf.push--); Buf.tic--; if (*dst & b6) { Buf.push++; *dst &= ~b6; } }
 ugoc Keys(void) {
-  ugoc s = 0; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
+  ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
@@ -203,37 +207,44 @@ uint8_t ViewPort(void) {
       else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); } }
   if (SyncSize(VRam.addr)) s = MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, Off, Off);
   if (Vector(Off)) { Convas.W = Menu(Off)->Win; Vector(Off)(); }
-  if (Vector(VP.Cod)) { Convas.W = Menu(VP.Cod)->Win; Vector(VP.Cod)(); }
   if (control > 1) { control--; }
   else { control--; }
   return VP.Loop; }
 
-void WinView(uint16_t n, goc x, goc y) {
-  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); w->Xrender = x; w->Yrender = y; }
 void WinTop(uint16_t n) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - 1;
-  WindowData* w = Win(n); w->Layer = l; l += 1 - n;
-  while(--l) { w = Win(n + l); --w->Layer; } }
+  ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - On;
+  Win(n)->Layer = l; l += On - n; while(--l) --Win(n + l)->Layer; }
+void _WinView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off;
+  if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
+  if (count > On) { x = args[Off];
+    if (!(y = args[On])) x = Off;
+    if (x && !(Win(n)->Flags & b7)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
+      if ((ugoc)VP.X >= Convas.Wmax && (ugoc)VP.Y >= Convas.Hmax) return; } }
+  if (count == Off) { x = VP.Xs + On; y = VP.Ys + On;
+    if (Win(n)->Flags & b7) { ugoc r, c = TermCR(&r);
+      if (c < x + Win(n)->MaxVs) x = -On;
+      if (r < y + Win(n)->MaxH) y = -On; } 
+    else if ((ugoc)VP.X >= Convas.Wmax && (ugoc)VP.Y >= Convas.Hmax) return; }
+  Win(n)->Xr = x; Win(n)->Yr = y; }
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
-  ugoc l, c = 0, h = 0; uint16_t n = ++Convas.Dwin; Convas.Flag = 0; WindowData* w = Win(n); if (count) { h = args[0]; if (--count) c = args[1]; }
-  if (col < 0) { n = --Convas.Swin; --Convas.Dwin;
-    if (n < 1) { Convas.Swin = Convas.WinMax - 1; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
-    w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - 1; l = Convas.WinMax - n;
-    while(--l) { WindowData* d = Win(n + l); --d->Layer; } }
-  else { if (n >= Convas.Swin) { n = 0; Convas.Dwin = 0; Convas.Xdwin = 0; Convas.Ydwin = 0; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
-  w->Key = 0; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = 0; w->MaxVs = 0; w->MaxH = 0;
-  w->XCur = 0; w->YCur = 0; w->WFirstSR = Convas.Hmax; w->Xconvas = Convas.Wmax; w->Yconvas = Convas.Hmax; w->Xrender = 0; w->Yrender = 0; return n; }
+  ugoc l, c = Off, h = Off; uint16_t n = ++Convas.Dwin; Convas.Flag = Off; WindowData* w = Win(n); if (count) { h = args[Off]; if (--count) c = args[On]; }
+  if (col < Off) { n = --Convas.Swin; --Convas.Dwin;
+    if (n < On) { Convas.Swin = Convas.WinMax - On; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
+    w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - On; l = Convas.WinMax - n; while(--l) --Win(n + l)->Layer; }
+  else { if (n >= Convas.Swin) { n = Off; Convas.Dwin = Off; Convas.Xdwin = Off; Convas.Ydwin = Off; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
+  w->Key = Off; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxCs = Off; w->MaxVs = Off; w->MaxH = Off;
+  w->XCur = Off; w->YCur = Off; w->WFirstSR = Convas.Hmax; w->Xc = Convas.Wmax; w->Yc = Convas.Hmax; w->Xr = Off; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); if (w->Flags & b7) { if (cur) w->Key = cur;
-    if (count--) { Vector(cur) = args[0]; Menu(cur)->Win = n;
-      if (Menu(cur)->CountMenu && count) {  } } return; }
-  w->Flags &= ~b5; if (cur) w->Flags |= b5;
-  if (count) { w->Flags &= ~b6; if (args[0]) w->Flags |= b6; } }
+  WindowData* w = Win(n); if (!(w->Flags & b7)) { w->Flags &= ~b5; if (cur) w->Flags |= b5;
+    if (count) { w->Flags &= ~b6; if (args[Off]) w->Flags |= b6; } return; }
+  if (cur) { w->Key = cur; Vector(cur) = show; }
+  if (count--) { Vector(cur) = args[Off]; Menu(cur)->Win = n;
+    if (Menu(cur)->CountMenu && count) {  } }
+  return; }
 void _WData(uint16_t n, char    *str, uint8_t count, goc *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); if (w->Xconvas == Convas.Wmax) { ugoc c = w->W, r = w->H; (void)r;
+  WindowData* w = Win(n); if (w->Xc == Convas.Wmax) { ugoc c = w->W, r = w->H; (void)r;
     if (!c) { } } 
   (void)*str; (void)count; (void)*args; }

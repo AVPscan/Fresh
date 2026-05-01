@@ -11,13 +11,13 @@
 #include "sys.h"
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
-  if (argc > 1) {
-    if (MemCmp(argv[1], "-?", 2) == 0 || MemCmp(argv[1], "-h", 2) == 0 || MemCmp(argv[1], "-help", 5) == 0) {
+  if (argc > On) {
+    if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.30 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.31 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
-void how(void) {  // костыль, пока не дописано WinData и Render!
+void body(void) {  // костыль, пока не дописано WinData и Render!
   char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d           ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
@@ -36,17 +36,13 @@ void how(void) {  // костыль, пока не дописано WinData и R
     else { w = *Buf.key; snprintf(p, 10, "{%d}", w); }
     p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10,"    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
     if (r > 2) Print(Cgreen,Cdbuf); } } }
-    
-void show(void) { static uint8_t flag = Off;
-  if (flag) { WinView(Convas.W, -2, -2); --flag; }
-  else { WinView(Convas.W, 0, 0); ++flag; } }
-void body(void) { how(); } //WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }
+
+//void body(void) { WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }
 
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
-  if (flag) { ugoc size = (ugoc)((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 40, 120);
-              WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinView(control, -2, -2); WinSet(control, K_Ctrl_K, show);
-              WinData(menu, "%0mCreate\nLoad\nSave\nExit", K_Ctrl_C, K_Ctrl_L, K_Ctrl_S, K_Ctrl_E); WinSet(menu, K_ESC);
-              WinSet(control, Off, body); WinView(test, 10, 30);
+  if (flag) { ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 40, 120);
+              WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, Off, body); WinSet(control, K_Ctrl_K);
+              WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'C', 'L', 'S', 'E'); WinSet(menu, K_ESC); WinView(test, 10, 30);
               while (ViewPort()) Delay_ms(Fps); }
   return (int)SystemSwitch(); }
