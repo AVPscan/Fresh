@@ -88,7 +88,7 @@ void Print(uint8_t n, char *str) {
   ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
   SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
-void show(void) { static uint8_t flag = Off;
+void AdaptiveShow(void) { static uint8_t flag = On;
   if (flag) { WinView(Convas.W); --flag; }
   else { WinView(Convas.W, Off); ++flag; } }
 void Anchor(void) { VP.Mode ^= b1; if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
@@ -192,14 +192,13 @@ uint8_t ViewPort(void) {
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control) {
     if (VP.Cod != VP.oCod) { VP.dXY = On; VP.oCod = VP.Cod; }
-    if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud) {
-      if ((VP.Tic > 7) && !(VP.Tic & b10) && (VP.dXY < MaxSpeed)) VP.dXY <<= On;
-      if (VP.Cod == VP.le) dx--;
-      else if (VP.Cod == VP.ri) dx++;
-      else if (VP.Cod == VP.up) dy--;
-      else dy++;
-      if (VP.Mode & b1) {  }
-      else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); } }
+    if ((VP.Tic > 7) && !(VP.Tic & b10) && (VP.dXY < MaxSpeed)) VP.dXY <<= On;
+    if (VP.Cod == VP.le) dx--;
+    else if (VP.Cod == VP.ri) dx++;
+    else if (VP.Cod == VP.up) dy--;
+    else if (VP.Cod == VP.ud) dy++;
+    if (VP.Mode & b1) {  }
+    else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); }
   if (SyncSize(VRam.addr)) control = On + MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, Off, Off);
   if (Vector(Off)) { Convas.W = Menu(Off)->Win; Vector(Off)(); }
   if (control > On) { control--; }
@@ -232,8 +231,7 @@ uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   if (Win(n)->Flags & b7) {
-    if (cur) Vector(cur) = show;
-    else if (count--) Vector(Off) = args[Off];
+    if (count--) Vector(cur) = args[Off];
     Win(n)->Key = cur; Menu(cur)->Win = n;
     if (Menu(cur)->CountMenu && count) { uint8_t j, c = Menu(cur)->CountMenu, i = On;
       while(c-- || count--) { j = 156; while(j) { if (Menu(j)->Win == n && Menu(j)->NumberMenu == i) { Vector(j) = args[i]; i++; break; } j--; } } }

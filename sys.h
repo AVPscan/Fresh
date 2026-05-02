@@ -216,7 +216,9 @@ void MemMove(void* dst, void* src, Cell len);                         // Пер�
 uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
 uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
-void ext(void);                                                       // Выход из мира
+void AdaptiveShow(void);                                              // Адаптивно показать окно {Спрятать окно}
+void Anchor(void);                                                    // Вход в окно {Выход с окна}
+void Bye(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
