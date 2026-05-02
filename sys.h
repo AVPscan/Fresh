@@ -167,7 +167,7 @@ enum {
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd, key[6]; } B_;
-typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, mouse, F11; } V_;
+typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, mouse, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -186,7 +186,7 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,6,K_UP,K_DOW,K_LEF,K_RIG,K_Mouse,K_F11}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,5,K_UP,K_DOW,K_LEF,K_RIG,K_Mouse,K_F11,K_F12}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \

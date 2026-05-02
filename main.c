@@ -14,7 +14,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.34 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.35 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
 
 void body(void) {  // костыль, пока не дописано WinData и Render!
@@ -34,7 +34,7 @@ void body(void) {  // костыль, пока не дописано WinData и 
     p = Cdbuf; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, q, l, v, w); p += StrLen(p);
     if (!(w)) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = 0; }
     else { w = *Buf.key; snprintf(p, 10, "{%d}", w); }
-    p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10,"    "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
+    p = Cdbuf + StrLen(Cdbuf); snprintf(p, 10,"         "); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
     if (r > 2) Print(Cgreen,Cdbuf); } } }
 
 //void body(void) { WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }

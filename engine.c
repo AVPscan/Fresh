@@ -91,13 +91,15 @@ void Print(uint8_t n, char *str) {
 void show(void) { static uint8_t flag = Off;
   if (flag) { WinView(Convas.W); --flag; }
   else { WinView(Convas.W, Off); ++flag; } }
-void bye(void) { VP.Loop = Off; }
+void Anchor(void) { VP.Mode ^= b1; if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
+void Bye(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
   Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
   Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu; Cvector = Cdbuf + SizeBuf; Vector(K_F12) = bye;
+  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu;
+  Cvector = Cdbuf + SizeBuf; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
   while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
     if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
   i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
@@ -186,10 +188,9 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if (!(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
 uint8_t ViewPort(void) {
-  uint8_t control, s = Buf.mode; goc dx = 0, dy = 0; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
+  uint8_t control, s = Buf.mode; goc dx = Off, dy = Off; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control) {
-    if (VP.Cod == VP.F11) { VP.Mode ^= b1; if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
     if (VP.Cod != VP.oCod) { VP.dXY = On; VP.oCod = VP.Cod; }
     if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud) {
       if ((VP.Tic > 7) && !(VP.Tic & b10) && (VP.dXY < MaxSpeed)) VP.dXY <<= On;
@@ -199,9 +200,9 @@ uint8_t ViewPort(void) {
       else dy++;
       if (VP.Mode & b1) {  }
       else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); } }
-  if (SyncSize(VRam.addr)) s = MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, Off, Off);
+  if (SyncSize(VRam.addr)) control = On + MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, Off, Off);
   if (Vector(Off)) { Convas.W = Menu(Off)->Win; Vector(Off)(); }
-  if (control > 1) { control--; }
+  if (control > On) { control--; }
   else { control--; }
   return VP.Loop; }
 
