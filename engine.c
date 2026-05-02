@@ -154,7 +154,6 @@ void ForgetKey(void) {
 ugoc Keys(void) {
   ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
-
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
   uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = *cx, y = *cy; x += dx; y += dy;
   if ((*cx < -MaxSpeed || *cx > MaxSpeed) && ((x ^ *cx) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
@@ -167,40 +166,36 @@ uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my) {
   if ((dx ^ *cx) & GOC_MIN) return Off;
   if ((dy ^ *cy) & GOC_MIN) return Off;
   *cx = dx; *sx -= mx; *cy = dy; *sy -= my; return On; }
-
-uint8_t Mouse(uint8_t *c, uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t t = Off, p = Off; goc dx = Off, dy = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
-  if (Buf.Mkey == Buf.Ru) dy--;
-  else if (Buf.Mkey == Buf.Rd) dy++;
-  else if (Buf.Mkey == Buf.cRu) dx++;
-  else if (Buf.Mkey == Buf.cRd) dx--;
-  if (dx || dy) t = MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY);
-  if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
+uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y) {
+  uint8_t p = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
+  if (Buf.Mkey == Buf.Ru) c = VP.up;
+  else if (Buf.Mkey == Buf.Rd) c = VP.ud;
+  else if (Buf.Mkey == Buf.cRu) c = VP.ri;
+  else if (Buf.Mkey == Buf.cRd) c = VP.le;
+  else if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p && MoveScreen(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, VP.Xs - Buf.MX, VP.Ys - Buf.MY)) *c = K_Mouse;  // Извлечение кода пункта меню если над ним
-  return t; }
+  if (p && MoveScreen(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, VP.Xs - Buf.MX, VP.Ys - Buf.MY)) c = K_Mouse; // Извлечение кода пункта меню если над ним
+  return c; }
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c; *control = Off; *tic = Buf.tic; GetKey(Buf.key); if (*Buf.key == K_ESC && *(Buf.key + On) == K_NO) return Off;
   if ((c = (*Buf.key == K_ESC) ? *(Buf.key + On) : (*Buf.key & b7) ? Off : *Buf.key) != Off) {
-    if (c == K_Mouse) *control = Mouse(&c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
+    if (c == K_Mouse) c = Mouse(c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
     if (*num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
     if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); } }
-  else if (!(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
+  if (!(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
-
 uint8_t ViewPort(void) {
   uint8_t control, s = Buf.mode; goc dx = 0, dy = 0; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
-  if (control && VP.Cod != K_Mouse) {
-    if (VP.Cod == VP.F11) { VP.Mode ^= b1;
-      if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
+  if (control) {
+    if (VP.Cod == VP.F11) { VP.Mode ^= b1; if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
     if (VP.Cod != VP.oCod) { VP.dXY = On; VP.oCod = VP.Cod; }
-    if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud || VP.Cod == VP.cle || VP.Cod == VP.cri || VP.Cod == VP.cup || VP.Cod == VP.cdo) {
+    if (VP.Cod == VP.le || VP.Cod == VP.ri || VP.Cod == VP.up || VP.Cod == VP.ud) {
       if ((VP.Tic > 7) && !(VP.Tic & b10) && (VP.dXY < MaxSpeed)) VP.dXY <<= On;
-      if (VP.Cod == VP.le || VP.Cod == VP.cle) dx--;
-      else if (VP.Cod == VP.ri || VP.Cod == VP.cri) dx++;
-      else if (VP.Cod == VP.up || VP.Cod == VP.cup) dy--;
+      if (VP.Cod == VP.le) dx--;
+      else if (VP.Cod == VP.ri) dx++;
+      else if (VP.Cod == VP.up) dy--;
       else dy++;
       if (VP.Mode & b1) {  }
       else control += MoveConvas(&VP.Xs, &VP.Ys, &VP.X, &VP.Y, dx * VP.dXY, dy * VP.dXY); } }
@@ -243,9 +238,8 @@ void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
       while(c-- || count--) { j = 156; while(j) { if (Menu(j)->Win == n && Menu(j)->NumberMenu == i) { Vector(j) = args[i]; i++; break; } j--; } } }
     return; }
   WindowData* w = Win(n); w->Flags &= ~b5; if (cur) w->Flags |= b5;
-  if (count) { w->Flags &= ~b6; if (args[Off]) w->Flags |= b6; }
-  return; }
+  if (count) { w->Flags &= ~b6; if (args[Off]) w->Flags |= b6; } }
 void _WData(uint16_t n, char *str, uint8_t count, goc *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
-  WindowData* w = Win(n); if (!(w->MaxVs)) { ugoc c = w->W, r = w->H; (void)r; } 
+  WindowData* w = Win(n); if (!(w->MaxVs)) {  } 
   (void)*str; (void)count; (void)*args; }
