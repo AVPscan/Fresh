@@ -186,7 +186,7 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,5,K_UP,K_DOW,K_LEF,K_RIG,K_Mouse,K_F11,K_F12}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,7,K_UP,K_DOW,K_LEF,K_RIG,K_Mouse,K_F11,K_F12}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
@@ -215,17 +215,17 @@ int8_t MemCmp(void* dst, void* src, Cell len);                        // Сра�
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
 uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
+uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
+uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
+void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
+ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void AdaptiveShow(void);                                              // Адаптивно показать окно {Спрятать окно}
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
-uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
-uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
-uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
-void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
-ugoc Keys(void);                                                      // Сколько клавиш в буфере
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
 uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y);          // Обработка событий мыши с учётом рамок терминала

@@ -82,38 +82,6 @@ uint8_t UTFinfoTile(uint8_t *s, Cell len) {
   else if ((*s & 0xF8) == 0xF0 && len < 0x04) return 0xC0;
   return UTFinfo(s); }
 
-void Print(uint8_t n, char *str) {
-  char *dst = Cdbuf + 512; n &= Mcbi; if (!str) return;
-  PalData* pal =  Palette(n); MemCpy(dst, pal->data, pal->len); dst += pal->len;
-  ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
-  if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
-  SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
-void AdaptiveShow(void) { static uint8_t flag = On;
-  if (flag) { WinView(Convas.W); --flag; }
-  else { WinView(Convas.W, Off); ++flag; } }
-void Anchor(void) { VP.Mode ^= b1; if (!(VP.Mode & b1)) { VP.Win = Off; ForgetKey(); } }
-void Bye(void) { VP.Loop = Off; }
-void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
-  char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
-  Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
-  Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu;
-  Cvector = Cdbuf + SizeBuf; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
-  while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
-    if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
-  i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
-      pal->len = src->len + mode->len - 1; MemCpy(pal->data, src->data, src->len - 1); MemCpy(pal->data + src->len - 1, mode->data, mode->len); } }
-  VP.Mode = On; VP.Loop = On; Convas.W = MaxWin; Convas.Flag = Convas.W; Convas.WinMax = Convas.W; Convas.Dwin = Convas.W; Convas.Swin = Convas.W;
-  Convas.Wmax = CellLine; Convas.Hmax = CellStr; Convas.Xdwin = Off; Convas.Ydwin = Off; Convas.Xswin = Convas.Wmax - On; Convas.Yswin = Convas.Hmax - On; }
-Cell SystemSwitch(void) {
-  if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
-    VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
-    SyncSize(VRam.addr); Print(Cdefault,AltBufOn Reset HideCur WrapOff Cls MouseX10on); }
-  else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off);
-    FreeRam(VRam.addr, VRam.size); } }
-  return On; }
-
 uint8_t PushKey(uint8_t c, uint8_t *key) {
   uint8_t *sav, *dst, d, l, data = UTFinfo(key); if (data & b7) return Off;
   if (Buf.pop == Buf.push) { dst = KeyBuf(++Buf.push);
@@ -152,10 +120,43 @@ uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key) {
   return On; }
 void ForgetKey(void) {
   if (Buf.pop == Buf.push) return;
-  uint8_t *dst = KeyBuf(Buf.push--); Buf.tic--; if (*dst & b6) { Buf.push++; *dst &= ~b6; } }
+  uint8_t *dst = KeyBuf(Buf.push); Buf.tic--; if (*dst & b6) *dst &= ~b6; else { *dst &= ~b7; Buf.push--; } }
 ugoc Keys(void) {
   ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
+  
+void Print(uint8_t n, char *str) {
+  char *dst = Cdbuf + 512; n &= Mcbi; if (!str) return;
+  PalData* pal =  Palette(n); MemCpy(dst, pal->data, pal->len); dst += pal->len;
+  ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
+  if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
+  SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
+void AdaptiveShow(void) { static uint8_t flag = On;
+  if (flag) { WinView(Convas.W); --flag; }
+  else { WinView(Convas.W, Off); ++flag; } }
+void Anchor(void) { VP.Mode ^= b1; if (!(VP.Mode & b1)) ForgetKey(); }
+void Bye(void) { VP.Loop = Off; }
+void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
+  uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
+  char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
+  Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
+  Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
+  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu;
+  Cvector = Cdbuf + SizeBuf; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
+  while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
+    if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
+  i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
+      pal->len = src->len + mode->len - 1; MemCpy(pal->data, src->data, src->len - 1); MemCpy(pal->data + src->len - 1, mode->data, mode->len); } }
+  VP.Mode = On; VP.Loop = On; Convas.W = MaxWin; Convas.Flag = Convas.W; Convas.WinMax = Convas.W; Convas.Dwin = Convas.W; Convas.Swin = Convas.W;
+  Convas.Wmax = CellLine; Convas.Hmax = CellStr; Convas.Xdwin = Off; Convas.Ydwin = Off; Convas.Xswin = Convas.Wmax - On; Convas.Yswin = Convas.Hmax - On; }
+Cell SystemSwitch(void) {
+  if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
+    VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
+    SyncSize(VRam.addr); Print(Cdefault,AltBufOn Reset HideCur WrapOff Cls MouseX10on); }
+  else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Cdefault,AltBufOff Reset ShowCur WrapOn MouseX10off);
+    FreeRam(VRam.addr, VRam.size); } }
+  return On; }
+
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy) {
   uint8_t t = Off; ugoc r, c = TermCR(&r); goc x = *cx, y = *cy; x += dx; y += dy;
   if ((*cx < -MaxSpeed || *cx > MaxSpeed) && ((x ^ *cx) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
@@ -188,7 +189,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if (!(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
 uint8_t ViewPort(void) {
-  uint8_t control, s = Buf.mode; goc dx = Off, dy = Off; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
+  goc dx = Off, dy = Off; uint8_t control, s = Buf.mode; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control) {
     if (VP.Cod != VP.oCod) { VP.dXY = On; VP.oCod = VP.Cod; }

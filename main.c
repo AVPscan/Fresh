@@ -7,15 +7,8 @@
  * лицензии GNU (GPLv3).
  */
 
-#include <stdio.h>
+#include <stdio.h> // временно snprintf
 #include "sys.h"
-
-Cell Help(Cell argc, char *argv[], Cell flag) {
-  if (argc > On) {
-    if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.36 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
-  return flag; }
 
 void body(void) {  // пока не дописано WinData,Render затем будет заменена на void body(void) { WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }
   char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
@@ -40,12 +33,21 @@ void body(void) {  // пока не дописано WinData,Render затем �
 void show(void) { static uint8_t flag = Off;
   if (flag) { WinView(Convas.W, -2, -2); --flag; }
   else { WinView(Convas.W, Off); ++flag; } }
+  
+void Init(void) {
+  ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 40, 120);
+  WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, K_Ctrl_K, show); WinView(control, -2, -2); 
+  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'C', 'L', 'S', 'E'); WinSet(menu, K_ESC, AdaptiveShow); WinView(test, 10, 30);
+  WinSet(control, Off, body); VP.Anchor = K_F11; VP.Exit = K_F12; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
 
+Cell Help(Cell argc, char *argv[], Cell flag) {
+  if (argc > On) {
+    if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
+      if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
+                  Print(Corange," in 07.02.2026 version 8.37 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+  return flag; }
+  
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
-  if (flag) { ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 40, 120);
-              WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, K_Ctrl_K, show); WinView(control, -2, -2); 
-              WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'C', 'L', 'S', 'E'); WinSet(menu, K_ESC, AdaptiveShow); WinView(test, 10, 30);
-              WinSet(control, Off, body); VP.Anchor = K_F11; VP.Exit = K_F12; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
-              while (ViewPort()) Delay_ms(Fps); }
+  if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
   return (int)SystemSwitch(); }
