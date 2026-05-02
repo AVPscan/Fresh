@@ -71,7 +71,9 @@ typedef void (*AFunction)(void);
 typedef uintptr_t Cell;
 #define SCell sizeof(Cell)
 extern char     *Cdata;
-extern ugoc     *Cattr;
+extern uint8_t  *Cinfo;
+extern uint8_t  *Cds;
+extern ugoc     *Coffset;
 extern ugoc     *Cvlswin;
 extern ugoc     *Cdwin;
 extern ugoc     *Cdcon;
@@ -125,7 +127,6 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } WinFlags;
-typedef struct { uint8_t Info, ds; ugoc offset; } ADOCell;                    // ds Data/Structure, offset смещение данных от начала строки в байтах
 typedef struct { ugoc MaxCs, MaxVs; } ConWinStr;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; // WFirstSR если равен Convas.Hmax то вьюпорт не
                  uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
@@ -138,7 +139,8 @@ enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
     Utf8 = 4,                                                                 // Максимальная длина utf8
     Data_shift = CellPow + 2,                                                 // Смещение между строк холста в байтах
-    ADO_shift = CellPow + 1,                                                  // Смещение между атрибутами ячеек в словах
+    Offset_shift = CellPow + 1,                                               // Смещение между смещениями строк холста
+    Ds_shift = CellPow,                                                       // Смещение между атрибутами строк холста
     CVWin_shift = 9,                                                          // 512 Смещение для числа ячеек и визуальной длины строки окна n на строке холста r
     Palette_shift = 5,                                                        //  32 Смещение для палитр
     Win_shift = 4,                                                            //  16 Смещение для данных окон в словах - 32 байта на окно.
@@ -146,8 +148,11 @@ enum {
     Menu_shift = 2,                                                           //   4 Смещение для организации меню
     CellLine = 1 << CellPow,                                                  // Определение ширины холста
     CellStr = CellLine / 2,                                                   // Определение высоты холста
-    SizeCell = CellStr * CellLine * Utf8,                                     // Размер данных в ячейках холста
-    SizeADOCell = CellStr * CellLine * sizeof(ADOCell) / 2,                   // Размер атрибутов, данных, смещения для ячейках холста
+    ConvasArea = CellLine * CellStr,                                          // Площадь холста
+    SizeCell = ConvasArea * Utf8,                                             // Размер данных для ячеек холста
+    SizeInfo = ConvasArea,                                                    // Размер атрибутов для ячеек холста
+    SizeDs = ConvasArea,                                                      // Размер информации о ячейках холста
+    SizeOffset = ConvasArea * sizeof(ugoc) / 2,                               // Размер смещений для ячеек холста
     SizeVlsWin = CellStr * MaxWin * sizeof(ConWinStr) / 2,                    // Размер визуальных и реальных длин строк окон - обновляются при наполнении
     SizeDataWin = MaxWin * sizeof(WindowData) / 2,                            // Размер данных для окон
     SizeDataConvas = sizeof(Canalysis) / 2,                                   // Размер данных под разбивку холста для организации окон
@@ -156,14 +161,16 @@ enum {
     SizeBufMenu = SKey * sizeof(Menus),                                       // Размер данных для событий (привязка вызова функций к событиям)
     SizeBuf = 1024,                                                           // Размер буфера
     SizeVector = SKey * sizeof(AFunction),                                    // Размер вектора прерываний
-    SizeVram = SizeCell + 2 * (SizeADOCell + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBufMenu + SizeBuf + SizeVector};
+    SizeVram = SizeCell + 2 * (SizeInfo + SizeOffset + SizeVlsWin + SizeDataWin + SizeDataConvas) + SizeBufPal + SizeBufKey + SizeBufMenu + SizeBuf + SizeVector};
 #define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста
-#define IDO(r, c)     ((ADOCell*)(Cattr + ((((r) << ADO_shift) + (c)) << 1))) // адрес атрибута, данных и смещения ячейки холста
+#define Attr(r)       (Cinfo + ((r) << Ds_shift))                             // адрес атрибута строки холста
+#define Ds(r)         (Cds + ((r) << Ds_shift))                               // адрес данных строки холста
+#define Offset(r)     (Coffset + ((r) << Offset_shift))                       // адрес смещения строки холста
 #define Wbv(r,n)      ((ConWinStr*)(Cvlswin + ((((r) << CVWin_shift) + (n)) << 1))) // адрес числа ячеек и визуальной длины строки окна n принадлежащих строке холста r
 #define Win(n)        ((WindowData*)(Cdwin + ((n) << Win_shift)))             // адрес начала данных окна n
 #define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
 #define Palette(cbi)  ((PalData*)(Cdpal + ((cbi) << Palette_shift)))          // адрес начала кода цвета colBI[0..31]
-#define KeyBuf(n)     ((Cdkey + ((n) << Key_shift)))                          // адрес начала ячейки в буфере клавиатуры
+#define KeyBuf(n)     (Cdkey + ((n) << Key_shift))                            // адрес начала ячейки в буфере клавиатуры
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd, key[6]; } B_;
@@ -177,7 +184,9 @@ extern B_ Buf;
 extern R_ VRam;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
-    ugoc      *Cattr      = 0; \
+    uint8_t   *Cinfo      = 0; \
+    uint8_t   *Cds        = 0; \
+    ugoc      *Coffset    = 0; \
     ugoc      *Cvlswin    = 0; \
     ugoc      *Cdwin      = 0; \
     ugoc      *Cdcon      = 0; \
@@ -201,7 +210,7 @@ extern R_ VRam;
 
 _Static_assert(SizeCell == CellLine * CellStr * 4, "SizeCell mismatch");
 _Static_assert((1 << Data_shift) == CellLine * Utf8, "Data_shift mismatch");
-_Static_assert((1 << ADO_shift) == CellLine * sizeof(ADOCell) / 2, "ADO_shift mismatch");
+_Static_assert((1 << Offset_shift) == CellLine * sizeof(ugoc), "Offset_shift");
 _Static_assert((1 << CVWin_shift) == MaxWin, "CVWin_shift must equal MaxWin");
 _Static_assert((1 << Win_shift) == sizeof(WindowData) / 2, "Win_shift mismatch");
 _Static_assert((1 << Palette_shift) == sizeof(PalData), "Palette_shift mismatch");

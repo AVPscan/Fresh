@@ -131,8 +131,8 @@ void Print(uint8_t n, char *str) {
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
-  Cdata = (char*)base; Cattr = (ugoc*)(base + SizeCell); Cvlswin = Cattr + SizeADOCell;
-  Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
+  Cdata = (char*)base; Cinfo = (uint8_t*)(base + SizeCell); Cds = Cinfo + SizeInfo; Coffset = (ugoc*)(Cds + SizeDs);
+  Cvlswin = Coffset + SizeOffset; Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
   Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu;
   Cvector = Cdbuf + SizeBuf; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
   while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
