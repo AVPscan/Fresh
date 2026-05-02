@@ -118,9 +118,6 @@ uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key) {
   else { *dst &= ~b6; dst += b1; d = *dst; }
   *count = *++dst; *data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(key + d) = *(dst + d);
   return On; }
-void ForgetKey(void) {
-  if (Buf.pop == Buf.push) return;
-  uint8_t *dst = KeyBuf(Buf.push); Buf.tic--; if (*dst & b6) *dst &= ~b6; else { *dst &= ~b7; Buf.push--; } }
 ugoc Keys(void) {
   ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *KeyBuf(c--); if (d & b7) s++; if (d & b6) s++; }
   return s; }
@@ -131,11 +128,6 @@ void Print(uint8_t n, char *str) {
   ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
   SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
-void AdaptiveShow(void) { static uint8_t flag = On;
-  if (flag) { WinView(Convas.W); --flag; }
-  else { WinView(Convas.W, Off); ++flag; } }
-void Anchor(void) { VP.Mode ^= b1; if (!(VP.Mode & b1)) ForgetKey(); }
-void Bye(void) { VP.Loop = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
@@ -185,9 +177,11 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if ((c = (*Buf.key == K_ESC) ? *(Buf.key + On) : (*Buf.key & b7) ? Off : *Buf.key) != Off) {
     if (c == K_Mouse) c = Mouse(c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
     if (*num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
-    if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); } }
-  if (!(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
+    if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); *tic = ++Buf.tic; return c; } }
+  if (c != K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
+void Anchor(void) { VP.Mode ^= b1; }
+void Bye(void) { VP.Loop = Off; }
 uint8_t ViewPort(void) {
   goc dx = Off, dy = Off; uint8_t control, s = Buf.mode; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
@@ -210,6 +204,9 @@ void WinTop(uint16_t n) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - On;
   Win(n)->Layer = l; l += On - n; while(--l) --Win(n + l)->Layer; }
+void AdaptiveShow(void) { static uint8_t flag = On;
+  if (flag) { WinView(Convas.W); --flag; }
+  else { WinView(Convas.W, Off); ++flag; } }
 void _WinView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off;
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   if (count > On) { x = args[Off];

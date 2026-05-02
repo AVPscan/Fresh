@@ -167,7 +167,7 @@ enum {
 #define Menu(n)       ((Menus*)(Cdmenu + ((n) << Menu_shift)))                // адрес начала структуры события
 #define Vector(n)     (*(AFunction*)((Cell*)Cvector + (n)))                   // адрес вектора прерывания события
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd, key[6]; } B_;
-typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, mouse, Anchor, Exit; } V_;
+typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -186,7 +186,7 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,7,K_UP,K_DOW,K_LEF,K_RIG,K_Mouse,K_F11,K_F12}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG,K_F11,K_F12}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
@@ -218,20 +218,19 @@ uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рас�
 uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
 uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
-void ForgetKey(void);                                                 // Забыть последнюю пришедшую клавишу в буфере даже ожидаемую/получаемую
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
-void AdaptiveShow(void);                                              // Адаптивно показать окно {Спрятать окно}
-void Anchor(void);                                                    // Вход в окно {Выход с окна}
-void Bye(void);                                                       // Выход из мира
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
 uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y);          // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+void Anchor(void);                                                    // Вход в окно {Выход с окна}
+void Bye(void);                                                       // Выход из мира
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
+void AdaptiveShow(void);                                              // Адаптивно показать окно {Спрятать окно}
 void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязка окна к рендеру
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
