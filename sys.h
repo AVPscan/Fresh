@@ -87,8 +87,8 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
     K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,
     K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,
-    K_BAC = 127, K_UP, K_Ctrl_UP, K_DOW, K_Ctrl_DOW, K_RIG, K_Ctrl_RIG, K_LEF,
-    K_Ctrl_LEF, K_Mouse, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1,
+    K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
+    K_DOW, K_Mouse, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1,
     K_F2, K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9,
     K_F10, K_F11, K_F12, K_F13, K_F14, K_F15, K_Max = 61 };
 enum {
