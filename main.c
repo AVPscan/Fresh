@@ -35,16 +35,16 @@ void show(void) { static uint8_t flag = Off;
   else { WinView(Convas.W, Off); ++flag; } }
   
 void Init(void) {
-  ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 40, 120);
+  ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold), menu = Window(-CgoldIB), test = Window(Cgreen, 120, 40);
   WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, K_Ctrl_K, show); WinView(control, -2, -2); 
-  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'C', 'L', 'S', 'E'); WinSet(menu, K_ESC, AdaptiveShow); WinView(test, 10, 30);
+  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'C', 'L', 'S', 'E'); WinSet(menu, K_ESC, Adaptive, Nop, Nop, Nop, Bye); WinView(test, 10, 2);
   WinSet(control, Off, body); VP.Anchor = K_F11; VP.Exit = K_F12; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.38 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.39 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
   
 int main(int argc, char *argv[]) {

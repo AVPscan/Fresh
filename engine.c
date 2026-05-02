@@ -180,6 +180,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
     if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); *tic = ++Buf.tic; return c; } }
   if (c != K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
+void Nop(void) { }
 void Anchor(void) { VP.Mode ^= b1; }
 void Bye(void) { VP.Loop = Off; }
 uint8_t ViewPort(void) {
@@ -204,7 +205,7 @@ void WinTop(uint16_t n) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   ugoc l = Convas.Dwin; if (n > Convas.Dwin) l = Convas.WinMax - On;
   Win(n)->Layer = l; l += On - n; while(--l) --Win(n + l)->Layer; }
-void AdaptiveShow(void) { static uint8_t flag = On;
+void Adaptive(void) { static uint8_t flag = On;
   if (flag) { WinView(Convas.W); --flag; }
   else { WinView(Convas.W, Off); ++flag; } }
 void _WinView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off;
@@ -220,7 +221,7 @@ void _WinView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off;
     else if ((ugoc)VP.X >= Convas.Wmax && (ugoc)VP.Y >= Convas.Hmax) return; }
   Win(n)->Xr = x; Win(n)->Yr = y; }
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
-  ugoc l, c = Off, h = Off; uint16_t n = ++Convas.Dwin; Convas.Flag = Off; WindowData* w = Win(n); if (count--) { h = args[Off]; if (count) c = args[On]; }
+  ugoc l, c = Off, h = Off; uint16_t n = ++Convas.Dwin; Convas.Flag = Off; WindowData* w = Win(n); if (count--) { c = args[Off]; if (count) h = args[On]; }
   if (col < Off) { n = --Convas.Swin; --Convas.Dwin;
     if (n < On) { Convas.Swin = Convas.WinMax - On; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
     w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - On; l = Convas.WinMax - n; while(--l) --Win(n + l)->Layer; }

@@ -226,11 +226,12 @@ uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // В�
 uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
 uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y);          // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
-void AdaptiveShow(void);                                              // Адаптивно показать окно {Спрятать окно}
+void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязка окна к рендеру
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
