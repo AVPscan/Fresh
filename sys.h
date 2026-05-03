@@ -92,7 +92,7 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_Mouse, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1,
     K_F2, K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9,
-    K_F10, K_F11, K_F12, K_F13, K_F14, K_F15, K_Max = 61 };
+    K_F10, K_F11, K_F12, K_F13, K_F14, K_F15, K_Max = 158 };
 enum {
     Cconvas, Cborder, CconvasB, CborderB, Cgrey, CgreyI, CgreyB, CgreyIB,
     Cgreen, CgreenI, CgreenB, CgreenIB, Cred, CredI, CredB, CredIB,

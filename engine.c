@@ -221,19 +221,24 @@ void _WinView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off;
     else if ((ugoc)VP.X >= Convas.Wmax && (ugoc)VP.Y >= Convas.Hmax) return; }
   Win(n)->Xr = x; Win(n)->Yr = y; }
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
-  ugoc l, c = Off, h = Off; uint16_t n = ++Convas.Dwin; Convas.Flag = Off; WindowData* w = Win(n); if (count--) { c = args[Off]; if (count) h = args[On]; }
+  ugoc l; uint16_t n = ++Convas.Dwin; Convas.Flag = Off; WindowData* w = Win(n);
   if (col < Off) { n = --Convas.Swin; --Convas.Dwin;
     if (n < On) { Convas.Swin = Convas.WinMax - On; n = Convas.Swin; Convas.Xswin = Convas.Wmax; Convas.Yswin = Convas.Hmax; }
     w = Win(n); w->Flags = (((-col) & Mcbi) | b7); w->Layer = Convas.WinMax - On; l = Convas.WinMax - n; while(--l) --Win(n + l)->Layer; }
-  else { if (n >= Convas.Swin) { n = Off; Convas.Dwin = Off; Convas.Xdwin = Off; Convas.Ydwin = Off; } w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
-  w->Key = Off; w->W = c; w->H = h; w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Convas.Hmax; w->Xr = Off; return n; }
+  else { if (n >= Convas.Swin) { n = Off; Convas.Dwin = Off; Convas.Xdwin = Off; Convas.Ydwin = Off; }
+    w = Win(n); w->Flags = ((col & Mcbi) | b65); w->Layer = n; }
+  w->Xr = Off; w->Yr = Off; w->W = Off; w->H = Off;
+  if (count > On) { w->Xr = args[0]; w->Yr = args[1]; }
+  if (count > 2) w->W = args[2]; 
+  if (count > 3) w->H = args[3];  
+  w->Key = Off; w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Convas.Hmax; w->Xr = Off; return n; }
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if (Convas.Flag || (n > Convas.Dwin && n < Convas.Swin)) return;
   if (Win(n)->Flags & b7) {
     if (count--) Vector(cur) = args[Off];
     Win(n)->Key = cur; Menu(cur)->Win = n;
     if (Menu(cur)->CountMenu && count) { uint8_t j, c = Menu(cur)->CountMenu, i = On;
-      while(c-- || count--) { j = 156; while(j) { if (Menu(j)->Win == n && Menu(j)->NumberMenu == i) { Vector(j) = args[i]; i++; break; } j--; } } }
+      while(c-- || count--) { j = K_Max; while(--j) { if (Menu(j)->Win == n && Menu(j)->NumberMenu == i) { Vector(j) = args[i]; i++; break; } } } }
     return; }
   WindowData* w = Win(n); w->Flags &= ~b5; if (cur) w->Flags |= b5;
   if (count) { w->Flags &= ~b6; if (args[Off]) w->Flags |= b6; } }
