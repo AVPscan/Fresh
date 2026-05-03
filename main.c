@@ -10,7 +10,7 @@
 #include <stdio.h> // временно snprintf
 #include "sys.h"
 
-void body(void) {  // пока не дописано WinData,Render затем будет заменена на void body(void) { WinData(Convas.W, "%2fbdd", VP.Mode, VP.X, VP.Y); }
+void body(void) {  // пока не дописано WinData,Render затем будет заменена на void body(void) { WinData(Convas.W, "%2f%ub%d%d", VP.Mode, VP.X, VP.Y); }
   char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d           ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
@@ -44,7 +44,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.42 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.43 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
   
 int main(int argc, char *argv[]) {

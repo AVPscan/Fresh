@@ -131,10 +131,10 @@ void Print(uint8_t n, char *str) {
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
-  Cdata = (char*)base; Cinfo = (uint8_t*)(base + SizeCell); Cds = Cinfo + SizeInfo; Coffset = (ugoc*)(Cds + SizeDs);
-  Cvlswin = Coffset + SizeOffset; Cdwin = Cvlswin + SizeVlsWin; Cdcon = Cdwin + SizeDataWin; Cdpal = (char*)(Cdcon + SizeDataConvas);
-  Cdkey = (uint8_t*)(Cdpal + SizeBufPal); Cdmenu = (char*)(Cdkey + SizeBufKey); Cdbuf = Cdmenu + SizeBufMenu;
-  Cvector = Cdbuf + SizeBuf; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
+  Cdata = (char*)base; Cinfo = (uint8_t*)(base + SizeCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs);
+  Cvsw = Coffset + SOffset; Ccsw = Cvsw + SVsw; Cdwin = Ccsw + SCsw; Cdcon = Cdwin + SDataWin; Cdpal = (char*)(Cdcon + SDataConvas);
+  Cdkey = (uint8_t*)(Cdpal + SBufPal); Cdmenu = (char*)(Cdkey + SBufKey); Cdbuf = Cdmenu + SBufMenu; Cvector = Cdbuf + SBuf;
+  Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye;
   while (i--) { pal = (PalData*)(Cdbuf + (i << 5)); pal->len = c; MemCpy(pal->data, Reset, pal->len);
     if (StrLen(colors[i])) { pal->len = StrLen(colors[i]); MemCpy(pal->data, colors[i], pal->len); } }
   i = 4; while(i) { mode = (PalData*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalData*)(Cdbuf + ((c) << 5)); pal = Palette(cbi);
