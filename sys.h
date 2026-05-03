@@ -128,12 +128,12 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } WinFlags;
-typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; // WFirstSR если равен Convas.Hmax то вьюпорт не
-                 uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData; // приземлён в окно оно автоматическое иначе указывает на первую строку для отображения
+typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
+                 uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
 typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t W, Flag, WinMax, Dwin, Swin; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;    // Поля data1,data2 соответствуют структуре Data
-typedef struct { uint8_t CountMenu, NumberMenu; uint16_t Win; } Menus;        // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
+typedef struct { uint8_t CMenu, NMenu; uint16_t Win; } Menus;                 // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
 enum {
     MaxWin = MAX_WIN,                                                         // Максимальное число окон
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -175,8 +175,8 @@ enum {
 #define KeyBuf(k)     (Cdkey + ((k) << Key_shift))                            // адрес начала ячейки в буфере клавиатуры
 #define Menu(m)       ((Menus*)(Cdmenu + ((m) << Menu_shift)))                // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cvector + (v)))                   // адрес вектора прерывания события
-typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, Lk, Mk, Rk, Ru, Rd, cRu, cRd, key[6]; } B_;
-typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Mode, Loop, Tic, Cod, oCod, Key, up, ud, le, ri, Anchor, Exit; } V_;
+typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
+typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -198,8 +198,8 @@ extern R_ VRam;
     char      *Cdmenu     = 0; \
     char      *Cdbuf      = 0; \
     char      *Cvector    = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG,K_F11,K_F12}; \
-    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0x20,0x21,0x22,0x60,0x61,0x64,0x65,{0,0,0,0,0,0}}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
+    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \

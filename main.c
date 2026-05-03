@@ -13,7 +13,7 @@
 void body(void) {  // пока не дописано WinData,Render затем будет заменена на void body(void) { WinData(Convas.W, "%2f%ub%d%d", VP.Mode, VP.X, VP.Y); }
   char *p = Cdbuf; uint8_t l, v, q = 0, w = 0, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
-  snprintf(p, 91, " %dMb c%d r%d b%d x%d y%d           ", s, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
+  snprintf(p, 91, " %dMb %d c%d r%d b%d x%d y%d           ", s, 255 - K_Max, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(p) >= c) *(p + c + 1) = 0;
   Print(Cdefault,Home); Print(Corange,Cdbuf); if (r < 2) return;
   snprintf(Cdbuf, 100, "\nx%d y%d %d %d                      ", VP.X, VP.Y, VP.Xs, VP.Ys); if (StrLen(Cdbuf) >= c) *(Cdbuf + c + 1) = 0;
   Print(CredB,Cdbuf); if (r < 3) return;
@@ -37,14 +37,14 @@ void show(void) { static uint8_t flag = Off;
 void Init(void) {
   ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold, -2, -2), menu = Window(-CgoldIB), c = Window(-CgreenI), test = Window(Cgreen, Off, Off, 120, 40);
   WinData(control, " %-5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, K_Ctrl_K, show); WinSet(control, Off, body); WinView(test, 10, 2);
-  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'c', 'l', 's', 'e'); WinSet(menu, K_ESC, Adaptive, Nop, Nop, Nop, Bye);
-  WinData(c, "%12mName:", 'n'); WinSet(c, 'c', Adaptive, Nop); VP.Anchor = K_F11; VP.Exit = K_F12; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
+  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'c', 'l', 's', 'e'); WinSet(menu, K_ESC, Adaptive, Nop, Nop, Nop, Bye); Vector(K_F11) = Nop; Vector(K_F12) = Nop;
+  WinData(c, "%12mName:", 'n'); WinSet(c, 'c', Adaptive, Nop); VP.Anchor = K_PUP; VP.Exit = K_PDN; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeIB," Created by Alexey Pozdnyakov "); flag = Off;
-                  Print(Corange," in 07.02.2026 version 8.43 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
+                  Print(Corange," in 07.02.2026 version 8.44 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } }
   return flag; }
   
 int main(int argc, char *argv[]) {
