@@ -123,11 +123,11 @@ ugoc Keys(void) {
   return s; }
   
 void Print(uint8_t n, char *str) {
-  char *dst = Cdbuf + 512; n &= Mcbi; if (!str) return;
+  char *dst = Cdbuf; n &= Mcbi; if (!str) return;
   PalData* pal =  Palette(n); MemCpy(dst, pal->data, pal->len); dst += pal->len;
   ugoc len = StrLen(str); MemCpy(dst, str, len); dst += len;
   if (n != Cconvas) { pal =  Palette(Cconvas); MemCpy(dst, pal->data, pal->len); dst += pal->len; }
-  SysWrite(Cdbuf + 512, dst - Cdbuf - 512); }
+  SysWrite(Cdbuf, dst - Cdbuf); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t cbi, c = StrLen(Reset), i = 8; uint8_t* base = (uint8_t*)addr; PalData *pal, *mode, *src;
   char* colors[] = { Reset, Grey, Green, Red, Blue, Orange, Gold, Reset }; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
@@ -161,7 +161,7 @@ uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my) {
   if ((dy ^ *cy) & GOC_MIN) return Off;
   *cx = dx; *sx -= mx; *cy = dy; *sy -= my; return On; }
 uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y) {
-  uint8_t p = Off; Buf.Mkey = key; Buf.MX = x - 33; Buf.MY = y - 33;
+  uint8_t p = Off; Buf.Mkey = key; Buf.MX = x - 0x21; Buf.MY = y - 0x21;
   if (Buf.Mkey == Buf.Ru) c = VP.up;
   else if (Buf.Mkey == Buf.Rd) c = VP.ud;
   else if (Buf.Mkey == Buf.cRu) c = VP.ri;
