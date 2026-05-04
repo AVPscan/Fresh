@@ -175,7 +175,7 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   uint8_t t, c; *control = Off; *tic = Buf.tic; GetKey(Buf.key); if (*Buf.key == K_ESC && *(Buf.key + On) == K_NO) return Off;
   if ((c = (*Buf.key == K_ESC) ? *(Buf.key + On) : (*Buf.key & b7) ? Off : *Buf.key) != Off) {
     if (c == K_Mouse) c = Mouse(c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
-    if (*num < K_Max) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
+    if (*num < K_Mouse) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
     if (Vector(c)) { Convas.W = Menu(c)->Win; Vector(c)(); *tic = ++Buf.tic; return c; } }
   if (c != K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
@@ -237,7 +237,7 @@ void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
     if (count--) Vector(cur) = args[Off];
     Win(n)->Key = cur; Menu(cur)->Win = n;
     if (Menu(cur)->CMenu && count) { uint8_t j, c = Menu(cur)->CMenu, i = On;
-      while(c-- || count--) { j = K_Max; while(--j) { if (Menu(j)->Win == n && Menu(j)->NMenu == i) { Vector(j) = args[i]; i++; break; } } } }
+      while(c-- || count--) { j = K_Mouse; while(--j) { if (Menu(j)->Win == n && Menu(j)->NMenu == i) { Vector(j) = args[i]; i++; break; } } } }
     return; }
   WindowData* w = Win(n); w->Flags &= ~b5; if (cur) w->Flags |= b5;
   if (count) { w->Flags &= ~b6; if (args[Off]) w->Flags |= b6; } }
