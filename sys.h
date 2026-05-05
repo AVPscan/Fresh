@@ -84,8 +84,8 @@ extern char     *Cdmenu;
 extern char     *Cdbuf;
 extern char     *Cvector;
 enum {
-    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0,
-    Mcol = 0x1C, Mcbi = 0x1F, Fps = 0x14, On = 0x01, Off = 0x00 };
+    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80,
+    b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b765 = 0xE0, Fps = 0x14, On = 0x01, Off = 0x00 };
 enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
     K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,
@@ -129,7 +129,7 @@ typedef struct {
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } Flags;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
-typedef struct { uint16_t Flag, Win, Min, Max, D, S; } Canalysis;
+typedef struct { uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;
 typedef struct { uint8_t CMenu, NMenu; uint16_t Win; } Menus;
