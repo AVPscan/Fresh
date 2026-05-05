@@ -127,13 +127,12 @@ typedef struct {
     uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-} WinFlags;
-typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
-                 uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
-typedef struct { ugoc Wmax, Hmax, Xdwin, Ydwin, Xswin, Yswin; uint16_t W, Flag, WinMax, Dwin, Swin; } Canalysis;
+} Flags;
+typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
+typedef struct { ugoc DW, DH, SW, SH, DX, DY, SX, SY; uint16_t Flag, Win, Dmin, Smax, DA, SA, D, S; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
-typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;    // Поля data1,data2 соответствуют структуре Data
-typedef struct { uint8_t CMenu, NMenu; uint16_t Win; } Menus;                 // адрес функции flag{1} меню(Nmenu номер позиции) Win окно в котором объявлено событие
+typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;
+typedef struct { uint8_t CMenu, NMenu; uint16_t Win; } Menus;
 enum {
     MaxWin = MAX_WIN,                                                         // Максимальное число окон
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -176,7 +175,7 @@ enum {
 #define Menu(m)       ((Menus*)(Cdmenu + ((m) << Menu_shift)))                // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cvector + (v)))                   // адрес вектора прерывания события
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y; ugoc  Xs, Ys, Win; uint16_t dXY; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
+typedef struct { goc X, Y; ugoc  Xs, Ys; uint16_t dXY, Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -247,7 +246,7 @@ void Adaptive(void);                                                  // Ада�
 void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязка окна к рендеру
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
-void _WData(uint16_t n, char *str, uint8_t count, goc *args);         // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
@@ -262,5 +261,5 @@ Cell GetSC(Cell addr);                                                // Изм�
 #define WinView(n, ...) _WinView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
+#define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */
