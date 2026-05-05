@@ -129,7 +129,7 @@ typedef struct {
     uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } Flags;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
-typedef struct { ugoc DW, DH, SW, SH, DX, DY, SX, SY; uint16_t Flag, Win, Dmin, Smax, DA, SA, D, S; } Canalysis;
+typedef struct { uint16_t Flag, Win, Min, Max, D, S; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;
 typedef struct { uint8_t CMenu, NMenu; uint16_t Win; } Menus;
