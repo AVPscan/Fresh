@@ -11,7 +11,7 @@
 
 ENGINE_VARS_INIT;
 
-Cell StrLen(char *s) { if (!s) return 0;
+Cell StrLen(char *s) { if (!s) return Off;
   uint8_t *f = (uint8_t*)s; while (*f++);
   return (--f - (uint8_t*)s); }
 void MemSet(void* buf, uint8_t val, Cell len) {
@@ -49,7 +49,7 @@ int8_t MemCmp(void* dst, void* src, Cell len) {
     if (i + 1) { --dW; --sW; len += SCell; }
     d = (uint8_t*)dW; s = (uint8_t*)sW; }
   while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
-  return 0; }
+  return Off; }
 
 uint8_t UTFinfo(uint8_t *s) {
   uint32_t cp; uint8_t d = 0x00, c = *s++;
