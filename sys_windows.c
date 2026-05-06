@@ -13,7 +13,8 @@
 #include "sys.h"
 
 SYS_VARS_INIT;
-void Irnd(void) { Flag.Rn = (ugoc)Flag.Delay_ms | On; }
+void IRnd(void) { Flag.Rn = (ugoc)Flag.Delay_ms | On; }
+void SRnd(ugoc n) { Flag.Rn = n; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Flag.Rn = (ugoc)(RNG_A * Flag.Rn + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
 Cell SysWrite(void *buf, Cell len) { return (Cell)_write(1, buf, (unsigned int)len); }
 

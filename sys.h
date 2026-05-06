@@ -132,9 +132,12 @@ typedef struct {
     uint8_t color   : 3;                      // бит 432    цвет
     uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t stat    : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-} Flags;
-typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t Flags, Key; } WindowData;
+    uint8_t sd      : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
+} WF;
+typedef struct {
+    uint8_t vision  : 1;                      // бит 0      {1} отображается {0} не отображается
+} EF;
+typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } WindowData;
 typedef struct { uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { uint8_t len, data[31]; } PalData;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[2][2]; } KeysBuff;
@@ -253,7 +256,8 @@ void _WinView(uint16_t n, uint8_t count, goc *args);                  // При�
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-void Irnd(void);                                                      // Инициализация генератора случайных чисел
+void IRnd(void);                                                      // Инициализация генератора случайных чисел
+void SRnd(ugoc n);                                                    // Принудительно задать стартовое значение генератору случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime

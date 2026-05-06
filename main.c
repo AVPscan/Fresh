@@ -29,7 +29,7 @@ void body(void) {  // пока не дописано WinData,Render
     snprintf(p + StrLen(b), 10,"         "); if (StrLen(b) >= c) *(b + c + On) = Off;
     if (r > 2) Print(Cgreen,b); } } } 
 //void body(void) { WinData(VP.Win, "&2bdd", VP.Mode, VP.X, VP.Y); }
-void show(void) { static uint8_t flag = Off; if (flag) { WinView(VP.Win, -2, -2); --flag; } else { WinView(VP.Win, Off); ++flag; } }
+void show(void) { Win(VP.Win)->EF ^= b0; if (Win(VP.Win)->EF) { WinView(VP.Win, -2, -2); } else { WinView(VP.Win, Off); } }
 void Init(void) {
   ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold, -2, -2), menu = Window(-CgoldIB), c = Window(-CgreenI), test = Window(Cgreen, Off, Off, 120, 40);
   WinData(control, " %5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinSet(control, K_Ctrl_K, show); WinSet(control, Off, body); WinView(test, 10, 2);
@@ -40,7 +40,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.51 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.52 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
