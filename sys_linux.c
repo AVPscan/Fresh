@@ -18,6 +18,8 @@
 
 SYS_VARS_INIT;
 extern char **environ;
+void Irnd(void) { Flag.Rn = (ugoc)Flag.Delay_ms | On; }
+ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Flag.Rn = (ugoc)(RNG_A * Flag.Rn + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
 
 Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
 

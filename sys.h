@@ -57,12 +57,18 @@
 #if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
+    #define RNG_A 0x4F2D
+    #define RNG_B 0x3A7B
 #elif CellPow < 31
     typedef uint32_t ugoc;
     typedef int32_t  goc;
+    #define RNG_A 0x41C64E6D
+    #define RNG_B 0x3039
 #else
     typedef uint64_t ugoc;
     typedef int64_t  goc;
+    #define RNG_A 0x9E3779B97F4A7C15ULL
+    #define RNG_B 0xBF58476D1CE4E5B9ULL
 #endif
 #define UGOC_MAX ((ugoc)~(ugoc)0)
 #define GOC_MAX  ((goc)(UGOC_MAX >> 1))
@@ -159,7 +165,7 @@ enum {
     SBufPal = 32 * sizeof(PalData),                                           // Размер данных 32 палитр по 32 байта на каждую
     SBufKey = SKey * sizeof(KeysBuff),                                        // Размер данных кольцевого буфера клавиатуры
     SBufMenu = SKey * sizeof(Menus),                                          // Размер данных для событий (привязка вызова функций к событиям)
-    SBuf = 1024,                                                              // Размер буфера
+    SBuf = 8192,                                                              // Размер буфера Print/File
     SVector = SKey * sizeof(AFunction),                                       // Размер вектора прерываний
     SizeVram = SizeCell + 2 * (SInfo + SOffset + SVsw + SCsw + SDataWin + SDataConvas) + SBufPal + SBufKey + SBufMenu + SBuf + SVector};
 #define Data(r)       (Cdata + ((r) << Data_shift))                           // адрес начала буфера строки холста (Data(r)+*Offset(c-1,r) адрес начала буфера для c,r)
@@ -177,7 +183,7 @@ enum {
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc  Xs, Ys; uint16_t dXY, Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
-typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
+typedef struct { Cell Delay_ms; ugoc Rn; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern V_ VP;
@@ -202,7 +208,7 @@ extern R_ VRam;
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
-    static F_ Flag = {0,1,0}; \
+    static F_ Flag = {0,0,1,0}; \
     static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, \
         {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
@@ -247,6 +253,8 @@ void _WinView(uint16_t n, uint8_t count, goc *args);                  // При�
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
 void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void Irnd(void);                                                      // Инициализация генератора случайных чисел
+ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
