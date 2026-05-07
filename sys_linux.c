@@ -27,7 +27,7 @@ Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
 void SwitchRaw(void) {
   static struct termios oldt;
   if (Flag.SwitchRaw) {
-    tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG);
+    tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG ); newt.c_iflag &= ~(ICRNL | IXON | ISTRIP);
     tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
   else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
   
