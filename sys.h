@@ -254,10 +254,10 @@ void Adaptive(void);                                                  // Ада�
 void WinShow(void);                                                   // Ротация динамических окон
 void WinRev(void);                                                    // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
-void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязать окно к указанной позиции на холсте(динамическое) либо на экране(статическое)
+void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Создание окна с палитрой col при col<0 статичное окно
-void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Привязка функций к кодам клавиш
-void _WinSet(uint16_t n, uint8_t count, uint8_t *args);               // Установка флагов окна {Vision{,Cursor{,Warp}}}
+void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Настройка статического окна привязка функций к кодам клавиш
+void _WinSet(uint16_t n, uint8_t count, uint8_t *args);               // Настройка окна включение/отключение {Cursor{,Warp}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 void SRnd(ugoc n);                                                    // Принудительно задать стартовое значение генератору случайных чисел

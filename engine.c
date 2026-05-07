@@ -213,7 +213,7 @@ void _WinView(uint16_t n, uint8_t count, goc *args) {
   if (count == Off) { x = VP.Xs + On; y = VP.Ys + On;
     if (w->EF & b0) { ugoc r, c = TermCR(&r); if (c < (x + w->W)) { x = -On; } if (r < (y + w->H)) y = -On; } 
     else if ((ugoc)VP.X > CellLine && (ugoc)VP.Y > CellStr) return; }
-  w->Xr = x; w->Yr = y; if (w->Xr) w->WF |= b7; }
+  w->Xr = x; w->Yr = y; if (w->Xr) { w->WF |= b7; } else { w->WF &= ~b7; } }
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
   uint16_t l, n; Windows* w;
   if (col < Off) { n = --Convas.S; if (n < On) { Convas.S = Convas.Max; n = --Convas.S; }
@@ -225,14 +225,12 @@ uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
   if (count > 3) { w->H = args[3]; } if (!w->EF) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->WF |= b7; } return n; }
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
-  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; Exec(cur) = args[Off];
+  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; Exec(cur) = (args[Off] == Nop) ? Off : args[Off];
     if (Event(cur)->C && count) { uint8_t j, c = Event(cur)->C, i = On;
-      while(c-- && count--) { j = K_Mouse; while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exec(j) = args[i++]; break; } } } } } }
+      while(c-- && count--) { j = K_Mouse; while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exec(j) = (args[i] == Nop) ? Off : args[i]; i++; break; } } } } } }
 void _WinSet(uint16_t n, uint8_t count, uint8_t *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
-  if (count) { Windows* w = Win(n); uint8_t f = w->WF, s = b4, i = On; f &= ~b7; if (args[Off]) { f |= b7; } if (count > b10) count = b10;
-    if (!(w->EF & b0)) while(--count) { s <<= On; f &= ~s; if (args[i++]) f |= s; }
-    w->WF = f; } }
+  if (count--) { Windows* w = Win(n); w->WF &= ~b5; if (args[Off]) w->WF |= b5; if (count) { w->WF &= ~b6; if (args[On]) w->WF |= b6; } } }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }
