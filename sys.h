@@ -124,10 +124,10 @@ typedef struct {
     uint8_t color   : 3;                      // бит 432    цвет
     uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t sd      : 1;                      // бит 7      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
+    uint8_t vision  : 1;                      // бит 7      {1} отображается {0} не отображается
 } WF;
 typedef struct {
-    uint8_t vision  : 1;                      // бит 0      {1} отображается {0} не отображается
+    uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } EF;
 typedef struct { uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
@@ -254,9 +254,10 @@ void Adaptive(void);                                                  // Ада�
 void WinShow(void);                                                   // Ротация динамических окон
 void WinRev(void);                                                    // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
-void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязка окна к рендеру
-uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Определение цвета окна col при col<0 статичное окно
-void _WSet(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);  // Управление отображением курсора и авто переносом строк в окне
+void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязать окно к указанной позиции на холсте(динамическое) либо на экране(статическое)
+uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Создание окна с палитрой col при col<0 статичное окно
+void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Привязка функций к кодам клавиш
+void _WinSet(uint16_t n, uint8_t count, uint8_t *args);               // Установка флагов окна {Vision{,Cursor{,Warp}}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 void SRnd(ugoc n);                                                    // Принудительно задать стартовое значение генератору случайных чисел
@@ -274,6 +275,7 @@ void Delay_ms(uint8_t ms);                                            // Ада�
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 #define WinView(n, ...) _WinView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
-#define WinSet(n, cur, ...) _WSet(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define WinEvent(n, cur, ...) _WEvent(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define WinSet(n, ...) _WinSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */
