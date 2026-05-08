@@ -98,7 +98,7 @@ typedef struct {
     uint8_t inverse : 1;                      // бит 0      инверсия
     uint8_t bold    : 1;                      // бит 1      толстый
     uint8_t color   : 3;                      // бит 432    цвет
-    uint8_t null    : 1;                      // бит 5      резерв
+    uint8_t null    : 1;                      // бит 5      {1} Structure {0} UTF8
     uint8_t NoFull  : 1;                      // бит 6      {1} есть {0} нет данных
     uint8_t Error   : 1;                      // бит 7      {1} есть {0} нет изменений
 } Info;   
@@ -107,13 +107,12 @@ typedef struct {                              //UTFinfo
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
     uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
-    uint8_t NoFull  : 1;                      // бит 6      {1} не влезло в буфер (UTF8infoTile)
-    uint8_t Error   : 1;                      // бит 7      (UTF8info) {1} Structure
+    uint8_t NoFull  : 1;                      // бит 6      {1} не влезло в буфер {0} всё норм (UTF8infoTile)
+    uint8_t Error   : 1;                      // бит 7      {1} ошибка {0} UTF8info
 } Data;
 typedef struct {
-    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...127} визуальная длина равна длине в байтах (числа)
-    uint8_t format  : 2;                      // бит 65     {10} к левому {01} к правому {00}/{11} по центру
-    uint8_t str     : 1;                      // бит 7      {0} UTF8 {1} Structure
+    uint8_t len     : 6;                      // бит 543210 длина = 1+(0-63) ascii {32...127} визуальная длина равна длине в байтах (числа)
+    uint8_t format  : 2;                      // бит 76     {10}/{11} к левому {01} к правому {00} по центру
 } Structure;
 typedef struct { uint8_t l, d[31]; } PalBuf; 
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
