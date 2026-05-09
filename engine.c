@@ -224,10 +224,10 @@ uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
   if (!w->EF) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->WF |= b7; } return n; }
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
-  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; Exec(cur) = ((Cell)args[Off] <= (Cell)Nop) ? Off : args[Off];
+  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; SetExec(cur, args[Off]);
     if (Event(cur)->C && count) { uint8_t j, c = Event(cur)->C, i = On;
       while(c-- && count--) { j = K_Mouse;
-        while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exec(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } } } }
+        while(--j) { if (Event(j)->W == n && Event(j)->N == i) { SetExec(j, args[i]); i++; break; } } } } } }
 void _WinSet(uint16_t n, uint8_t count, uint8_t *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   if (count--) { Windows* w = Win(n); w->WF &= ~b5; if (args[Off]) w->WF |= b5; if (count) { w->WF &= ~b6; if (args[On]) w->WF |= b6; } } }

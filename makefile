@@ -7,7 +7,7 @@
 # лицензии GNU (GPLv3).
 #
 
-CC ?= gcc
+CC = gcc
 TARGET = fresh
 
 UNAME_S := $(shell uname -s)
@@ -67,10 +67,6 @@ tiny: $(SOURCES)
 
 g: CC = gcc
 g: tiny
-
-c: CC = clang
-c: CFLAGS_TINY += -Oz
-c: tiny
 
 musl: g-musl
 g-musl: 
