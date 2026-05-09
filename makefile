@@ -69,8 +69,7 @@ g: CC = gcc
 g: tiny
 
 c: CC = clang
-c: CFLAGS_TINY += -Os
-c: LDFLAGS_TINY += -fuse-ld=lld -Wl,--gc-sections
+c: CFLAGS_TINY += -Oz
 c: tiny
 
 musl: g-musl

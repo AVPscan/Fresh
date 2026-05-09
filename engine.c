@@ -176,8 +176,8 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if ((c = (*Buf.key == K_ESC) ? *(Buf.key + On) : (*Buf.key & b7) ? Off : *Buf.key) != Off) {
     if (c == K_Mouse) c = Mouse(c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
     if (*num < K_Mouse) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
-    if (Exec(c)) { VP.Win = Event(c)->W; Exec(c)(); *tic = ++Buf.tic; return c; } }
-  if (c != K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
+    if (Exec(c)) { VP.Win = Event(c)->W; Exec(c)(); } }
+  if (c < K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
 void Nop(void) { }
 void Anchor(void) { VP.Mode ^= b1; }
