@@ -6,8 +6,9 @@
  * распространять ее и/или изменять согласно условиям Стандартной общественной 
  * лицензии GNU (GPLv3).
  */
-#include <stdio.h> // временно snprintf
-#include "sys.h"
+//#include <stdio.h> // временно snprintf
+#include "sys.h" 
+/*
 void body(void) {  // пока не дописано WinData,Render
   char *p = Cdbuf + 512, *b = p; uint8_t l, v, q, w, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
@@ -26,8 +27,8 @@ void body(void) {  // пока не дописано WinData,Render
     if (!(w)) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = Off; }
     else { w = *Buf.key; snprintf(p, 10, "{%d}", w); p += StrLen(p); }
     snprintf(p, 10, "         "); if (StrLen(b) >= c) *(b + c + On) = Off;
-    if (r > 2) Print(Cgreen,b); } } }
-//void body(void) { WinData(VP.Win, "&2bdd", VP.Mode, VP.X, VP.Y); }
+    if (r > 2) Print(Cgreen,b); } } } */
+void body(void) { WinData(VP.Win, "&2bdd", VP.Mode, VP.X, VP.Y); }
 void show(void) { if ((Win(VP.Win)->WF ^= b7) & b7) WinView(VP.Win, -2, -2); }
 void Init(void) {
   ugoc size = ((SizeVram + 1048575)/1048576), control = Window(-Cgold, -2, -2), menu = Window(-CgoldIB), c = Window(-CgreenI), test = Window(Cgreen, Off, Off, 120, 40);
