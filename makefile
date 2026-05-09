@@ -51,37 +51,32 @@ endif
 CFLAGS_TINY = $(BASE_CFLAGS) -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident -fomit-frame-pointer -fno-stack-protector
 LDFLAGS_TINY = $(BASE_LDFLAGS)
 
-.PHONY: all tiny clean run size help g c musl g-musl mac
+.PHONY: all tiny musl mac run size clean
 
 all: tiny
 tiny: $(SOURCES)
 	@echo "🎯 Сборка: $(SYS_SRC) -> $(TARGET)$(EXT) ($(UNAME_S))"
 	@$(CC) $(CFLAGS_TINY) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS_TINY)
 
-	@if [ "$(OS)" != "Windows_NT" ] && [ "$(UNAME_S)" != "Darwin" ]; then strip --strip-all --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
+	@if [ "$(UNAME_S)" = "Darwin" ]; then strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
+	elif [ "$(OS)" = "Windows_NT" ];then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
+	else strip --strip-all --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
 		--remove-section=.comment --remove-section=.eh_frame --remove-section=.eh_frame_hdr $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(UNAME_S)" = "Darwin" ]; then strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(OS)" = "Windows_NT" ]; then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
 	fi
 	@$(MAKE) --no-print-directory size
 
-g: CC = gcc
-g: tiny
-
-musl: g-musl
-g-musl: 
+musl:
 	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment."; \
 	else $(MAKE) tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
 mac:
 	@$(MAKE) tiny UNAME_S=Darwin SYS_SRC=sys_macos.c
+
+run: tiny
+	@./$(TARGET)$(EXT) || true
 size:
-	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); \
-	echo "📏 Размер бинарника: $$SIZE байт"; \
-	TARGET_SIZE=27000; \
-	if [ $$SIZE -le $$TARGET_SIZE ] && [ $$SIZE -gt 0 ]; then \
-	    echo "✅ Лимит выдержан"; \
-	elif [ $$SIZE -gt 0 ]; then \
-	    echo "⚠️  Превышение на $$((SIZE - TARGET_SIZE)) байт"; \
+	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); echo "📏 Размер бинарника: $$SIZE байт"; TARGET_SIZE=27000; \
+	if [ $$SIZE -le $$TARGET_SIZE ] && [ $$SIZE -gt 0 ]; then echo "✅ Лимит выдержан"; \
+	elif [ $$SIZE -gt 0 ]; then echo "⚠️  Превышение на $$((SIZE - TARGET_SIZE)) байт"; \
 	fi
 clean:
 	rm -f $(TARGET) $(TARGET).exe

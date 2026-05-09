@@ -6,10 +6,8 @@
  * распространять ее и/или изменять согласно условиям Стандартной общественной 
  * лицензии GNU (GPLv3).
  */
- 
 #include <stdio.h> // временно snprintf
 #include "sys.h"
-
 void body(void) {  // пока не дописано WinData,Render
   char *p = Cdbuf + 512, *b = p; uint8_t l, v, q, w, i = 8; ugoc s, r, c = TermCR(&r); Cell m = VRam.size;
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
@@ -37,12 +35,11 @@ void Init(void) {
   WinData(control, " %5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinEvent(control, K_Ctrl_K, show); WinEvent(control, K_NO, body);
   WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'c', 'l', 's', 'e'); WinEvent(menu, K_ESC, Adaptive, Nop, Nop, Nop, Bye);
   WinData(c, "%12gName:", 'n'); WinEvent(c, 'c', Adaptive, Nop); WinView(test, 10, 2); WinSet(test, Off, On); }
-
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.61 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.62 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
