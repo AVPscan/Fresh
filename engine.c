@@ -139,7 +139,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   i = 4; while(i) { mode = (PalBuf*)modes[--i]; c = 8; while(c) { cbi = (--c << 2) + i; src = (PalBuf*)(Cdbuf + ((c) << 5)); pal = APal(cbi);
       pal->l = src->l + mode->l - 1; MemCpy(pal->d, src->d, src->l - 1); MemCpy(pal->d + src->l - 1, mode->d, mode->l); } }
   VP.Win = MAX_WIN; Convas.Win = VP.Win; Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; VP.Mode = On; VP.Loop = On;
-  VP.Anchor = K_F11; VP.Exit = K_F12; Exec(VP.Anchor) = Anchor; Exec(VP.Exit) = Bye; Exec(K_ALT_TAB) = WinShow; Exec(K_ALT_ENT) = WinRev; }
+  VP.Anchor = K_F11; VP.Exit = K_F12; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; Vector(K_ALT_TAB) = WinShow; Vector(K_ALT_ENT) = WinRev; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
@@ -176,13 +176,13 @@ uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control) {
   if ((c = (*Buf.key == K_ESC) ? *(Buf.key + On) : (*Buf.key & b7) ? Off : *Buf.key) != Off) {
     if (c == K_Mouse) c = Mouse(c, *(Buf.key + 2), *(Buf.key + 3), *(Buf.key + 4));
     if (*num < K_Mouse) { t = *num++; while (t--) if (*num++ == c) { *control = On; break; } }
-    if (Exec(c)) { VP.Win = Event(c)->W; Exec(c)(); } }
+    if (Vector(c)) { VP.Win = Event(c)->W; Vector(c)(); } }
   if (c < K_Mouse && !(*control && (Buf.mode & b0))) c = PushKey(c, Buf.key);
   *tic = ++Buf.tic; return c; }
 void Nop(void) { }
 void Anchor(void) { VP.Mode ^= b1; }
 void Bye(void) { VP.Loop = Off; }
-uint8_t ViewPort(void) { if (Exec(Off)) { VP.Win = Event(Off)->W; Exec(Off)(); }
+uint8_t ViewPort(void) { if (Vector(Off)) { VP.Win = Event(Off)->W; Vector(Off)(); }
   goc dx = Off, dy = Off; uint8_t control, s = Buf.mode; Buf.mode |= b0; if (VP.Mode & b1) Buf.mode--;
   VP.Cod = GetEventKM(&VP.Key, &VP.Tic, &control); Buf.mode = s;
   if (control) {
@@ -224,10 +224,10 @@ uint16_t _Window(int8_t col, uint8_t count, ugoc *args) {
   if (!w->EF) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->WF |= b7; } return n; }
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
-  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; SetExec(cur, args[Off]);
+  if ((Win(n)->EF & b0) && count--) { Event(cur)->W = n; Exec(cur, args[Off]);
     if (Event(cur)->C && count) { uint8_t j, c = Event(cur)->C, i = On;
       while(c-- && count--) { j = K_Mouse;
-        while(--j) { if (Event(j)->W == n && Event(j)->N == i) { SetExec(j, args[i]); i++; break; } } } } } }
+        while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exec(j, args[i]); i++; break; } } } } } }
 void _WinSet(uint16_t n, uint8_t count, uint8_t *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   if (count--) { Windows* w = Win(n); w->WF &= ~b5; if (args[Off]) w->WF |= b5; if (count) { w->WF &= ~b6; if (args[On]) w->WF |= b6; } } }

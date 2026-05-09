@@ -176,8 +176,8 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define APal(p)       ((PalBuf*)(Cdpal + ((p) << P_shift)))                   // адрес начала кода цвета colBI[0..31]
 #define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(Cevent + ((m) << V_shift)))                  // адрес начала структуры события
-#define Exec(v)       (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
-#define SetExec(v, func) Exec(v) = ((Cell)(func) <= (Cell)Nop) ? Off : (func);
+#define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
+#define Exec(v, func) Vector(v) = ((Cell)(func) < (Cell)Anchor) ? Off:(func); // сброс вектора если адрес функции раньше Anchor
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
