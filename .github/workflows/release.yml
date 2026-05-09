@@ -40,7 +40,7 @@ jobs:
         include:
           - desc: "Linux-Dynamic"
             os: ubuntu-latest
-            cmd: make
+            cmd: make musl
             artifact: linux-dynamic
           - desc: "Windows"
             os: windows-latest
