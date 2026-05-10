@@ -233,4 +233,4 @@ void _WinSet(uint16_t n, uint8_t count, uint8_t *args) {
   if (count--) { Windows* w = Win(n); w->WF &= ~b5; if (args[Off]) w->WF |= b5; if (count) { w->WF &= ~b6; if (args[On]) w->WF |= b6; } } }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
-  Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }
+  Windows* w = Win(n); if (!(w->MaxVs)) { ugoc a = Length(Off,Off); (void)a; } (void)*str; (void)count; (void)*args; }

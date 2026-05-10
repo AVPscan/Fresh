@@ -165,19 +165,22 @@ _Static_assert((1 << W_shift) == sizeof(Windows) / 2, "W_shift mismatch");
 _Static_assert((1 << P_shift) == sizeof(PalBuf), "P_shift mismatch");
 _Static_assert((1 << K_shift) == sizeof(KeyBuf), "K_shift mismatch");
 _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
-#define Data(r)       (Cdata + ((r) << D_shift))                              // адрес начала буфера строки холста (Data(r)+*Offset(c-1,r) адрес начала буфера для c,r)
-#define Info(c,r)     (Cinfo + (c) + ((r) << Ds_shift))                       // адрес атрибута ячейки холста      (Data(r)+*Offset(c,r) адрес конца буфера для c,r)
-#define Ds(c,r)       (Cds + (c) + ((r) << Ds_shift))                         // адрес данных ячейки холста        (*Offset(c,r)-*Offset(c-1,r) длина в байтах для c,r)
-#define Offset(c,r)   (Coffset + (c) + ((r) << O_shift))                      // адрес ячейки в которой смещение указывающее на конец данных в буфере строки холста
-#define Vsw(n,r)      (Cvsw + (r) + ((n) << VCsw_shift))                      // адрес визуальной длины строки r окна n
-#define Csw(n,r)      (Ccsw + (r) + ((n) << VCsw_shift))                      // адрес числа ячеек строки r окна n
+#define Data(r)       (Cdata + ((r) << D_shift))                              // адрес начала буфера строки холста
+#define Info(c, r)    (Cinfo + (c) + ((r) << Ds_shift))                       // адрес атрибута ячейки холста
+#define Ds(c, r)      (Cds + (c) + ((r) << Ds_shift))                         // адрес данных ячейки холста
+#define Offset(c, r)  (Coffset + (c) + ((r) << O_shift))                      // адрес ячейки в которой смещение указывающее на конец данных в буфере строки холста
+#define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
+#define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
+#define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
+#define Vsw(n, r)     (Cvsw + (r) + ((n) << VCsw_shift))                      // адрес визуальной длины строки r окна n
+#define Csw(n, r)     (Ccsw + (r) + ((n) << VCsw_shift))                      // адрес числа ячеек строки r окна n
 #define Win(n)        ((Windows*)(Cdwin + ((n) << W_shift)))                  // адрес начала данных окна n
 #define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
 #define APal(p)       ((PalBuf*)(Cdpal + ((p) << P_shift)))                   // адрес начала кода цвета colBI[0..31]
 #define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(Cevent + ((m) << V_shift)))                  // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
-#define Exec(v, func) Vector(v) = ((Cell)(func) < (Cell)Anchor) ? Off:(func); // сброс вектора если адрес функции раньше Anchor
+#define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Anchor) ? Off:(func))// сброс вектора если адрес функции раньше Anchor
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
