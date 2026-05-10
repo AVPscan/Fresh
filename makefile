@@ -51,15 +51,14 @@ endif
 CFLAGS_TINY = $(BASE_CFLAGS) -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident -fomit-frame-pointer -fno-stack-protector
 LDFLAGS_TINY = $(BASE_LDFLAGS)
 
-.PHONY: all tiny musl mac run size clean
+.PHONY: tiny musl mac static run size clean
 
-all: tiny
 tiny: $(SOURCES)
 	@echo "🎯 Сборка: $(SYS_SRC) -> $(TARGET)$(EXT) ($(UNAME_S))"
 	@$(CC) $(CFLAGS_TINY) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS_TINY)
 
 	@if [ "$(UNAME_S)" = "Darwin" ]; then strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(OS)" = "Windows_NT" ];then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
+	elif [ "$(OS)" = "Windows_NT" ]; then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
 	else strip --strip-all --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
 		--remove-section=.comment --remove-section=.eh_frame --remove-section=.eh_frame_hdr $(TARGET)$(EXT) 2>/dev/null || true; \
 	fi
@@ -67,10 +66,13 @@ tiny: $(SOURCES)
 
 musl:
 	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment."; \
-	else $(MAKE) tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
+	else $(MAKE)  --no-print-directory tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
 mac:
 	@$(MAKE) tiny UNAME_S=Darwin SYS_SRC=sys_macos.c
 
+static: $(SOURCES)
+	@echo "🔧 Статическая сборка с glibc"
+	@$(MAKE) --no-print-directory tiny CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"
 run: tiny
 	@./$(TARGET)$(EXT) || true
 size:
