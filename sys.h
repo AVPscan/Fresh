@@ -128,7 +128,7 @@ typedef struct {
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
 } EF;
-typedef struct { uint16_t Win, Min, Max, D, S; } Canalysis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -180,7 +180,6 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(Cevent + ((m) << V_shift)))                  // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
-#define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Anchor) ? Off:(func))// сброс вектора если адрес функции раньше Anchor
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
@@ -254,13 +253,15 @@ void Anchor(void);                                                    // Вхо�
 void Bye(void);                                                       // Выход из мира
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
-void WinShow(void);                                                   // Ротация динамических окон
-void WinRev(void);                                                    // Ротация динамических окон в обратном направлении
+void WinDown(void);                                                   // Ротация динамических окон
+void WinUp(void);                                                     // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
-void _WinView(uint16_t n, uint8_t count, goc *args);                  // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
+void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Создание окна с палитрой col при col<0 статичное окно
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Настройка статического окна привязка функций к кодам клавиш
-void _WinSet(uint16_t n, uint8_t count, uint8_t *args);               // Настройка окна включение/отключение {Cursor{,Warp}}
+void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Настройка окна включение/отключение {Cursor{,Warp}}
+void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
+void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 void SRnd(ugoc n);                                                    // Принудительно задать стартовое значение генератору случайных чисел
@@ -276,9 +277,11 @@ uint8_t SyncSize(Cell addr);                                          // Пол�
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
-#define WinView(n, ...) _WinView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
+#define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(col, ...) _Window(col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinEvent(n, cur, ...) _WEvent(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define WinSet(n, ...) _WinSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define WinSet(n, ...) _WSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */
