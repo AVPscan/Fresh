@@ -98,7 +98,7 @@ typedef struct {
     uint8_t inverse : 1;                      // бит 0      инверсия
     uint8_t bold    : 1;                      // бит 1      толстый
     uint8_t color   : 3;                      // бит 432    цвет
-    uint8_t null    : 1;                      // бит 5      {1} Structure {0} UTF8
+    uint8_t null    : 1;                      // бит 5      {1} структура {0} символ UTF8 или последовательность CJK
     uint8_t NoFull  : 1;                      // бит 6      {1} есть {0} нет данных
     uint8_t Error   : 1;                      // бит 7      {1} есть {0} нет изменений
 } Info;   
@@ -108,11 +108,12 @@ typedef struct {                              //UTFinfo
     uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
     uint8_t NoFull  : 1;                      // бит 6      {1} не влезло в буфер {0} всё норм (UTF8infoTile)
-    uint8_t Error   : 1;                      // бит 7      {1} ошибка {0} UTF8info
+    uint8_t Error   : 1;                      // бит 7      {1} ошибка {0} UTF8info признак содержимого ячейки
 } Data;
 typedef struct {
-    uint8_t len     : 6;                      // бит 543210 длина = 1+(0-63) ascii {32...127} визуальная длина равна длине в байтах (числа)
-    uint8_t format  : 2;                      // бит 76     {10}/{11} к левому {01} к правому {00} по центру
+    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...127} визуальная длина равна длине в байтах (числа)
+    uint8_t format  : 2;                      // бит 65     {10}/{11} к левому {01} к правому {00} по центру (как заполнять поле структуры)
+    uint8_t type    : 1;                      // бит 7      {1} структура {0} UTF8 признак содержимого ячейки
 } Structure;
 typedef struct { uint8_t l, d[31]; } PalBuf; 
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
@@ -127,6 +128,7 @@ typedef struct {
 } WF;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
+    uint8_t wait    : 1;                      // бит 1      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
@@ -180,6 +182,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(Cevent + ((m) << V_shift)))                  // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
+#define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
