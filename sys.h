@@ -143,14 +143,14 @@ enum {
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
     SPal = 4 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (4 режима по 8 цветов) 32 байта на каждую
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
-    SEvent = SKey * sizeof(Events),                                           // Размер данных для событий (привязка вызова функций к событиям)
-    SExec = SKey * sizeof(AFunction),                                         // Размер вектора прерываний
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
     SVsw = MAX_WIN * CellStr * sizeof(ugoc) / 2,                              // Размер для визуальных длин строк окон на холсте
     SCsw = MAX_WIN * CellStr * sizeof(ugoc) / 2,                              // Размер для числа ячеек в строках окон на холсте
+    SEvent = SKey * sizeof(Events),                                           // Размер данных для событий (привязка вызова функций к событиям)
+    SExec = SKey * sizeof(AFunction),                                         // Размер вектора событий
     SBuf = 8192,                                                              // Размер буфера Print/File
-    SizeVram = SDCell + SInfo + SDs + SPal + SKeys + SEvent + SExec + 2 * (SOffset + SVsw + SCsw + SWin + SConvas) + SBuf,
+    SizeVram = SDCell + SInfo + SDs + SPal + SKeys + 2 * (SOffset + SVsw + SCsw + SWin + SConvas) + SEvent + SExec + SBuf,
     D_shift = CellPow + 2,                                                    // Смещение между строк холста в байтах
     O_shift = CellPow + 1,                                                    // Смещение между смещениями строк холста
     Ds_shift = CellPow,                                                       // Смещение между атрибутами строк холста
@@ -196,12 +196,12 @@ extern uint8_t  *Cds;
 extern ugoc     *Coffset;
 extern char     *Cdpal;
 extern uint8_t  *Cdkey;
-extern char     *Cevent;
-extern char     *Cexec;
 extern ugoc     *Cdcon;
 extern ugoc     *Cdwin;
 extern ugoc     *Cvsw;
 extern ugoc     *Ccsw;
+extern char     *Cevent;
+extern char     *Cexec;
 extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
@@ -213,12 +213,12 @@ extern R_ VRam;
     ugoc      *Coffset    = 0; \
     char      *Cdpal      = 0; \
     uint8_t   *Cdkey      = 0; \
-    char      *Cevent     = 0; \
-    char      *Cexec      = 0; \
     ugoc      *Cdcon      = 0; \
     ugoc      *Cdwin      = 0; \
     ugoc      *Cvsw       = 0; \
     ugoc      *Ccsw       = 0; \
+    char      *Cevent     = 0; \
+    char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
@@ -251,10 +251,11 @@ uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // В�
 uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
 uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y);          // Обработка событий мыши с учётом рамок терминала
 uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
+void PortZero(void);                                                  // Опрос порта 0 {read(0,...)}
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
-uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
 void WinUp(void);                                                     // Ротация динамических окон в обратном направлении

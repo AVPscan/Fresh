@@ -92,7 +92,7 @@
     gnome-chess stockfish brave thunderbird speedcrunch vitetris qbittorrent
     hunspell hunspellDicts.ru_RU libreoffice-fresh onlyoffice-desktopeditors koreader
     cavalier museeks clementine soundconverter netease-cloud-music-gtk sacd mpv papers avidemux
-    file-roller p7zip gthumb gparted ntfs3g btrfs-progs wget git gnumake clang gcc sakura
+    file-roller p7zip gthumb gparted ntfs3g btrfs-progs wget git gnumake gcc sakura
     iputils traceroute pkg-config curl orchis-theme graphite-cursors arc-icon-theme
     (pkgs.makeDesktopItem {
       name = "продукты"; desktopName = "Моя программа для жены";
