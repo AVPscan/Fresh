@@ -81,7 +81,7 @@
   environment.gnome.excludePackages = with pkgs; [
     epiphany simple-scan totem yelp geary seahorse
     gnome-characters gnome-music gnome-photos gnome-terminal
-    gnome-tour gnome-maps gnome-contacts gnome-connections gnome-disk-utility
+    gnome-tour gnome-maps gnome-contacts gnome-connections
     evince loupe baobab folio ];
   environment.systemPackages = with pkgs; [
     gnomeExtensions.transparent-top-bar-adjustable-transparency

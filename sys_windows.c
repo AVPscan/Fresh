@@ -13,9 +13,7 @@
 #include "sys.h"
 
 SYS_VARS_INIT;
-void IRnd(void) { Flag.Rn = (ugoc)Flag.Delay_ms | On; }
-void SRnd(ugoc n) { Flag.Rn = n; }
-ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Flag.Rn = (ugoc)(RNG_A * Flag.Rn + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
+
 Cell SysWrite(void *buf, Cell len) { return (Cell)_write(1, buf, (unsigned int)len); }
 
 void SwitchRaw(void) {
@@ -73,6 +71,7 @@ void SWD(Cell addr) { if (!addr) return;
     for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
+ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
 
 uint8_t SyncSize(Cell addr) {
     if (!addr) return 0;

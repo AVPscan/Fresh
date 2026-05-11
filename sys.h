@@ -184,10 +184,10 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
-typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
+typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mode, Mkey, MX, MY, Ctrl, Count, Cod, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
+typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
-typedef struct { Cell Delay_ms; ugoc Rn; uint8_t SwitchRaw, SyncSize; } F_;
+typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern char     *Cdata;
@@ -220,38 +220,40 @@ extern R_ VRam;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
-    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
-    R_ VRam = {0,0,1}
+    R_ VRam = {0,0,1}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
+    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
-    static F_ Flag = {0,0,1,0}; \
+    static F_ Flag = {0,1,0}; \
     static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, {"\r", K_ALT_ENT}, \
         {"[M", K_Mouse}, {"\t", K_ALT_TAB}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
         {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
         {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
-        {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} }
+        {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
 void MemCpy(void* dst, void* src, Cell len);                          // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                        // Сравнение
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
-uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
-uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
+void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
+void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
 void PushKey(uint8_t *key);                                           // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
-uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
-uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
+uint8_t ShowKey(uint8_t *key);                                        // Показать ожидаемую/получаемую клавишу Buf.Cod = Data; Buf.Count;
+uint8_t PopKey(uint8_t *key);                                         // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
-uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
-uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
-void Mouse(uint8_t key, uint8_t x, uint8_t y);                        // Обработка событий мыши с учётом рамок терминала
-void GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);        // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
+uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
+void Mouse(void);                                                     // Обработка событий мыши с учётом рамок терминала
+void GetEventKM(uint8_t *n);                                          // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
+void IRnd(void);                                                      // Инициализация генератора случайных чисел
+ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 void PortZero(void);                                                  // Опрос порта 0 {read(0,...)}
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
@@ -267,9 +269,6 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Нас�
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-void IRnd(void);                                                      // Инициализация генератора случайных чисел
-void SRnd(ugoc n);                                                    // Принудительно задать стартовое значение генератору случайных чисел
-ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
@@ -277,6 +276,7 @@ Cell GetRam(Cell *size);                                              // Взя�
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
 void SWD(Cell addr);                                                  // Установить рабочую директорию
 ugoc TermCR(ugoc *r);                                                 // Считать рамки терминала
+ugoc GetDelay(void);                                                  // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Получить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
