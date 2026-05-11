@@ -15,13 +15,13 @@ void body(void) {  // пока не дописано WinData,Render
   Print(Cdefault,Home); Print(Corange,b); if (r < 2) return;
   snprintf(b, 100, "\nx%d y%d %d %d                      ", VP.X, VP.Y, VP.Xs, VP.Ys); if (StrLen(b) >= c) *(b + c + On) = Off;
   Print(CredB,b); if (r < 3) return;
-  if (Buf.pop > Buf.push) { i = PopKey(Buf.key); w = Buf.Cod; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
+  if (Buf.pop > Buf.push) { i = PopKey(); w = Buf.Cod; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
     snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
     if (!(w)) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = Off; }
     else { w = *Buf.key; snprintf(p, 10, "{%d}", w); p += StrLen(p); }
     snprintf(p, 10, "         "); if (StrLen(b) >= c) *(b + c + On) = Off;
     if (r > 2) Print(Cgreen,b); } }
-  else { i = ShowKey(Buf.key); w = Buf.Cod; if (Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
+  else { i = ShowKey(); w = Buf.Cod; if (Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
     snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
     if (!(w)) { i = l; while (i--) { *(p + i) = *(Buf.key + i); } p += l; *p = Off; }
     else { w = *Buf.key; snprintf(p, 10, "{%d}", w); p += StrLen(p); }
@@ -39,7 +39,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.72 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.73 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

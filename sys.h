@@ -88,7 +88,8 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
+    K_TCodec };
 enum {
     Cconvas, Cborder, CconvasB, CborderB, Cgrey, CgreyI, CgreyB, CgreyIB,
     Cgreen, CgreenI, CgreenB, CgreenIB, Cred, CredI, CredB, CredIB,
@@ -240,28 +241,29 @@ int8_t MemCmp(void* dst, void* src, Cell len);                        // Сра�
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
-void PushKey(uint8_t *key);                                           // Положить клавишу в буфер 
-uint8_t ShowKey(uint8_t *key);                                        // Показать ожидаемую/получаемую клавишу Buf.Cod = Data; Buf.Count;
-uint8_t PopKey(uint8_t *key);                                         // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая Buf.Cod = Data; Buf.Count;
+void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
+uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Cod = Data; Buf.Count;
+uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
-void Mouse(void);                                                     // Обработка событий мыши с учётом рамок терминала
+void Mouse(void);                                                     // Обработка событий мыши
 void GetEventKM(uint8_t *n);                                          // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 void PortZero(void);                                                  // Опрос порта 0 {read(0,...)}
+void TextCodec(void);                                                 // Декодирование кодировки
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
 void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
 void WinUp(void);                                                     // Ротация динамических окон в обратном направлении
-void WinTop(ugoc n);                                                  // Установить окно поверх всех (игнорирует теневые)
+void WinTop(ugoc n);                                                  // Установить окно выше остальных подобных
 void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
 uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Создание окна с палитрой col при col<0 статичное окно
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Настройка статического окна привязка функций к кодам клавиш
@@ -277,7 +279,7 @@ void FreeRam(Cell addr, Cell size);                                   // Вер�
 void SWD(Cell addr);                                                  // Установить рабочую директорию
 ugoc TermCR(ugoc *r);                                                 // Считать рамки терминала
 ugoc GetDelay(void);                                                  // Считать колибровачные данные
-uint8_t SyncSize(Cell addr);                                          // Получить рамки терминала при необходимости стабилизировать
+uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
