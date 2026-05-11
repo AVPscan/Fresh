@@ -101,7 +101,7 @@ void PushKey(uint8_t *key) {
       *dst++ = Buf.Cod | b7; *dst = On; dst += b10; l = On + (Buf.Cod & b10);
       if (c) *dst = c;
       else while(l--) *(dst + l) = *(key + l); } }
-  if (!c) Buf.Cod = ~Off; }
+  Buf.Cod = c; if (!c) Buf.Cod = ~Off; }
 uint8_t ShowKey(uint8_t *key) {
   if (Buf.pop == Buf.push) { Buf.Cod = Off; Buf.Count = Off; return Off; }
   uint8_t d, *dst; dst = AKey(Buf.push); d = *dst++; if (d & b6) { dst++; d = *dst++; }
@@ -175,7 +175,7 @@ void GetEventKM(uint8_t *n) {
     if (*n < K_Mouse) { uint8_t t = *n++; while (t--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
     if (Vector(Buf.Cod)) { VP.Wec = Event(Buf.Cod)->W; Vector(Buf.Cod)(); } }
   if (Buf.Cod < K_Mouse && !(Buf.Ctrl && (Buf.Mode & b0))) PushKey(Buf.key);
-  ++Buf.tic; }
+  if (Buf.Cod) ++Buf.tic; }
 uint8_t ViewPort(void) {
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
   goc dx = Off, dy = Off; uint8_t s = Buf.Mode; Buf.Mode |= b0;

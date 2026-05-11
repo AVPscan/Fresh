@@ -240,7 +240,7 @@ int8_t MemCmp(void* dst, void* src, Cell len);                        // Сра�
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
-void PushKey(uint8_t *key);                                           // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+void PushKey(uint8_t *key);                                           // Положить клавишу в буфер 
 uint8_t ShowKey(uint8_t *key);                                        // Показать ожидаемую/получаемую клавишу Buf.Cod = Data; Buf.Count;
 uint8_t PopKey(uint8_t *key);                                         // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
