@@ -185,7 +185,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, mode, Mkey, MX, MY, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
+typedef struct { goc X, Y; ugoc dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Tic, Cod, oCod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; ugoc Rn; uint8_t SwitchRaw, SyncSize; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -220,7 +220,7 @@ extern R_ VRam;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     R_ VRam = {0,0,1}
 #define SYS_VARS_INIT \
@@ -240,7 +240,7 @@ int8_t MemCmp(void* dst, void* src, Cell len);                        // Сра�
 void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 uint8_t UTFinfo(uint8_t *s);                                          // Рассказ об utf8 возвращает Data
 uint8_t UTFinfoTile(uint8_t *s, Cell len);                            // Рассказ об utf8 возвращает Data с учётом буфера
-uint8_t PushKey(uint8_t c, uint8_t *key);                             // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
+void PushKey(uint8_t *key);                                           // Положить клавишу в буфер [код управляющей или печатная 0xFF или 0 ошибка]
 uint8_t ShowKey(uint8_t *data, uint8_t *count, uint8_t *key);         // Показать ожидаемую/получаемую клавишу
 uint8_t PopKey(uint8_t *data, uint8_t *count, uint8_t *key);          // Взять клавишу из буфера [1] буфер пуст [0] видна ожидаемая/получаемая
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
@@ -249,8 +249,8 @@ void InitVram(Cell addr, Cell size);                                  // Ини�
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 uint8_t MoveConvas(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc dx, goc dy); // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(ugoc *sx, ugoc *sy, goc *cx, goc *cy, goc mx, goc my); // Взаимосвязь изменения экранных координат(мышью) и холста
-uint8_t Mouse(uint8_t c, uint8_t key, uint8_t x, uint8_t y);          // Обработка событий мыши с учётом рамок терминала
-uint8_t GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);     // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
+void Mouse(uint8_t key, uint8_t x, uint8_t y);                        // Обработка событий мыши с учётом рамок терминала
+void GetEventKM(uint8_t *num, uint8_t *tic, uint8_t *control);        // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void PortZero(void);                                                  // Опрос порта 0 {read(0,...)}
 void Nop(void);                                                       // Заглушка, пустая функция
