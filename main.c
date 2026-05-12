@@ -30,18 +30,17 @@ void body(void) {  // пока не дописано WinData,Render
 //void body(void) { WinData(VP.Wec, "&2bdd", VP.Mode, VP.X, VP.Y); }
 void show(void) { if (Win(VP.Wec)->WF ^= b7) WinView(VP.Wec, -2, -2); }
 void Init(void) {
-  ugoc size = ((VRam.size + 1048575)/1048576), control = Window(-Cgold, -2, -2), menu = Window(-CgoldIB), c = Window(-CgreenI), test = Window(Cgreen, Off, Off, 120, 40);
+  ugoc size = ((VRam.size + 1048575)/1048576), control = Window(-Cgold, -2, -2), W1 = Window(CgoldIB, 1, 1, 40, 10), W2 = Window(Cgreen, Off, Off, 80, 24);
   Events(K_F11, K_F12, K_ALT_TAB, K_ALT_ENT, K_PUP, K_PDN); Execs(Nop, Nop, WinDown, WinUp, Anchor, Bye);
   WinData(control, " %5dMb %3 %06c:%06c ", size, CblueB, CblueB); WinEvent(control, K_Ctrl_K, show); WinEvent(control, K_NO, body);
-  WinData(menu, "%0mCreate\nLoad\nSave\nExit", 'c', 'l', 's', 'e'); WinEvent(menu, K_ESC, Adaptive, Nop, Nop, Nop, Bye);
-  WinData(c, "%12gName:", 'n'); WinEvent(c, 'c', Adaptive, Nop); WinView(test, 10, 2); WinSet(test, Off, On); }
+  WinSet(W1, On, On); WinView(W2, 10, 3); WinSet(W2, Off, Off); }
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cconvas,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.74 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.75 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
   return (int)SystemSwitch(); }
-  
+
