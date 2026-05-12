@@ -185,7 +185,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
-typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mode, Mkey, MX, MY, Ctrl, Count, Cod, key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
+typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Anchor, Exit, Key, up, ud, le, ri; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw, SyncSize; } F_;
@@ -222,7 +222,7 @@ extern R_ VRam;
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
     R_ VRam = {0,0,1}; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,5,K_UP,K_DOW,K_LEF,K_RIG}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
@@ -251,12 +251,9 @@ Cell SystemSwitch(void);                                              // Вхо�
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
 void Mouse(void);                                                     // Обработка событий мыши
-void GetEventKM(uint8_t *n);                                          // Читаем мышь и клавиатуру, заполняем буфер при необходимости, проверка управляющих кодов.
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
-void PortZero(void);                                                  // Опрос порта 0 {read(0,...)}
-void TextCodec(void);                                                 // Декодирование кодировки
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира

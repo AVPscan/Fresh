@@ -52,66 +52,66 @@ int8_t MemCmp(void* dst, void* src, Cell len) {
   return Off; }
 
 void UTFinfo(uint8_t *s) {
-  uint32_t cp; uint8_t c = *s++; Buf.Cod = Off;
+  uint32_t cp; uint8_t c = *s++; Buf.Data = Off;
   if (c < 0x80) cp = (uint32_t) c;
   else if ((c & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80)
-    { Buf.Cod++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
+    { Buf.Data++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
   else if ((c & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
-    { Buf.Cod = 0x02; cp = ((c & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
+    { Buf.Data = 0x02; cp = ((c & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
   else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
-    { Buf.Cod = 0x03; cp = ((c & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
-  else { Buf.Cod |= b7; return; }
-  if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) { Buf.Cod |= b5; return; }
-  if (cp < 0x100) { Buf.Cod |= b2; return; }
-  if (cp >= 0x0590 && cp <= 0x08FF) Buf.Cod |= b4;
-  if (((Buf.Cod & 0x03) == 0x01 && cp < 0x80) || ((Buf.Cod & 0x03) == 0x02 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
-      ((Buf.Cod & 0x03) == 0x03 && (cp < 0x10000 || cp > 0x10FFFF))) { Buf.Cod |= b7; return; }
+    { Buf.Data = 0x03; cp = ((c & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
+  else { Buf.Data |= b7; return; }
+  if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) { Buf.Data |= b5; return; }
+  if (cp < 0x100) { Buf.Data |= b2; return; }
+  if (cp >= 0x0590 && cp <= 0x08FF) Buf.Data |= b4;
+  if (((Buf.Data & 0x03) == 0x01 && cp < 0x80) || ((Buf.Data & 0x03) == 0x02 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
+      ((Buf.Data & 0x03) == 0x03 && (cp < 0x10000 || cp > 0x10FFFF))) { Buf.Data |= b7; return; }
   if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
-      (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) { Buf.Cod &= 0xF3; return; }
+      (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) { Buf.Data &= 0xF3; return; }
   if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) ||
-      (cp >= 0xE0100 && cp <= 0xE01EF)) { Buf.Cod &= 0xF3; return; }
+      (cp >= 0xE0100 && cp <= 0xE01EF)) { Buf.Data &= 0xF3; return; }
   if ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) || (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || 
       (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE10 && cp <= 0xFE19) || 
       (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
-      (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) { Buf.Cod |= 0x08; return; }
-  Buf.Cod |= b2; }
+      (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) { Buf.Data |= 0x08; return; }
+  Buf.Data |= b2; }
 void UTFinfoTile(uint8_t *s, Cell len) {
-  Buf.Cod = 0xC0; if (!len) return;
+  Buf.Data = 0xC0; if (!len) return;
   if ((*s & 0xE0) == 0xC0 && len < 0x02) return;
   else if ((*s & 0xF0) == 0xE0 && len < 0x03) return;
   else if ((*s & 0xF8) == 0xF0 && len < 0x04) return;
   UTFinfo(s); }
 
 void PushKey(void) {
-  uint8_t *sav, *dst, d, l, c = Buf.Cod; Vector(K_TCodec)(); if (Buf.Cod & b7) { Buf.Cod = Off; return; }
+  uint8_t *sav, *dst, d, l; if (Buf.Data & b7) { Buf.Cod = Off; return; }
   if (Buf.pop == Buf.push) { dst = AKey(++Buf.push);
-    *dst++ = Buf.Cod | b7; *dst = On; dst += b10; l = On + (Buf.Cod & b10);
-    if (c) *dst = c;
-    else while(l--) *(dst + l) = *(Buf.key + l); }
+    *dst++ = Buf.Data | b7; *dst = On; dst += b10; l = On + (Buf.Data & b10);
+    if (Buf.Cod) *dst = Buf.Cod;
+    else while(l--) *(dst + l) = *(Buf.Key + l); }
   else {
-    dst = AKey(Buf.push); d = *dst++; sav = dst; dst += b10; l = On + (Buf.Cod & b10);
+    dst = AKey(Buf.push); d = *dst++; sav = dst; dst += b10; l = On + (Buf.Data & b10);
     if (d & b6) { d = *++sav; sav++; dst += b1; }
-    if ((d & ~b76) == Buf.Cod) {
-      if (c) { if (*dst == c) l = ~Off; }
-      else while(l--) { if (*(dst + l) != *(Buf.key + l)) break; } }
+    if ((d & ~b76) == Buf.Data) {
+      if (Buf.Cod) { if (*dst == Buf.Cod) l = ~Off; }
+      else while(l--) { if (*(dst + l) != *(Buf.Key + l)) break; } }
     if (l == (uint8_t)~Off) { if (!(*sav += On)) *sav = ~Off; }
     else { dst = AKey(Buf.push); d = *dst;
-      if (!(d & b6) && (d & b10) < b1 && (Buf.Cod & b10) < b1) { *dst |= b6; dst += 2; }
+      if (!(d & b6) && (d & b10) < b1 && (Buf.Data & b10) < b1) { *dst |= b6; dst += 2; }
       else { dst = AKey(++Buf.push); if (Buf.pop == Buf.push) ++Buf.pop; }
-      *dst++ = Buf.Cod | b7; *dst = On; dst += b10; l = On + (Buf.Cod & b10);
-      if (c) *dst = c;
-      else while(l--) *(dst + l) = *(Buf.key + l); } }
-  Buf.Cod = c; if (!c) Buf.Cod--; }
+      *dst++ = Buf.Data | b7; *dst = On; dst += b10; l = On + (Buf.Data & b10);
+      if (Buf.Cod) *dst = Buf.Cod;
+      else while(l--) *(dst + l) = *(Buf.Key + l); } }
+  if (!Buf.Cod) Buf.Cod--; }
 uint8_t ShowKey(void) {
-  if (Buf.pop == Buf.push) { Buf.Cod = Off; Buf.Count = Off; return Off; }
+  if (Buf.pop == Buf.push) { Buf.Data = Off; Buf.Count = Off; return Off; }
   uint8_t d, *dst; dst = AKey(Buf.push); d = *dst++; if (d & b6) { dst++; d = *dst++; }
-  Buf.Count = *dst; Buf.Cod = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.key + d) = *(dst + d);
+  Buf.Count = *dst; Buf.Data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.Key + d) = *(dst + d);
   return On; }
 uint8_t PopKey(void) {
   uint8_t *dst, d; while(!((d = *(dst = AKey(Buf.pop))) & b76) && (Buf.pop != Buf.push)) Buf.pop++;
-  if (!(d & b76)) { Buf.Cod = Off; Buf.Count = Off; return Off; } if (Buf.pop == Buf.push) Buf.pop--;
+  if (!(d & b76)) { Buf.Data = Off; Buf.Count = Off; return Off; } if (Buf.pop == Buf.push) Buf.pop--;
   if (d & b7) { *dst &= ~b7; } else { *dst &= ~b6; dst += b1; d = *dst; }
-  Buf.Count = *++dst; Buf.Cod = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.key + d) = *(dst + d);
+  Buf.Count = *++dst; Buf.Data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.Key + d) = *(dst + d);
   return On; }
 ugoc Keys(void) {
   ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *AKey(c--); if (d & b7) s++; if (d & b6) s++; }
@@ -135,7 +135,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
       pal->l = src->l + mode->l - 1; MemCpy(pal->d, src->d, src->l - 1); MemCpy(pal->d + src->l - 1, mode->d, mode->l); } }
   VP.Win = MAX_WIN; Convas.Win = VP.Win; Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine;
   Convas.W = Convas.CW; Convas.CH = CellStr; Convas.H = Convas.CH; VP.Mode = On; VP.Loop = On; VP.Anchor = K_F11; VP.Exit = K_F12;
-  Vector(K_Mouse) = PortZero; Vector(K_TCodec) = TextCodec; Vector(K_ALT_TAB) = WinDown; Vector(K_ALT_ENT) = WinUp; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
+  Vector(K_ALT_TAB) = WinDown; Vector(K_ALT_ENT) = WinUp; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
@@ -166,28 +166,27 @@ void Mouse(void) {
   else if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p++; }
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p++; }
-  if (p && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } }
-void GetEventKM(uint8_t *n) {
-  Vector(K_Mouse)(); Buf.Ctrl = Off;
-  if (*Buf.key == K_ESC && *(Buf.key + On) == K_NO) return;
-  if (Buf.Cod) {
-    if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.key + 2); Buf.MX = *(Buf.key + 3) - 0x21; Buf.MY = *(Buf.key + 4) - 0x21; Mouse(); }
-    if (*n < K_Mouse) { uint8_t t = *n++; while (t--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
-    if (Vector(Buf.Cod)) { VP.Wec = Event(Buf.Cod)->W; Vector(Buf.Cod)(); } }
-  if (Buf.Cod < K_Mouse && !(Buf.Ctrl && (Buf.Mode & b0))) PushKey();
-  if (Buf.Cod) ++Buf.tic; }
+  if (p && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } 
+  return; }
 uint8_t ViewPort(void) {
-  if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
-  goc dx = Off, dy = Off; uint8_t s = Buf.Mode; Buf.Mode |= b0;
-  if (VP.Mode & b1) { Buf.Mode--; } GetEventKM(&VP.Key); Buf.Mode = s;
-  if (Buf.Ctrl) {
+  Buf.Ctrl = Off; if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
+  GetKey(Buf.Key); UTFinfo(Buf.Key); Buf.Cod = (*Buf.Key == K_ESC) ? *(Buf.Key + On) : (*Buf.Key & b7) ? Off : *Buf.Key;
+  if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; Mouse(); }
+  if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
+  else { 
+    if (Buf.Cod) { 
+      if (Vector(Buf.Cod)) { VP.Wec = Event(Buf.Cod)->W; Vector(Buf.Cod)(); }
+      uint8_t t = *(Buf.Key); while (--t) if (*(Buf.Key + t) == Buf.Cod) { Buf.Ctrl++; break; } }
+    if (Buf.Cod < K_Mouse && !(Buf.Ctrl && !(VP.Mode & b1))) PushKey();
+    if (Buf.Cod) ++Buf.tic; }
+  if (Buf.Ctrl) { goc dx = Off, dy = Off;
     if (Buf.Cod != VP.Cod) { VP.dXY = On; VP.Cod = Buf.Cod; }
     if ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < MaxSpeed)) VP.dXY <<= On;
-    if (Buf.Cod == VP.le) dx--;
-    else if (Buf.Cod == VP.ri) dx++;
-    else if (Buf.Cod == VP.up) dy--;
-    else if (Buf.Cod == VP.ud) dy++;
-    MoveConvas(dx * VP.dXY, dy * VP.dXY); }
+    if (Buf.Cod == VP.le) dx = -VP.dXY;
+    else if (Buf.Cod == VP.ri) dx = VP.dXY;
+    else if (Buf.Cod == VP.up) dy = -VP.dXY;
+    else if (Buf.Cod == VP.ud) dy = VP.dXY;
+    MoveConvas(dx, dy); }
   if (SyncSize(VRam.addr)) MoveConvas(Off, Off);
   if (Buf.Ctrl > On) { Buf.Ctrl--; }
   else { Buf.Ctrl--; }
@@ -195,8 +194,6 @@ uint8_t ViewPort(void) {
 
 void IRnd(void) { VP.Rnd = GetDelay() | On; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
-void PortZero(void) { GetKey(Buf.key); Buf.Cod = (*Buf.key & b7) ? Off : (*Buf.key == K_ESC) ? *(Buf.key + On) : *Buf.key; }
-void TextCodec(void) { UTFinfo(Buf.key); }
 
 void Nop(void) { }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
