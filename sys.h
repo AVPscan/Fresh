@@ -221,7 +221,7 @@ extern R_ VRam;
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
     R_ VRam = {0,0,1}; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,5,K_UP,K_DOW,K_LEF,K_RIG}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,0,0,4,K_UP,K_DOW,K_LEF,K_RIG}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
@@ -241,7 +241,7 @@ void MemMove(void* dst, void* src, Cell len);                         // Пер�
 void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
 void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
-uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Cod = Data; Buf.Count;
+uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
@@ -253,6 +253,7 @@ void Mouse(void);                                                     // Обр�
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
+void RPEncode(void);                                                  // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
