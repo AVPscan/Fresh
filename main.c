@@ -13,7 +13,7 @@ void body(void) {  // пока не дописано WinData,Render
   s = (ugoc)((m + 1048575) / 1048576); *p++ = 'v'; while (i--) *p++ = (VP.Mode & (1 << i)) ? '1' : '0';
   snprintf(p, 91, " %dMb %d c%d r%d b%d x%d y%d          ", s, K_Mouse, c, r, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) >= c) *(b + c + On) = Off;
   Print(Cwhite,Home); Print(Cred,b); if (r < 2) return;
-  snprintf(b, 100, "\n%d x%d y%d %d %d                      ", Convas.Border - 32, VP.X, VP.Y, VP.Xs, VP.Ys); if (StrLen(b) >= c) *(b + c + On) = Off;
+  snprintf(b, 100, "\n%d x%d y%d %d %d                      ", Convas.Border - 0x20, VP.X, VP.Y, VP.Xs, VP.Ys); if (StrLen(b) >= c) *(b + c + On) = Off;
   Print(Corange,b); if (r < 3) return;
   if (Buf.pop > Buf.push) { i = PopKey(); w = Buf.Data; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
     snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
@@ -39,7 +39,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cblack,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.79 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.80 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

@@ -82,7 +82,7 @@ uint8_t SyncSize(Cell addr) {
     uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left;
     uint16_t h = csbi.srWindow.Bottom - csbi.srWindow.Top;
     if (w == TS.col - 1 && h == TS.row - 1) return 0;
-    if (Flag.SyncSize) { uint8_t stable = 3; if (w < TS.col - 1 || h < TS.row - 1) { BPrint(Convas.Border,Cls); }
+    if (Flag.SyncSize) { uint8_t stable = 3;
       while (stable--) { Delay_ms(3);
         if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
           if ((csbi.srWindow.Right - csbi.srWindow.Left) != w || (csbi.srWindow.Bottom - csbi.srWindow.Top) != h) { 
