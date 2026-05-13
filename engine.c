@@ -196,7 +196,7 @@ uint8_t ViewPort(void) {
       else if (Buf.Cod == VP.up) dy = -VP.dXY;
       else if (Buf.Cod == VP.ud) dy = VP.dXY;
       MoveConvas(dx, dy); } }
-  Buf.Ctrl += SyncSize(VRam.addr);
+  if (SyncSize(VRam.addr)) { MoveConvas(Off, Off); BPrint(Convas.Border,Cls); }
   if (Buf.Ctrl > On) { BPrint(Convas.Border,Cls); }
   else {  }
   return VP.Loop; }

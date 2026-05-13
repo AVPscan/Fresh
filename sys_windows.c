@@ -82,11 +82,6 @@ uint8_t SyncSize(Cell addr) {
     uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left;
     uint16_t h = csbi.srWindow.Bottom - csbi.srWindow.Top;
     if (w == TS.col - 1 && h == TS.row - 1) return 0;
-    if (Flag.SyncSize) { uint8_t stable = 3;
-      while (stable--) { Delay_ms(3);
-        if (GetConsoleScreenBufferInfo(hOut, &csbi)) {
-          if ((csbi.srWindow.Right - csbi.srWindow.Left) != w || (csbi.srWindow.Bottom - csbi.srWindow.Top) != h) { 
-            w = csbi.srWindow.Right - csbi.srWindow.Left; h = csbi.srWindow.Bottom - csbi.srWindow.Top; stable = 3; } } } }
     TS.col = w + 1; TS.row = h + 1; Flag.SyncSize = 1; return 1; }
 
 Cell GetCycles(void) {

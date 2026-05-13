@@ -63,11 +63,8 @@ ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
 ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
 
 uint8_t SyncSize(Cell addr) { if (!addr) return 0;
-    struct winsize ws, cur; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
+    struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
     if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-    if (Flag.SyncSize) { uint8_t stable = 3;
-        while (stable--) { Delay_ms(3);
-            if (ioctl(0, TIOCGWINSZ, &cur) >= 0) if (cur.ws_col != ws.ws_col || cur.ws_row != ws.ws_row) { ws = cur; stable = 3; } } }
     TS.col = ws.ws_col; TS.row = ws.ws_row; Flag.SyncSize = 1; return 1; }
     
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
