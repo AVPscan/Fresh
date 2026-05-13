@@ -27,27 +27,33 @@
 //#define USE_BW
 //#define USE_RGB
 #ifdef USE_BW
-  #define Grey    ""
-  #define Green   ""
-  #define Red     ""
-  #define Blue    ""
-  #define Orange  ""
-  #define Gold    ""
+  #define White   "\033[37m"                  // белый
+  #define Gold    "\033[33m"                  // оттенок 1
+  #define Orange  "\033[36m"                  // оттенок 2
+  #define Green   "\033[32m"                  // оттенок 3
+  #define Grey    "\033[35m"                  // оттенок 4
+  #define Red     "\033[31m"                  // оттенок 5
+  #define Blue    "\033[34m"                  // оттенок 6
+  #define Black   "\033[30m"                  // чёрный
 #else
   #ifdef USE_RGB
-    #define Grey    "\033[38;2;120;120;120m"  // Бледный нейтральный
+    #define White   "\033[38;2;255;255;255m"  // Белый
+    #define Gold    "\033[38;2;184;134;11m"   // Светящийся золотой
+    #define Orange  "\033[38;2;210;105;30m"   // Сочный оранжевый
     #define Green   "\033[38;2;34;139;34m"    // Глубокий лесной
+    #define Grey    "\033[38;2;120;120;120m"  // Бледный нейтральный
     #define Red     "\033[38;2;220;20;60m"    // Насыщенный малиновый
     #define Blue    "\033[38;2;30;144;255m"   // Яркий небесный
-    #define Orange  "\033[38;2;210;105;30m"   // Сочный оранжевый
-    #define Gold    "\033[38;2;184;134;11m"   // Светящийся золотой
+    #define Black   "\033[38;2;0;0;0m"        // Чёрный
   #else
-    #define Grey    "\033[38;5;244m"
-    #define Green   "\033[38;5;28m"
-    #define Red     "\033[38;5;160m"
-    #define Blue    "\033[38;5;27m"
-    #define Orange  "\033[38;5;166m"
-    #define Gold    "\033[38;5;178m"
+    #define White   "\033[38;5;15m"           // Белый
+    #define Gold    "\033[38;5;178m"          // Золотой
+    #define Orange  "\033[38;5;166m"          // Оранжевый
+    #define Green   "\033[38;5;28m"           // Зелёный
+    #define Grey    "\033[38;5;244m"          // Серый
+    #define Red     "\033[38;5;160m"          // Красный
+    #define Blue    "\033[38;5;27m"           // Синий
+    #define Black   "\033[38;5;0m"            // Чёрный
   #endif
 #endif
 
@@ -80,7 +86,7 @@ typedef uintptr_t Cell;
 
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80,
-    b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b765 = 0xE0, Fps = 0x14, On = 0x01, Off = 0x00 };
+    b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, Fps = 0x14, On = 0x01, Off = 0x00 };
 enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
     K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,
@@ -88,12 +94,14 @@ enum { K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC,
+    K_Mouse };
 enum {
-    Cconvas, Cborder, CconvasB, CborderB, Cgrey, CgreyI, CgreyB, CgreyIB,
-    Cgreen, CgreenI, CgreenB, CgreenIB, Cred, CredI, CredB, CredIB,
-    Cblue, CblueI, CblueB, CblueIB, Corange, CorangeI, CorangeB, CorangeIB,
-    Cgold, CgoldI, CgoldB, CgoldIB, Cdefault, CdefaultI, CdefaultB, CdefaultIB };
+    Cblack = 1, CblackI, CblackB, CblackIB, Cblue, CblueI, CblueB, CblueIB,
+    Cred, CredI, CredB, CredIB, Cgrey, CgreyI, CgreyB, CgreyIB,
+    Cgreen, CgreenI, CgreenB, CgreenIB, Corange, CorangeI, CorangeB, CorangeIB,
+    Cgold, CgoldI, CgoldB, CgoldIB, Cwhite, CwhiteI, CwhiteB, CwhiteIB,
+    BBlack, BBlue, BRed, BGrey, BGreen, BOrange, BGold, BWhite };
 typedef struct {
     uint8_t inverse : 1;                      // бит 0      инверсия
     uint8_t bold    : 1;                      // бит 1      толстый
@@ -130,7 +138,7 @@ typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
     uint8_t wait    : 1;                      // бит 1      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Inc, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -141,7 +149,7 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SPal = 4 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (4 режима по 8 цветов) 32 байта на каждую
+    SPal = 5 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (4 режима по 8 цветов) 32 байта на каждую и 8 цветов бордюра
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
@@ -229,7 +237,7 @@ extern R_ VRam;
     static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, {"\r", K_ALT_ENT}, \
         {"[M", K_Mouse}, {"\t", K_ALT_TAB}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
-        {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
+        {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, {"\33", K_ALT_ESC}, \
         {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
         {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4} };
 
@@ -245,6 +253,7 @@ uint8_t ShowKey(void);                                                // Пок�
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
+void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -255,6 +264,9 @@ void IRnd(void);                                                      // Ини�
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 void RPEncode(void);                                                  // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция
+void VCurSpeed(void);                                                 // Переключение поведения курсора вьюпорта {обычный/ускоряемый}
+void VCurShow(void);                                                  // Отображение курсора вьюпорта {не показывать/показать}
+void SCBorder(void);                                                  // Циклическая смена цвета фона
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
 void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
