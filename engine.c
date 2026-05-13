@@ -120,13 +120,13 @@ ugoc Keys(void) {
 void Print(uint8_t n, char *str) {
   if (!n || !str) return;
   char *dst = Cdbuf; n--; n &= ~b765; PalBuf* pal =  APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l;
-  ugoc len = StrLen(str); MemCpy(dst, str, len);
-  if (n + On != Convas.Inc) { dst += len; pal =  APal(Convas.Inc - On); len = pal->l; MemCpy(dst, pal->d, len); }
-  SysWrite(Cdbuf, dst + len - Cdbuf); }
+  ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
 void BPrint(uint8_t n, char *str) {
   if (!str) return;
   char *dst = Cdbuf; n -= 0x21; n &= b210; PalBuf* pal =  APal(n + 0x20); MemCpy(dst, pal->d, pal->l); dst += pal->l;
-  ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
+  ugoc len = StrLen(str); MemCpy(dst, str, len); 
+  if (n + On != Convas.Inc) { dst += len; pal =  APal(Convas.Inc - On); len = pal->l; MemCpy(dst, pal->d, len); }
+  SysWrite(Cdbuf, dst + len - Cdbuf); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t i, c = 4; uint8_t* base = (uint8_t*)addr; PalBuf *pal, *mode, *src;
   char* colors[] = { Black, Blue, Red, Grey, Green, Orange, Gold, White}; char* modes[] = { "\7;22;27m", "\6;22;7m", "\6;1;27m", "\5;1;7m" };
@@ -137,13 +137,11 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     while(i--) { pal = APal((i << 2) + c); src = APal(i + 0x20); src->l = StrLen(colors[i]); MemCpy(src->d, colors[i], src->l);
       pal->l = src->l + mode->l - 1; MemCpy(pal->d, src->d, src->l - 1); MemCpy(pal->d + src->l - 1, mode->d, mode->l); *(src->d + b1) = '4'; } }
   VP.Win = MAX_WIN; Convas.Win = VP.Win; Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine; Convas.W = Convas.CW;
-  Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Inc = Cblack; Convas.Border = BWhite; VP.Mode = b2; VP.Loop = On;
-  Vector(K_Mouse) = RPEncode; Vector(K_Ctrl_LEF) = SCBorder; Vector(K_Ctrl_RIG) = VCurShow; Vector(K_Ctrl_UP) = VCurSpeed;
-  VP.Anchor = K_Ctrl_DOW; VP.Exit = K_PDN; Vector(VP.Anchor) = Anchor; Vector(VP.Exit) = Bye; }
+  Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Inc = BWhite; Convas.Border = BBlack; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
-    IRnd(); SyncSize(VRam.addr); BPrint(Convas.Border, HideCur Cls); Print(Convas.Inc,AltBufOn HideCur WrapOff MouseX10on); }
+    IRnd(); SyncSize(VRam.addr); Print(Convas.Inc,AltBufOn HideCur WrapOff MouseX10on); BPrint(Convas.Border, HideCur Cls); }
   else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Convas.Inc,AltBufOff Reset ShowCur WrapOn MouseX10off);
     FreeRam(VRam.addr, VRam.size); } }
   return On; }
@@ -155,7 +153,8 @@ void MoveConvas(goc dx, goc dy) {
     if ((VP.X < -MaxSpeed || VP.X > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
     if ((VP.Y < -MaxSpeed || VP.Y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) y = (y < Off) ? GOC_MAX : GOC_MIN; }
   VP.X = x; VP.Y = y; dx = x / c; dy = y / r; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
-  if ((x / c) != dx || (y / r) != dy) { Buf.Ctrl++; } VP.Xs = x; VP.Ys = y; }
+  if ((x / c) != dx || (y / r) != dy) Buf.Ctrl++;
+  VP.Xs = x; VP.Ys = y; }
 uint8_t MoveScreen(goc mx, goc my) {
   goc dx = VP.X - mx, dy = VP.Y - my;
   if (VP.Mode & b1) { return Off; }
@@ -184,26 +183,29 @@ uint8_t ViewPort(void) {
       if (!Buf.Ctrl) PushKey(); }
     if (Buf.Cod) ++Buf.tic; }
   if (Buf.Ctrl) { goc dx = Off, dy = Off;
-    if (Buf.Cod != VP.Cod) { VP.dXY = On; VP.Cod = Buf.Cod; }
-    if ((VP.Mode & b2) && ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < MaxSpeed))) VP.dXY <<= On;
-    if (Buf.Cod == VP.le) dx = -VP.dXY;
-    else if (Buf.Cod == VP.ri) dx = VP.dXY;
-    else if (Buf.Cod == VP.up) dy = -VP.dXY;
-    else if (Buf.Cod == VP.ud) dy = VP.dXY;
-    MoveConvas(dx, dy); }
-  if (SyncSize(VRam.addr)) MoveConvas(Off, Off);
+    if (Buf.Cod == VP.scs) { if (!(VP.Mode ^= b2)) VP.dXY = On; }
+    else if (Buf.Cod == VP.Anchor) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
+    else if (Buf.Cod == VP.bcu) { Convas.Border -= 0x21; Convas.Border++; Convas.Border &= b210; Convas.Border += 0x21; BPrint(Convas.Border,Cls); }
+    else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
+    else if (Buf.Cod == VP.Exit) VP.Loop = Off;
+    else {
+      if (Buf.Cod != VP.Cod) { VP.dXY = On; VP.Cod = Buf.Cod; }
+      if ((VP.Mode & b2) && ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < MaxSpeed))) VP.dXY <<= On;
+      if (Buf.Cod == VP.le) dx = -VP.dXY;
+      else if (Buf.Cod == VP.ri) dx = VP.dXY;
+      else if (Buf.Cod == VP.up) dy = -VP.dXY;
+      else if (Buf.Cod == VP.ud) dy = VP.dXY;
+      MoveConvas(dx, dy); } }
+  Buf.Ctrl += SyncSize(VRam.addr);
   if (Buf.Ctrl > On) { BPrint(Convas.Border,Cls); }
   else {  }
   return VP.Loop; }
 
 void IRnd(void) { VP.Rnd = GetDelay() | On; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
-void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 
+void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
-void VCurSpeed(void) { if (!((VP.Mode ^= b2) & b2)) VP.dXY = On; }
-void VCurShow(void) { VP.Mode ^= b0; }
-void SCBorder(void) { Convas.Border -= 0x21; Convas.Border++; Convas.Border &= b210; Convas.Border += 0x21; BPrint(Convas.Border,Cls); }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
 void Bye(void) { VP.Loop = Off; }
 void Adaptive(void) { if (Win(VP.Wec)->WF ^= b7) WinView(VP.Wec); }
