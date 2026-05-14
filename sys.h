@@ -270,7 +270,8 @@ void RPEncode(void);                                                  // Про�
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
-void Adaptive(void);                                                  // Адаптивно показать окно {Спрятать окно}
+void WSwitch(void);                                                   // Показать окно {Спрятать окно}
+void WASwitch(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
 void WinUp(void);                                                     // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно выше остальных подобных

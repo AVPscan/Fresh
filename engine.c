@@ -208,7 +208,8 @@ void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
 void Bye(void) { VP.Loop = Off; }
-void Adaptive(void) { if (Win(VP.Wec)->WF ^= b7) WinView(VP.Wec); }
+void WSwitch(void) { Win(VP.Wec)->WF ^= b7; }
+void WASwitch(void) { if (Win(VP.Wec)->WF ^= b7) WinView(VP.Wec); }
 void WinDown(void) { if (Convas.D) { uint16_t l = Convas.D; Win(l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
 void WinUp(void) { if (Convas.D) { uint16_t l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
 
