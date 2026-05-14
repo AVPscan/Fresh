@@ -10,28 +10,28 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = 8; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; Print(Cgold,Home);
+  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = 8; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; Print(CGold,Home);
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d                    ", s, K_Mouse, c, r);
-  if (StrLen(b) > 43) { *(b + 43) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(Cgold,b); if (r < 2) return;
+  if (StrLen(b) > 43) { *(b + 43) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(CGold,b); if (r < 2) return;
   snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d                           ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
-  if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(Corange,b); if (r < 3) return;
+  if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(CBOrange,b); if (r < 3) return;
   if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; 
   if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
   snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
   if (!(w)) { while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
-  snprintf(p, 30, "                 "); if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } if (r > 2) Print(Cgreen,b); } }
+  snprintf(p, 30, "                   "); if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } if (r > 2) Print(CCBGreen,b); } }
 
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
 void Init(void) {
-  ugoc control = Window(-Cgold, -2, -2), W1 = Window(CgoldIB, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Rand(32) + On, Rand(10), Rand(10), 80, 24);
+  ugoc control = Window(-CGold, -2, -2), W1 = Window(CBIGold, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Rand(64) + On, Rand(10), Rand(10), 80, 24);
   VKeys(K_ALT_ESC,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Events(K_ALT_TAB, K_ALT_ENT); Execs(WinDown, WinUp);
-  WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), CblueB, CblueB); WinEvent(control, K_Ctrl_K, WSwitch);
+  WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), CBBlue, CBBlue); WinEvent(control, K_Ctrl_K, WSwitch);
   WinEvent(control, K_NO, body); WinView(W2, 10, 3); WinSet(W1, On, On); WinSet(W2, Off, Off); }
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (flag) { Print(Cblack,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.87 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+      if (flag) { Print(CBlack,AltBufOff); Print(CBOrange,"Created by Alexey Pozdnyakov "); flag = Off;
+        Print(COrange,"in 07.02.2026 version 8.88 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

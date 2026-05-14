@@ -15,14 +15,14 @@
 #define Reset       "\033[0m"                 // СБРОСИТЬ ВСЁ (и цвета, и режимы)
 #define Cls         "\033[2J\033[H"           // Очистить экран и в начало
 #define Home        "\033[H"                  // В начало экрана
-#define HideCur     "\033[?25l"               // Скрыть курсор
 #define ShowCur     "\033[?25h"               // Показать курсор
+#define HideCur     "\033[?25l"               // Скрыть курсор
 #define WrapOn      "\033[?7h"                // Включить перенос длинных строк
 #define WrapOff     "\033[?7l"                // Выключить перенос строк
 #define MouseX10on  "\033[?1000h"             // Включаем мышь
-#define MouseX10off "\033[?1000l"
-#define AltBufOn    "\033[?1049h"
-#define AltBufOff   "\033[?1049l"
+#define MouseX10off "\033[?1000l"             // Выключаем мышь
+#define AltBufOn    "\033[?1049h"             // Включаем альтернативный буфер
+#define AltBufOff   "\033[?1049l"             // Выключаем альтернативный буфер
 
 //#define USE_BW
 #define USE_RGB
@@ -97,21 +97,25 @@ enum {
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
 enum {
-    Cblack = 1, CblackI, CblackB, CblackIB, Cblue, CblueI, CblueB, CblueIB,
-    Cred, CredI, CredB, CredIB, Cgrey, CgreyI, CgreyB, CgreyIB,
-    Cgreen, CgreenI, CgreenB, CgreenIB, Corange, CorangeI, CorangeB, CorangeIB,
-    Cgold, CgoldI, CgoldB, CgoldIB, Cwhite, CwhiteI, CwhiteB, CwhiteIB,
+    CBlack = 1, CBlue, CRed, CGrey, CGreen, COrange, CGold, CWhite,
+    CIBlack, CIBlue, CIRed, CIGrey, CIGreen, CIOrange, CIGold, CIWhite,
+    CBBlack, CBBlue, CBRed, CBGrey, CBGreen, CBOrange, CBGold, CBWhite,
+    CBIBlack, CBIBlue, CBIRed, CBIGrey, CBIGreen, CBIOrange, CBIGold, CBIWhite,
+    CCBlack, CCBlue, CCRed, CCGrey, CCGreen, CCOrange, CCGold, CCWhite,
+    CCIBlack, CCIBlue, CCIRed, CCIGrey, CCIGreen, CCIOrange, CCIGold, CCIWhite,
+    CCBBlack, CCBBlue, CCBRed, CCBGrey, CCBGreen, CCBOrange, CCBGold, CCBWhite,
+    CCBIBlack, CCBIBlue, CCBIRed, CCBIGrey, CCBIGreen, CCBIOrange, CCBIGold, CCBIWhite,
     BBlack, BBlue, BRed, BGrey, BGreen, BOrange, BGold, BWhite };
 
 #define FFone   BBlack
 #define FBorder BWhite
 typedef struct {
-    uint8_t inverse : 1;                      // бит 0      инверсия
-    uint8_t bold    : 1;                      // бит 1      толстый
-    uint8_t color   : 3;                      // бит 432    цвет
-    uint8_t null    : 1;                      // бит 5      {1} структура {0} символ UTF8 или последовательность CJK
-    uint8_t NoFull  : 1;                      // бит 6      {1} есть {0} нет данных
-    uint8_t Error   : 1;                      // бит 7      {1} есть {0} нет изменений
+    uint8_t color   : 3;                      // бит 210    цвет
+    uint8_t inverse : 1;                      // бит 3      инверсия
+    uint8_t bold    : 1;                      // бит 4      толстый
+    uint8_t cursive : 1;                      // бит 5      курсив
+    uint8_t Data    : 1;                      // бит 6      {1/0} есть/нет данных
+    uint8_t Refresh : 1;                      // бит 7      {1/0} есть/нет изменений
 } Info;   
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -122,7 +126,7 @@ typedef struct {                              //UTFinfo
     uint8_t Error   : 1;                      // бит 7      {1} ошибка {0} UTF8info признак содержимого ячейки
 } Data;
 typedef struct {
-    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...127} визуальная длина равна длине в байтах (числа)
+    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...126} визуальная длина равна длине в байтах (числа)
     uint8_t format  : 2;                      // бит 65     {10}/{11} к левому {01} к правому {00} по центру (как заполнять поле структуры)
     uint8_t type    : 1;                      // бит 7      {1} структура {0} UTF8 признак содержимого ячейки
 } Structure;
@@ -130,16 +134,17 @@ typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct {
-    uint8_t inverse : 1;                      // бит 0      инверсия
-    uint8_t bold    : 1;                      // бит 1      толстый
-    uint8_t color   : 3;                      // бит 432    цвет
-    uint8_t cursor  : 1;                      // бит 5      {1} показывать {0} не показывать - курсор окна
-    uint8_t nowrap  : 1;                      // бит 6      {1} включен {0} выключен авто перенос строк окна
-    uint8_t vision  : 1;                      // бит 7      {1} отображается {0} не отображается
+    uint8_t color   : 3;                      // бит 210    цвет
+    uint8_t inverse : 1;                      // бит 3      инверсия
+    uint8_t bold    : 1;                      // бит 4      толстый
+    uint8_t cursive : 1;                      // бит 5      курсив
+    uint8_t cursor  : 1;                      // бит 6      {1} показывать {0} не показывать - курсор окна
+    uint8_t nowrap  : 1;                      // бит 7      {1} включен {0} выключен авто перенос строк окна
 } WF;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-    uint8_t wait    : 1;                      // бит 1      {1} занято заливаются данные из файла/порта {0} свободно
+    uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
+    uint8_t wait    : 1;                      // бит 2      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
@@ -152,7 +157,7 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SPal = 5 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (4 режима по 8 цветов) 32 байта на каждую и 8 цветов бордюра
+    SPal = 9 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (8 режимов по 8 цветов) 32 байта на каждую и 8 цветов бордюра
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
