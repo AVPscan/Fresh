@@ -49,15 +49,13 @@ void GetKey(uint8_t *b) {
     
 Cell GetRam(Cell *size) { if (!*size) return 0;
   Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (r == MAP_FAILED) { r = 0; l = 0; }
-  *size = l; return (Cell)r; }
+  if (r == MAP_FAILED) { r = 0; l = 0; } *size = l; return (Cell)r; }
   
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
 
 void SWD(Cell addr) { if (!addr) return;
   char *path = (char *)(addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
-  path[len] = '\0';
-  if (MemCmp(path, "/nix/store", 10) == 0) {
+  path[len] = 0; if (MemCmp(path, "/nix/store", 10) == 0) {
     for (char **env = environ; *env != NULL; env++) { char *e = *env;
       if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }
     return; }
@@ -66,10 +64,10 @@ void SWD(Cell addr) { if (!addr) return;
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
 ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
 
-uint8_t SyncSize(Cell addr) { if (!addr) return 0;
-  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
-  if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-  TS.col = ws.ws_col; TS.row = ws.ws_row; Flag.SyncSize = 1; return 1; }
+uint8_t SyncSize(Cell addr) { if (!addr) return Off;
+  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
+  if (ws.ws_col == TS.col && ws.ws_row == TS.row) return Off;
+  TS.col = ws.ws_col; TS.row = ws.ws_row; return On; }
   
 Cell GetCycles(void) {
   Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));

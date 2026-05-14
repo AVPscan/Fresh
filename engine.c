@@ -125,7 +125,7 @@ void BPrint(uint8_t n, char *str) {
   if (!str) return;
   char *dst = Cdbuf; n -= 0x21; n &= b210; PalBuf* pal =  APal(n + 0x20); MemCpy(dst, pal->d, pal->l); dst += pal->l;
   ugoc len = StrLen(str); MemCpy(dst, str, len); 
-  if (n + On != Convas.Inc) { dst += len; pal =  APal(Convas.Inc - On); len = pal->l; MemCpy(dst, pal->d, len); }
+  if (n + On != Convas.Fone) { dst += len; pal =  APal(Convas.Fone - On); len = pal->l; MemCpy(dst, pal->d, len); }
   SysWrite(Cdbuf, dst + len - Cdbuf); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   uint8_t i, c = 4; uint8_t* base = (uint8_t*)addr; PalBuf *pal, *mode, *src;
@@ -137,29 +137,29 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     while(i--) { pal = APal((i << 2) + c); src = APal(i + 0x20); src->l = StrLen(colors[i]); MemCpy(src->d, colors[i], src->l);
       pal->l = src->l + mode->l - 1; MemCpy(pal->d, src->d, src->l - 1); MemCpy(pal->d + src->l - 1, mode->d, mode->l); *(src->d + b1) = '4'; } }
   VP.Win = MAX_WIN; Convas.Win = VP.Win; Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine; Convas.W = Convas.CW;
-  Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Inc = BWhite; Convas.Border = BBlack; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode; }
+  Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Fone = FFone; Convas.Border = FBorder; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off);
-    IRnd(); SyncSize(VRam.addr); Print(Convas.Inc,AltBufOn HideCur WrapOff MouseX10on); BPrint(Convas.Border, HideCur Cls); }
-  else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Convas.Inc,AltBufOff Reset ShowCur WrapOn MouseX10off);
+    IRnd(); SyncSize(VRam.addr); Print(Convas.Fone,AltBufOn HideCur WrapOff MouseX10on); BPrint(Convas.Border, HideCur Cls); }
+  else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Convas.Fone,AltBufOff Reset ShowCur WrapOn MouseX10off);
     FreeRam(VRam.addr, VRam.size); } }
   return On; }
 
 void MoveConvas(goc dx, goc dy) {
-  ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy; Buf.Ctrl = On;
+  Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy; dx = VP.X / c; dy = VP.Y / r;
   if (VP.Mode & b1) { return; }
   else {
     if ((VP.X < -MaxSpeed || VP.X > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
     if ((VP.Y < -MaxSpeed || VP.Y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) y = (y < Off) ? GOC_MAX : GOC_MIN; }
-  VP.X = x; VP.Y = y; dx = x / c; dy = y / r; x = (x < Off) ? (c + (x % c)) : (x % c); y = (y < Off) ? (r + (y % r)) : (y % r);
-  if ((x / c) != dx || (y / r) != dy) Buf.Ctrl++;
+  VP.X = x; VP.Y = y; x = (VP.X < Off) ? (c + (VP.X % c)) : (VP.X % c); y = (VP.Y < Off) ? (r + (VP.Y % r)) : (VP.Y % r);
+  if ((VP.X / c) != dx || (VP.Y / r) != dy) Buf.Ctrl++;
   VP.Xs = x; VP.Ys = y; }
 uint8_t MoveScreen(goc mx, goc my) {
   goc dx = VP.X - mx, dy = VP.Y - my;
   if (VP.Mode & b1) { return Off; }
   else if (((dx ^ VP.X) & GOC_MIN) || ((dy ^ VP.Y) & GOC_MIN)) return Off;
-  VP.X = dx; VP.Xs -= mx; VP.Y = dy; VP.Ys -= my; return On; }
+  VP.Xs -= mx; VP.Ys -= my; VP.X = dx; VP.Y = dy; return On; }
 void Mouse(void) {
   uint8_t p = Off; Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21;
   if (Buf.Mkey == Buf.Ru) Buf.Cod = VP.up;
@@ -185,7 +185,7 @@ uint8_t ViewPort(void) {
   if (Buf.Ctrl) { goc dx = Off, dy = Off;
     if (Buf.Cod == VP.scs) { if (!(VP.Mode ^= b2)) VP.dXY = On; }
     else if (Buf.Cod == VP.Anchor) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
-    else if (Buf.Cod == VP.bcu) { Convas.Border -= 0x21; Convas.Border++; Convas.Border &= b210; Convas.Border += 0x21; BPrint(Convas.Border,Cls); }
+    else if (Buf.Cod == VP.bcu) { Convas.Border -= 0x21; Convas.Border++; Convas.Border &= b210; Convas.Border += 0x21; }
     else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
     else if (Buf.Cod == VP.Exit) VP.Loop = Off;
     else {
