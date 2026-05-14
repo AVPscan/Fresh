@@ -107,8 +107,8 @@ enum {
     CCBIBlack, CCBIBlue, CCBIRed, CCBIGrey, CCBIGreen, CCBIOrange, CCBIGold, CCBIWhite,
     BBlack, BBlue, BRed, BGrey, BGreen, BOrange, BGold, BWhite };
 
-#define FFone   BBlack
-#define FBorder BWhite
+#define FFone   BWhite
+#define FBorder BBlack
 typedef struct {
     uint8_t color   : 3;                      // бит 210    цвет
     uint8_t inverse : 1;                      // бит 3      инверсия
