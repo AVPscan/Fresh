@@ -196,7 +196,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, up, ud, le, ri, scs, Anchor, bcu, ssc, Exit; } V_;
+typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay_ms; uint8_t SwitchRaw; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -232,7 +232,7 @@ extern R_ VRam;
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
     R_ VRam = {0,0,1}; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_UP,K_DOW,K_LEF,K_RIG,K_Ctrl_UP,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_RIG,K_ALT_ESC}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_ALT_ESC}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
@@ -280,6 +280,7 @@ void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Нас�
 void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
+void _VKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
@@ -299,5 +300,6 @@ Cell GetSC(Cell addr);                                                // Изм�
 #define WinSet(n, ...) _WSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define VKeys(...) _VKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */

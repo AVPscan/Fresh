@@ -252,6 +252,7 @@ void _SExec(uint8_t count, AFunction *args) { uint16_t m = Window(Off), k = K_Mo
           break; } } 
         } }
     break; } } }
+void _VKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key,i = Off; p += *p; if (count > 9) { count = 9; } while(count--) *p-- = args[i++]; }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) {
   if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }

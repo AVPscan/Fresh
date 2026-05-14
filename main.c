@@ -11,9 +11,9 @@
 
 void body(void) {  // пока не дописано WinData,Render
   char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = 8; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; Print(Cgold,Home);
-  while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d b%d x%d y%d        ", s, K_Mouse, c, r, Buf.Mkey, Buf.MX, Buf.MY);
+  while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d                    ", s, K_Mouse, c, r);
   if (StrLen(b) > 43) { *(b + 43) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(Cgold,b); if (r < 2) return;
-  snprintf(b, 100, "\nx%d y%d %d %d                                       ", VP.X, VP.Y, VP.Xs, VP.Ys);
+  snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d                           ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
   if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c + On) = Off; } Print(Corange,b); if (r < 3) return;
   if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; 
   if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
@@ -26,14 +26,14 @@ void show(void) { if (Win(VP.Wec)->WF ^= b7) WinView(VP.Wec, -2, -2); }
 void Init(void) {
   ugoc size = ((VRam.size + 1048575)/1048576), control = Window(-Cgold, -2, -2); IRnd();
   ugoc W1 = Window(CgoldIB, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Rand(31) + On, Rand(10), Rand(10), 80, 24);
-  Events(K_ALT_TAB, K_ALT_ENT); Execs(WinDown, WinUp);
+  Events(K_ALT_TAB, K_ALT_ENT); Execs(WinDown, WinUp); VKeys(K_ALT_ESC,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG);
   WinData(control, " %+5dMb %+3 %06c:%06c ", size, CblueB, CblueB); WinEvent(control, K_Ctrl_K, show); WinEvent(control, K_NO, body);
   WinSet(W1, On, On); WinView(W2, 10, 3); WinSet(W2, Off, Off); }
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Cblack,AltBufOff); Print(CorangeB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(Corange,"in 07.02.2026 version 8.83 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(Corange,"in 07.02.2026 version 8.84 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
