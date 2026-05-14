@@ -12,50 +12,51 @@
 ENGINE_VARS_INIT;
 
 Cell StrLen(char *s) { if (!s) return Off;
-  uint8_t *f = (uint8_t*)s; while (*f++);
+  uint8_t *f = (uint8_t*)s; while(*f++);
   return (--f - (uint8_t*)s); }
-void MemSet(void* buf, uint8_t val, Cell len) {
-  uint8_t *p = (uint8_t*)buf;
-  while (len && ((Cell)p & (SCell - 1))) { len--; *p++ = val; }
+void MemSet(void* buf, uint8_t val, Cell len) { uint8_t *p = (uint8_t*)buf;
+  while(len && ((Cell)p & (SCell - 1))) { len--; *p++ = val; }
   if (len >= SCell) {
     Cell vW = val * (((Cell) - 1) / 255); Cell *pW = (Cell*)p;
-    Cell i = len / SCell; len &= (SCell - 1); while (i--) *pW++ = vW;
+    Cell i = len / SCell; len &= (SCell - 1); while(i--) *pW++ = vW;
     p = (uint8_t*)pW; }
-  while (len--) *p++ = val; }
-void MemCpy(void* dst, void* src, Cell len) {
-  uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
-  while (len && ((Cell)d & (SCell - 1))) { *d++ = *s++; len--; }
-  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
-    Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
-    Cell i = len / SCell; len &= (SCell - 1); while (i--) *dW++ = *sW++;
-    d = (uint8_t*)dW; s = (uint8_t*)sW; }
-  while (len--) *d++ = *s++ ; }
+  while(len--) *p++ = val; }
 void MemMove(void* dst, void* src, Cell len) {
-  if (dst > src) {
-    uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src; d += len; s += len;
-    while (len && ((Cell)d & (SCell - 1))) { len--; *--d = *--s; }
+  if (dst > src) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src; d += len; s += len;
+    while(len && ((Cell)d & (SCell - 1))) { len--; *--d = *--s; }
     if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
       Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
-      Cell i = len / SCell; len &= (SCell - 1); while (i--) *--dW = *--sW;
+      Cell i = len / SCell; len &= (SCell - 1); while(i--) *--dW = *--sW;
       d = (uint8_t*)dW; s = (uint8_t*)sW; }
-    while (len--) *--d = *--s ; }
-  else if (dst < src ) MemCpy(dst, src, len); }
-int8_t MemCmp(void* dst, void* src, Cell len) {
-  uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
-  while (len && ((Cell)d & (SCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
+    while(len--) *--d = *--s ; }
+  else if (dst == src ) return; 
+  MemCpy(dst, src, len); }
+void MemCpy(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
+  while(len && ((Cell)d & (SCell - 1))) { *d++ = *s++; len--; }
   if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
     Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
-    Cell i = len / SCell; len &= (SCell - 1); while (i-- && (*dW++ == *sW++));
+    Cell i = len / SCell; len &= (SCell - 1); while(i--) *dW++ = *sW++;
+    d = (uint8_t*)dW; s = (uint8_t*)sW; }
+  while(len--) *d++ = *s++ ; }
+int8_t MemCmp(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
+  while(len && ((Cell)d & (SCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
+  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
+    Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
+    Cell i = len / SCell; len &= (SCell - 1); while(i-- && (*dW++ == *sW++));
     if (i + 1) { --dW; --sW; len += SCell; }
     d = (uint8_t*)dW; s = (uint8_t*)sW; }
-  while (len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
+  while(len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
   return Off; }
 
-void UTFinfo(uint8_t *s) {
-  uint32_t cp; uint8_t c = *s++; Buf.Data = Off;
+void UTFinfoTile(uint8_t *s, Cell len) { Buf.Data = 0xC0;
+  if (!len) return;
+  if ((*s & 0xE0) == 0xC0 && len < 0x02) return;
+  else if ((*s & 0xF0) == 0xE0 && len < 0x03) return;
+  else if ((*s & 0xF8) == 0xF0 && len < 0x04) return;
+  UTFinfo(s); }
+void UTFinfo(uint8_t *s) { uint32_t cp; uint8_t c = *s++; Buf.Data = Off;
   if (c < 0x80) cp = (uint32_t) c;
-  else if ((c & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80)
-    { Buf.Data++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
+  else if ((c & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80) { Buf.Data++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
   else if ((c & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
     { Buf.Data = 0x02; cp = ((c & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
   else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
@@ -75,15 +76,9 @@ void UTFinfo(uint8_t *s) {
       (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
       (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) { Buf.Data |= 0x08; return; }
   Buf.Data |= b2; }
-void UTFinfoTile(uint8_t *s, Cell len) {
-  Buf.Data = 0xC0; if (!len) return;
-  if ((*s & 0xE0) == 0xC0 && len < 0x02) return;
-  else if ((*s & 0xF0) == 0xE0 && len < 0x03) return;
-  else if ((*s & 0xF8) == 0xF0 && len < 0x04) return;
-  UTFinfo(s); }
 
-void PushKey(void) {
-  uint8_t *sav, *dst, d, l; if (Buf.Data & b7) { Buf.Cod = Off; return; }
+void PushKey(void) { uint8_t *sav, *dst, d, l;
+  if (Buf.Data & b7) { Buf.Cod = Off; return; }
   if (Buf.pop == Buf.push) { dst = AKey(++Buf.push);
     *dst++ = Buf.Data | b7; *dst = On; dst += b10; l = On + (Buf.Data & b10);
     if (Buf.Cod) *dst = Buf.Cod;
@@ -100,32 +95,25 @@ void PushKey(void) {
       else { dst = AKey(++Buf.push); if (Buf.pop == Buf.push) ++Buf.pop; }
       *dst++ = Buf.Data | b7; *dst = On; dst += b10; l = On + (Buf.Data & b10);
       if (Buf.Cod) *dst = Buf.Cod;
-      else while(l--) *(dst + l) = *(Buf.Key + l); } }
-  if (!Buf.Cod) Buf.Cod--; }
-uint8_t ShowKey(void) {
+      else while(l--) *(dst + l) = *(Buf.Key + l); } } if (!Buf.Cod) Buf.Cod--; }
+uint8_t ShowKey(void) { uint8_t d, *dst; dst = AKey(Buf.push);
   if (Buf.pop == Buf.push) { Buf.Data = Off; Buf.Count = Off; return Off; }
-  uint8_t d, *dst; dst = AKey(Buf.push); d = *dst++; if (d & b6) { dst++; d = *dst++; }
-  Buf.Count = *dst; Buf.Data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.Key + d) = *(dst + d);
-  return On; }
-uint8_t PopKey(void) {
-  uint8_t *dst, d; while(!((d = *(dst = AKey(Buf.pop))) & b76) && (Buf.pop != Buf.push)) Buf.pop++;
+  d = *dst++; if (d & b6) { dst++; d = *dst++; } Buf.Count = *dst; Buf.Data = (d & ~b76);
+  dst += b10; d = On + (d & b10); while(d--) { *(Buf.Key + d) = *(dst + d); } return On; }
+uint8_t PopKey(void) { uint8_t *dst, d;
+  while(!((d = *(dst = AKey(Buf.pop))) & b76) && (Buf.pop != Buf.push)) Buf.pop++;
   if (!(d & b76)) { Buf.Data = Off; Buf.Count = Off; return Off; } if (Buf.pop == Buf.push) Buf.pop--;
-  if (d & b7) { *dst &= ~b7; } else { *dst &= ~b6; dst += b1; d = *dst; }
-  Buf.Count = *++dst; Buf.Data = (d & ~b76); dst += b10; d = On + (d & b10); while(d--) *(Buf.Key + d) = *(dst + d);
-  return On; }
-ugoc Keys(void) {
-  ugoc s = Off; uint8_t d, c = Buf.push; while (c != Buf.pop) { d = *AKey(c--); if (d & b7) s++; if (d & b6) s++; }
-  return s; }
+  if (d & b7) { *dst &= ~b7; } else { *dst &= ~b6; dst += b1; d = *dst; } Buf.Count = *++dst; Buf.Data = (d & ~b76);
+  dst += b10; d = On + (d & b10); while(d--) { *(Buf.Key + d) = *(dst + d); } return On; }
+ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push;
+  while(c != Buf.pop) { d = *AKey(c--); if (d & b7) s++; if (d & b6) s++; } return s; }
 
-void Print(uint8_t n, char *str) {
-  if (!n || !str) return;
-  char *dst = Cdbuf; n--; n &= ~b765; PalBuf* pal =  APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l;
-  ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
-void BPrint(uint8_t n, char *str) {
-  if (!str) return;
-  char *dst = Cdbuf; n -= 0x21; n &= b210; PalBuf* pal =  APal(n + 0x20); MemCpy(dst, pal->d, pal->l); dst += pal->l;
-  ugoc len = StrLen(str); MemCpy(dst, str, len); 
-  if (n + On != Convas.Fone) { dst += len; pal =  APal(Convas.Fone - On); len = pal->l; MemCpy(dst, pal->d, len); }
+void Print(uint8_t n, char *str) { if (!n || !str) return;
+  char *dst = Cdbuf; ugoc len = StrLen(str); n--; n &= ~b765; PalBuf* pal =  APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l;
+  MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
+void BPrint(uint8_t n, char *str) { if (!str) return;
+  char *dst = Cdbuf; ugoc len = StrLen(str); n -= 0x21; n &= b210; PalBuf* pal =  APal(n + 0x20); MemCpy(dst, pal->d, pal->l); dst += pal->l;
+  MemCpy(dst, str, len); if (n + On != Convas.Fone) { dst += len; pal =  APal(Convas.Fone - On); len = pal->l; MemCpy(dst, pal->d, len); }
   SysWrite(Cdbuf, dst + len - Cdbuf); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   PalBuf *pal, *mode, *src; uint8_t i, c = 4; char* base = (char*)addr;
@@ -146,21 +134,19 @@ Cell SystemSwitch(void) {
     FreeRam(VRam.addr, VRam.size); } }
   return On; }
 
-void MoveConvas(goc dx, goc dy) {
-  Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy;
+void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy;
   if (VP.Mode & b1) { return; }
   else {
     if ((VP.X < -MaxSpeed || VP.X > MaxSpeed) && ((x ^ VP.X) & GOC_MIN)) x = (x < Off) ? GOC_MAX : GOC_MIN;
     if ((VP.Y < -MaxSpeed || VP.Y > MaxSpeed) && ((y ^ VP.Y) & GOC_MIN)) y = (y < Off) ? GOC_MAX : GOC_MIN; }
   dx = VP.X / c; dy = VP.Y / r; VP.X = x; VP.Y = y; VP.Xs = (VP.X < Off) ? (c + (VP.X % c)) : (VP.X % c);
   VP.Ys = (VP.Y < Off) ? (r + (VP.Y % r)) : (VP.Y % r); if ((x / c) != dx || (y / r) != dy) Buf.Ctrl++; }
-uint8_t MoveScreen(goc mx, goc my) {
-  goc dx = VP.X - mx, dy = VP.Y - my;
+uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   if (VP.Mode & b1) { return Off; }
   else if (((dx ^ VP.X) & GOC_MIN) || ((dy ^ VP.Y) & GOC_MIN)) return Off;
   VP.X = dx; VP.Y = dy; VP.Xs -= mx; VP.Ys -= my; return On; }
-void Mouse(void) {
-  uint8_t p = Off; Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21;
+void Mouse(void) { uint8_t p = Off;
+  Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21;
   if (Buf.Mkey == Buf.Ru) Buf.Cod = VP.up;
   else if (Buf.Mkey == Buf.Rd) Buf.Cod = VP.ud;
   else if (Buf.Mkey == Buf.cRu) Buf.Cod = VP.ri;
@@ -170,8 +156,9 @@ void Mouse(void) {
   else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p = b1; }
   if (p && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } 
   return; }
-uint8_t ViewPort(void) {
-  Buf.Ctrl = Off; if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
+
+uint8_t ViewPort(void) { Buf.Ctrl = Off;
+  if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
   Vector(K_Mouse)(); if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
   else { Buf.Cod = (*Buf.Key == K_ESC) ? *(Buf.Key + On) : (*Buf.Key & b7) ? Off : *Buf.Key;
     if (Buf.Cod == K_Mouse) Mouse();

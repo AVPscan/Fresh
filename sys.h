@@ -247,11 +247,11 @@ extern R_ VRam;
 
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
+void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
 void MemCpy(void* dst, void* src, Cell len);                          // Копирование куска памяти, без проверки наложения!
 int8_t MemCmp(void* dst, void* src, Cell len);                        // Сравнение
-void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
-void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
+void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
