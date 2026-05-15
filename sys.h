@@ -24,39 +24,6 @@
 #define AltBufOn    "\033[?1049h"             // Включаем альтернативный буфер
 #define AltBufOff   "\033[?1049l"             // Выключаем альтернативный буфер
 
-//#define USE_BW
-#define USE_RGB
-#ifdef USE_BW
-  #define White   "\033[37m"                  // белый
-  #define Gold    "\033[33m"                  // оттенок 1
-  #define Orange  "\033[36m"                  // оттенок 2
-  #define Green   "\033[32m"                  // оттенок 3
-  #define Grey    "\033[35m"                  // оттенок 4
-  #define Red     "\033[31m"                  // оттенок 5
-  #define Blue    "\033[34m"                  // оттенок 6
-  #define Black   "\033[30m"                  // чёрный
-#else
-  #ifdef USE_RGB
-    #define White   "\033[38;2;255;255;255m"  // Белый
-    #define Gold    "\033[38;2;184;134;11m"   // Светящийся золотой
-    #define Orange  "\033[38;2;210;105;30m"   // Сочный оранжевый
-    #define Green   "\033[38;2;34;139;34m"    // Глубокий лесной
-    #define Grey    "\033[38;2;120;120;120m"  // Бледный нейтральный
-    #define Red     "\033[38;2;220;20;60m"    // Насыщенный малиновый
-    #define Blue    "\033[38;2;30;144;255m"   // Яркий небесный
-    #define Black   "\033[38;2;0;0;0m"        // Чёрный
-  #else
-    #define White   "\033[38;5;15m"           // Белый
-    #define Gold    "\033[38;5;178m"          // Золотой
-    #define Orange  "\033[38;5;166m"          // Оранжевый
-    #define Green   "\033[38;5;28m"           // Зелёный
-    #define Grey    "\033[38;5;244m"          // Серый
-    #define Red     "\033[38;5;160m"          // Красный
-    #define Blue    "\033[38;5;27m"           // Синий
-    #define Black   "\033[38;5;0m"            // Чёрный
-  #endif
-#endif
-
 #define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN 512                           // Максимально число окон на холсте
 #define MaxSpeed (1 << (CellPow - 4))         // Максимальное ускорение курсора
@@ -97,18 +64,19 @@ enum {
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
 enum {
-    CBlack, CBlue, CRed, CGrey, CGreen, COrange, CGold, CWhite,
-    CIBlack, CIBlue, CIRed, CIGrey, CIGreen, CIOrange, CIGold, CIWhite,
-    CBBlack, CBBlue, CBRed, CBGrey, CBGreen, CBOrange, CBGold, CBWhite,
-    CBIBlack, CBIBlue, CBIRed, CBIGrey, CBIGreen, CBIOrange, CBIGold, CBIWhite,
-    CCBlack, CCBlue, CCRed, CCGrey, CCGreen, CCOrange, CCGold, CCWhite,
-    CCIBlack, CCIBlue, CCIRed, CCIGrey, CCIGreen, CCIOrange, CCIGold, CCIWhite,
-    CCBBlack, CCBBlue, CCBRed, CCBGrey, CCBGreen, CCBOrange, CCBGold, CCBWhite,
-    CCBIBlack, CCBIBlue, CCBIRed, CCBIGrey, CCBIGreen, CCBIOrange, CCBIGold, CCBIWhite,
-    BBlack, BBlue, BRed, BGrey, BGreen, BOrange, BGold, BWhite };
-
-#define FFone   BWhite
-#define FBorder BBlack
+    Cblack, Cblue, Cred, Cgrey, Cgreen, Corange, Cgold, Cwhite,
+    CIblack, CIblue, CIred, CIgrey, CIgreen, CIorange, CIgold, CIwhite,
+    CBblack, CBblue, CBred, CBgrey, CBgreen, CBorange, CBgold, CBwhite,
+    CBIblack, CBIblue, CBIred, CBIgrey, CBIgreen, CBIorange, CBIgold, CBIwhite,
+    CCblack, CCblue, CCred, CCgrey, CCgreen, CCorange, CCgold, CCwhite,
+    CCIblack, CCIblue, CCIred, CCIgrey, CCIgreen, CCIorange, CCIgold, CCIwhite,
+    CCBblack, CCBblue, CCBred, CCBgrey, CCBgreen, CCBorange, CCBgold, CCBwhite,
+    CCBIblack, CCBIblue, CCBIred, CCBIgrey, CCBIgreen, CCBIorange, CCBIgold, CCBIwhite,
+    Fblack, Fblue, Fred, Fgrey, Fgreen, Forange, Fgold, Fwhite };
+#define FFone   Fwhite
+#define FBorder Fblack
+#define CFDeep  24                            // 3 8 24 бит цветность
+#define CFH     On                            // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
 typedef struct {
     uint8_t color   : 3;                      // бит 210    цвет
     uint8_t inverse : 1;                      // бит 3      инверсия
