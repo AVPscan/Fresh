@@ -23,7 +23,7 @@ void body(void) {  // пока не дописано WinData,Render
 
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
 void Init(void) {
-  ugoc control = Window(-CGold, -2, -2), W1 = Window(CBIGold, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Rand(64) + On, Rand(10), Rand(10), 80, 24);
+  ugoc control = Window(On,CGold, -2, -2), W1 = Window(Off,CBIGold, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Off,Rand(64) + On, Rand(10), Rand(10), 80, 24);
   VKeys(K_ALT_ESC,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Events(K_ALT_TAB, K_ALT_ENT); Execs(WinDown, WinUp);
   WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), CBBlue, CBBlue); WinEvent(control, K_Ctrl_K, WSwitch);
   WinEvent(control, K_NO, body); WinView(W2, 10, 3); WinSet(W1, On, On); WinSet(W2, Off, Off); }
@@ -31,7 +31,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(CBlack,AltBufOff); Print(CBOrange,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(COrange,"in 07.02.2026 version 8.89 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(COrange,"in 07.02.2026 version 8.90 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

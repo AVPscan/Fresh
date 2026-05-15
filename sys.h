@@ -97,7 +97,7 @@ enum {
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
 enum {
-    CBlack = 1, CBlue, CRed, CGrey, CGreen, COrange, CGold, CWhite,
+    CBlack, CBlue, CRed, CGrey, CGreen, COrange, CGold, CWhite,
     CIBlack, CIBlue, CIRed, CIGrey, CIGreen, CIOrange, CIGold, CIWhite,
     CBBlack, CBBlue, CBRed, CBGrey, CBGreen, CBOrange, CBGold, CBWhite,
     CBIBlack, CBIBlue, CBIRed, CBIGrey, CBIGreen, CBIOrange, CBIGold, CBIWhite,
@@ -281,7 +281,7 @@ void WinDown(void);                                                   // Рот�
 void WinUp(void);                                                     // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно выше остальных подобных
 void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
-uint16_t _Window(int8_t col, uint8_t count, ugoc *args);              // Создание окна с палитрой col при col<0 статичное окно
+uint16_t _Window(uint8_t t, int8_t col, uint8_t count, ugoc *args);   // Создание окна с палитрой col при col<0 статичное окно
 void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Настройка статического окна привязка функций к кодам клавиш
 void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
@@ -301,7 +301,7 @@ Cell GetCycles(void);                                                 // Тик�
 void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
-#define Window(col, ...) _Window(col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
+#define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinEvent(n, cur, ...) _WEvent(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define WinSet(n, ...) _WSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
