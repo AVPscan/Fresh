@@ -27,6 +27,8 @@
 #define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN 512                           // Максимально число окон на холсте
 #define MaxSpeed (1 << (CellPow - 4))         // Максимальное ускорение курсора
+#define CFDeep  24                            // 3 8 24 бит цветность
+#define CFH     1                             // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
 #if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
@@ -63,20 +65,32 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
+
+#if (CFH == 0)
 enum {
-    Cblack, Cblue, Cred, Cgrey, Cgreen, Corange, Cgold, Cwhite,
-    CIblack, CIblue, CIred, CIgrey, CIgreen, CIorange, CIgold, CIwhite,
-    CBblack, CBblue, CBred, CBgrey, CBgreen, CBorange, CBgold, CBwhite,
-    CBIblack, CBIblue, CBIred, CBIgrey, CBIgreen, CBIorange, CBIgold, CBIwhite,
-    CCblack, CCblue, CCred, CCgrey, CCgreen, CCorange, CCgold, CCwhite,
-    CCIblack, CCIblue, CCIred, CCIgrey, CCIgreen, CCIorange, CCIgold, CCIwhite,
-    CCBblack, CCBblue, CCBred, CCBgrey, CCBgreen, CCBorange, CCBgold, CCBwhite,
-    CCBIblack, CCBIblue, CCBIred, CCBIgrey, CCBIgreen, CCBIorange, CCBIgold, CCBIwhite,
-    Fblack, Fblue, Fred, Fgrey, Fgreen, Forange, Fgold, Fwhite };
+    black, olive, marsala, ochre, navy, cyan, fuchsia, white,
+    blackI, oliveI, marsalaI, ochreI, navyI, cyanI, fuchsiaI, whiteI,
+    blackB, oliveB, marsalaB, ochreB, navyB, cyanB, fuchsiaB, whiteB,
+    blackBI, oliveBI, marsalaBI, ochreBI, navyBI, cyanBI, fuchsiaBI, whiteBI,
+    blackC, oliveC, marsalaC, ochreC, navyC, cyanC, fuchsiaC, whiteC,
+    blackCI, oliveCI, marsalaCI, ochreCI, navyCI, cyanCI, fuchsiaCI, whiteCI,
+    blackCB, oliveCB, marsalaCB, ochreCB, navyCB, cyanCB, fuchsiaCB, whiteCB,
+    blackCBI, oliveCBI, marsalaCBI, ochreCBI, navyCBI, cyanCBI, fuchsiaCBI, whiteCBI,
+    Fblack, Folive, Fmarsala, Fochre, Fnavy, Fcyan, Ffuchsia, Fwhite };
+#else
+enum {
+    black, navy, olive, cyan, marsala, fuchsia, ochre, white,
+    blackI, navyI, oliveI, cyanI, marsalaI, fuchsiaI, ochreI, whiteI,
+    blackB, navyB, oliveB, cyanB, marsalaB, fuchsiaB, ochreB, whiteB,
+    blackBI, navyBI, oliveBI, cyanBI, marsalaBI, fuchsiaBI, ochreBI, whiteBI,
+    blackC, navyC, oliveC, cyanC, marsalaC, fuchsiaC, ochreC, whiteC,
+    blackCI, navyCI, oliveCI, cyanCI, marsalaCI, fuchsiaCI, ochreCI, whiteCI,
+    blackCB, navyCB, oliveCB, cyanCB, marsalaCB, fuchsiaCB, ochreCB, whiteCB,
+    blackCBI, navyCBI, oliveCBI, cyanCBI, marsalaCBI, fuchsiaCBI, ochreCBI, whiteCBI,
+    Fblack, Fnavy, Folive, Fcyan, Fmarsala, Ffuchsia, Fochre, Fwhite };
+#endif
 #define FFone   Fwhite
 #define FBorder Fblack
-#define CFDeep  24                            // 3 8 24 бит цветность
-#define CFH     On                            // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
 typedef struct {
     uint8_t color   : 3;                      // бит 210    цвет
     uint8_t inverse : 1;                      // бит 3      инверсия
