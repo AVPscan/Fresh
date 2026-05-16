@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define CFDeep    3                          // Глубина {3 8 24} бита цветности
+#define CFDeep    24                          // Глубина {3 8 24} бита
 #define CFH       1                           // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM},
                                               // можно не менять создаётся две палитры {в альтернативной сортировки нет}
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
@@ -66,23 +66,24 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
-enum { Fblack, f0, Fnavy, f1, Folive, f2, Fcyan, f3, Fmarsala, f4, Ffuchsia, f5, Fochre, f6, f7, Fwhite };
+enum { Fblack, Fnavy, Folive, Fcyan, Fmarsala, Ffuchsia, Fochre, Fwhite };
 enum {
-    black, c0, navy, c1, olive, c2, cyan, c3, marsala, c4, fuchsia, c5, ochre, c6, c7, white,
-    blackI, cI0, navyI, cI1, oliveI, cI2, cyanI, cI3, marsalaI, cI4, fuchsiaI, cI5, ochreI, cI6, cI7, whiteI,
-    blackB, cB0, navyB, cB1, oliveB, cB2, cyanB, cB3, marsalaB, cB4, fuchsiaB, cB5, ochreB, cB6, cB7, whiteB,
-    blackBI, cBI0, navyBI, cBI1, oliveBI, cBI2, cyanBI, cBI3, marsalaBI, cBI4, fuchsiaBI, cBI5, ochreBI, cBI6, cBI7, whiteBI,
-    blackC, cC0, navyC, cC1, oliveC, cC2, cyanC, cC3, marsalaC, cC4, fuchsiaC, cC5, ochreC, cC6, cC7, whiteC,
-    blackCI, cCI0, navyCI, cCI1, oliveCI, cCI2, cyanCI, cCI3, marsalaCI, cCI4, fuchsiaCI, cCI5, ochreCI, cCI6, cCI7, whiteCI,
-    blackCB, cCB0, navyCB, cCB1, oliveCB, cCB2, cyanCB, cCB3, marsalaCB, cCB4, fuchsiaCB, cCB5, ochreCB, cCB6, cCB7, whiteCB,
-    blackCBI, cCBI0, navyCBI, cCBI1, oliveCBI, cCBI2, cyanCBI, cCBI3, marsalaCBI, cCBI4, fuchsiaCBI, cCBI5, ochreCBI, cCBI6, cCBI7, whiteCBI };
+    black, navy, olive, cyan, marsala, fuchsia, ochre, white,
+    blackI, navyI, oliveI, cyanI, marsalaI, fuchsiaI, ochreI, whiteI,
+    blackB, navyB, oliveB, cyanB, marsalaB, fuchsiaB, ochreB, whiteB,
+    blackBI, navyBI, oliveBI, cyanBI, marsalaBI, fuchsiaBI, ochreBI, whiteBI,
+    blackC, navyC, oliveC, cyanC, marsalaC, fuchsiaC, ochreC, whiteC,
+    blackCI, navyCI, oliveCI, cyanCI, marsalaCI, fuchsiaCI, ochreCI, whiteCI,
+    blackCB, navyCB, oliveCB, cyanCB, marsalaCB, fuchsiaCB, ochreCB, whiteCB,
+    blackCBI, navyCBI, oliveCBI, cyanCBI, marsalaCBI, fuchsiaCBI, ochreCBI, whiteCBI };
 #define FFone   Fwhite
 #define FBorder Fblack
 typedef struct {
-    uint8_t color   : 4;                      // бит 3210   цвет
-    uint8_t inverse : 1;                      // бит 4      инверсия
-    uint8_t bold    : 1;                      // бит 5      толстый
-    uint8_t cursive : 1;                      // бит 6      курсив
+    uint8_t color   : 3;                      // бит 210    цвет
+    uint8_t inverse : 1;                      // бит 3      инверсия
+    uint8_t bold    : 1;                      // бит 4      толстый
+    uint8_t cursive : 1;                      // бит 5      курсив
+    uint8_t reserve : 1;                      // бит 6      
     uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
 } Info;   
 typedef struct {                              //UTFinfo  
@@ -102,17 +103,17 @@ typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct {
-    uint8_t color   : 4;                      // бит 3210   цвет
-    uint8_t inverse : 1;                      // бит 4      инверсия
-    uint8_t bold    : 1;                      // бит 5      толстый
-    uint8_t cursive : 1;                      // бит 6      курсив
-    uint8_t vision  : 1;                      // бит 7      {1} отображается {0} не отображается
+    uint8_t color   : 4;                      // бит 210    цвет
+    uint8_t inverse : 1;                      // бит 3      инверсия
+    uint8_t bold    : 1;                      // бит 4      толстый
+    uint8_t cursive : 1;                      // бит 5      курсив
+    uint8_t cursor  : 1;                      // бит 6      {1} показывать {0} не показывать - курсор окна
+    uint8_t nowrap  : 1;                      // бит 7      {1} включен {0} выключен авто перенос строк окна
 } WF;
 typedef struct {
-    uint8_t cursor  : 1;                      // бит 0      {1} показывать {0} не показывать - курсор окна
-    uint8_t nowrap  : 1;                      // бит 1      {1} включен {0} выключен авто перенос строк окна
-    uint8_t sd      : 1;                      // бит 2      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-    uint8_t wait    : 1;                      // бит 3      {1} занято заливаются данные из файла/порта {0} свободно
+    uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
+    uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
+    uint8_t wait    : 1;                      // бит 2      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
@@ -125,8 +126,8 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SFon = 2 * 16 * sizeof(PalBuf),                                           // Размер 2х буферов фона (16 цветов)
-    SPal = 2 * 8 * 16 * sizeof(PalBuf),                                       // Размер 2х буферов палитр (8 режимов по 16 цветов)
+    SFon = 2 * 8 * sizeof(PalBuf),                                            // Размер 2х буферов фона (8 цветов)
+    SPal = 2 * 8 * 8 * sizeof(PalBuf),                                        // Размер 2х буферов палитр (8 режимов по 8 цветов)
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
