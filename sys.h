@@ -28,10 +28,37 @@
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
 #define CFColour  8                           // Цветов будет создано разбивкой спектра
-#define CFDeep    24                          // 3 8 24 бит цветность
+#define CFDeep    24                          // Глубина {3 8 24} бита цветности
 #define CFH       1                           // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
-#if CellPow < 15
-    typedef uint16_t ugoc;
+
+#if (CFH == 1)
+enum {
+    black, navy, olive, cyan, marsala, fuchsia, ochre, white,
+    blackI, navyI, oliveI, cyanI, marsalaI, fuchsiaI, ochreI, whiteI,
+    blackB, navyB, oliveB, cyanB, marsalaB, fuchsiaB, ochreB, whiteB,
+    blackBI, navyBI, oliveBI, cyanBI, marsalaBI, fuchsiaBI, ochreBI, whiteBI,
+    blackC, navyC, oliveC, cyanC, marsalaC, fuchsiaC, ochreC, whiteC,
+    blackCI, navyCI, oliveCI, cyanCI, marsalaCI, fuchsiaCI, ochreCI, whiteCI,
+    blackCB, navyCB, oliveCB, cyanCB, marsalaCB, fuchsiaCB, ochreCB, whiteCB,
+    blackCBI, navyCBI, oliveCBI, cyanCBI, marsalaCBI, fuchsiaCBI, ochreCBI, whiteCBI,
+    Fblack, Fnavy, Folive, Fcyan, Fmarsala, Ffuchsia, Fochre, Fwhite };
+#else
+enum {
+    black, olive, marsala, ochre, navy, cyan, fuchsia, white,
+    blackI, oliveI, marsalaI, ochreI, navyI, cyanI, fuchsiaI, whiteI,
+    blackB, oliveB, marsalaB, ochreB, navyB, cyanB, fuchsiaB, whiteB,
+    blackBI, oliveBI, marsalaBI, ochreBI, navyBI, cyanBI, fuchsiaBI, whiteBI,
+    blackC, oliveC, marsalaC, ochreC, navyC, cyanC, fuchsiaC, whiteC,
+    blackCI, oliveCI, marsalaCI, ochreCI, navyCI, cyanCI, fuchsiaCI, whiteCI,
+    blackCB, oliveCB, marsalaCB, ochreCB, navyCB, cyanCB, fuchsiaCB, whiteCB,
+    blackCBI, oliveCBI, marsalaCBI, ochreCBI, navyCBI, cyanCBI, fuchsiaCBI, whiteCBI,
+    Fblack, Folive, Fmarsala, Fochre, Fnavy, Fcyan, Ffuchsia, Fwhite };
+#endif
+#define FFone   Fwhite
+#define FBorder Fblack
+
+#if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
+    typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {(ugoc)VP.Rnd текущее значение генератора} 
     typedef int16_t  goc;
     #define RNG_A 0x4F2D
     #define RNG_B 0x3A7B
@@ -46,7 +73,7 @@
     #define RNG_A 0x9E3779B97F4A7C15ULL
     #define RNG_B 0xBF58476D1CE4E5B9ULL
 #endif
-#define UGOC_MAX ((ugoc)~(ugoc)0)
+#define UGOC_MAX ((ugoc)~(ugoc)0)             // Вычисляем пределы для нового типа данных
 #define GOC_MAX  ((goc)(UGOC_MAX >> 1))
 #define GOC_MIN  (~GOC_MAX)
 
@@ -66,32 +93,6 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
-
-#if (CFH == 0)
-enum {
-    black, olive, marsala, ochre, navy, cyan, fuchsia, white,
-    blackI, oliveI, marsalaI, ochreI, navyI, cyanI, fuchsiaI, whiteI,
-    blackB, oliveB, marsalaB, ochreB, navyB, cyanB, fuchsiaB, whiteB,
-    blackBI, oliveBI, marsalaBI, ochreBI, navyBI, cyanBI, fuchsiaBI, whiteBI,
-    blackC, oliveC, marsalaC, ochreC, navyC, cyanC, fuchsiaC, whiteC,
-    blackCI, oliveCI, marsalaCI, ochreCI, navyCI, cyanCI, fuchsiaCI, whiteCI,
-    blackCB, oliveCB, marsalaCB, ochreCB, navyCB, cyanCB, fuchsiaCB, whiteCB,
-    blackCBI, oliveCBI, marsalaCBI, ochreCBI, navyCBI, cyanCBI, fuchsiaCBI, whiteCBI,
-    Fblack, Folive, Fmarsala, Fochre, Fnavy, Fcyan, Ffuchsia, Fwhite };
-#else
-enum {
-    black, navy, olive, cyan, marsala, fuchsia, ochre, white,
-    blackI, navyI, oliveI, cyanI, marsalaI, fuchsiaI, ochreI, whiteI,
-    blackB, navyB, oliveB, cyanB, marsalaB, fuchsiaB, ochreB, whiteB,
-    blackBI, navyBI, oliveBI, cyanBI, marsalaBI, fuchsiaBI, ochreBI, whiteBI,
-    blackC, navyC, oliveC, cyanC, marsalaC, fuchsiaC, ochreC, whiteC,
-    blackCI, navyCI, oliveCI, cyanCI, marsalaCI, fuchsiaCI, ochreCI, whiteCI,
-    blackCB, navyCB, oliveCB, cyanCB, marsalaCB, fuchsiaCB, ochreCB, whiteCB,
-    blackCBI, navyCBI, oliveCBI, cyanCBI, marsalaCBI, fuchsiaCBI, ochreCBI, whiteCBI,
-    Fblack, Fnavy, Folive, Fcyan, Fmarsala, Ffuchsia, Fochre, Fwhite };
-#endif
-#define FFone   Fwhite
-#define FBorder Fblack
 typedef struct {
     uint8_t color   : 3;                      // бит 210    цвет
     uint8_t inverse : 1;                      // бит 3      инверсия

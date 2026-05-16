@@ -32,7 +32,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(black,AltBufOff); Print(navyB,"Created by Alexey Pozdnyakov "); flag = Off;
-        Print(navyC,"in 07.02.2026 version 8.95 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
+        Print(navyC,"in 07.02.2026 version 8.96 email: avp70ru@mail.ru https://github.com/AVPscan\n"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
