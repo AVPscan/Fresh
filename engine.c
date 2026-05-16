@@ -131,7 +131,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
     #else
       ct = c;
     #endif
-    in = (k) ? ((ct) ? (uint32_t)(((1 << p) * ct) / y) - On : Off) : (uint32_t)(((1 << p) / y) * ct);
+    in = (ct) ? (uint32_t)(((1 << p) * ct) / y) - On : Off; if (!k && ct && in != y) in++;
     src->l = mode->l; MemCpy(src->d, mode->d, src->l); base = (char*)(src->d + src->l); i = src->l; j = On;
     if (k > On) { j += b1; } while(j--) { t = in & 255; in >>= b3; if (k) { *base++ = ';'; i++; }
       if (t / 100) { *base++ = 0x30 + (t / 100); t %= 100; i++; } if (t / 10) { *base++ = 0x30 + (t / 10); t %= 10; i++; } *base++ = 0x30 + t; i++; }
