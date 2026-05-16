@@ -117,27 +117,27 @@ void BPrint(uint8_t n, char *str) { if (!str) return;
   SysWrite(Cdbuf, dst + len - Cdbuf); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
 #if (CFH == 1)
-  uint8_t human_swap[] = { 0, 4, 1, 5, 2, 6, 3, 7 };
+  uint8_t h[] = { 0, 4, 1, 5, 2, 6, 3, 7 };
 #endif
-  PalBuf *pal, *mode, *src; uint32_t in, t; uint8_t i, j, ct, k = On, p = 8, c = p;
+  PalBuf *pal, *mode, *src; uint32_t in, t; uint8_t i, j, ct, k = On, p = b3, z = CFColour, y =z - On,c = z;
   char* base = (char*)addr; char* cbase[] = { "\3\33[3", "\6\33[38;5", "\6\33[38;2" }; 
   char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
   Cdata = base; Cinfo = (uint8_t*)(base + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdpal = (char*)(Coffset + SOffset);
   Cdkey = (uint8_t*)(Cdpal + SPal); Cdcon = (ugoc*)(Cdkey + SKeys); Cdwin = Cdcon + SConvas; Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw;
-  Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; if (CFDeep < 8) { k--; p = 3; } else if (CFDeep > 8) { k++; p = 24; }
+  Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; if (CFDeep < b3) { k--; p = 3; } else if (CFDeep > b3) { k++; p = 24; }
   while(c--) { src = APal(b6 + c); mode = (PalBuf*)cbase[k];
     #if (CFH == 1)
-      ct = human_swap[c];
+      ct = h[c];
     #else
       ct = c;
     #endif
-    in = (k) ? ((ct) ? (uint32_t)(((1 << p) * ct) / 7) - On : Off) : (uint32_t)(((1 << p) / 7) * ct);
+    in = (k) ? ((ct) ? (uint32_t)(((1 << p) * ct) / y) - On : Off) : (uint32_t)(((1 << p) / y) * ct);
     src->l = mode->l; MemCpy(src->d, mode->d, src->l); base = (char*)(src->d + src->l); i = src->l; j = On;
-    if (k > On) { j += b1; } while(j--) { t = in & 255; in >>= 8; if (k) { *base++ = ';'; i++; }        
-      if (t / 100) { *base++ = 48 + (t / 100); t %= 100; i++; } if (t / 10) { *base++ = 48 + (t / 10); t %= 10; i++; } *base++ = 48 + t; i++; }
-    *base = 'm'; src->l = i + On; } c = 8;
-  while(c--) { src = APal(b6 + c); i = 8;
-    while(i--) { pal = APal((i << 3) + c); mode = (PalBuf*)modes[i]; pal->l = src->l + mode->l - On;
+    if (k > On) { j += b1; } while(j--) { t = in & 255; in >>= b3; if (k) { *base++ = ';'; i++; }
+      if (t / 100) { *base++ = 0x30 + (t / 100); t %= 100; i++; } if (t / 10) { *base++ = 0x30 + (t / 10); t %= 10; i++; } *base++ = 0x30 + t; i++; }
+    *base = 'm'; src->l = i + On; } c = z;
+  while(c--) { src = APal(b6 + c); i = b3;
+    while(i--) { pal = APal((i << b10) + c); mode = (PalBuf*)modes[i]; pal->l = src->l + mode->l - On;
       MemCpy(pal->d, src->d, src->l - On); MemCpy(pal->d + src->l - On, mode->d, mode->l); }
     *(src->d + b1) = '4'; } VP.Win = MAX_WIN; Convas.Win = VP.Win; Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win;
   Convas.CW = CellLine; Convas.W = Convas.CW; Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Fone = FFone; Convas.Border = FBorder;

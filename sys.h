@@ -24,11 +24,12 @@
 #define AltBufOn    "\033[?1049h"             // Включаем альтернативный буфер
 #define AltBufOff   "\033[?1049l"             // Выключаем альтернативный буфер
 
-#define CellPow 13                            // Масштаб холста 13 16к, 14 32к, 15 64к.... 
-#define MAX_WIN 512                           // Максимально число окон на холсте
-#define MaxSpeed (1 << (CellPow - 4))         // Максимальное ускорение курсора
-#define CFDeep  24                            // 3 8 24 бит цветность
-#define CFH     1                             // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
+#define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
+#define MAX_WIN   512                         // Максимально число окон на холсте
+#define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
+#define CFColour  8                           // Цветов будет создано разбивкой спектра
+#define CFDeep    24                          // 3 8 24 бит цветность
+#define CFH       1                           // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM}
 #if CellPow < 15
     typedef uint16_t ugoc;
     typedef int16_t  goc;
@@ -139,7 +140,7 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SPal = 9 * 8 * sizeof(PalBuf),                                            // Размер данных палитр (8 режимов по 8 цветов) 32 байта на каждую и 8 цветов бордюра
+    SPal = 9 * CFColour * sizeof(PalBuf),                                     // Размер данных палитр (8 режимов по CFColour цветов) и CFColour цветов бордюра
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
