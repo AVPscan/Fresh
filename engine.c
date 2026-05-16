@@ -145,7 +145,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off); IRnd();
-    SyncSize(VRam.addr); Print(Convas.Fone,AltBufOn HideCur WrapOff MouseX10on); BPrint(Convas.Border, HideCur Cls); }
+    SyncSize(VRam.addr); Print(Convas.Fone,AltBufOn HideCur WrapOn MouseX10on); BPrint(Convas.Border, HideCur Cls); }
   else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Convas.Fone,AltBufOff Reset ShowCur WrapOn MouseX10off);
     FreeRam(VRam.addr, VRam.size); } }
   return On; }
