@@ -194,6 +194,19 @@ uint8_t ViewPort(void) { Buf.Ctrl = Off;
 void IRnd(void) { VP.Rnd = GetDelay() | On; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
 
+int8_t Fsin(int16_t u) { u &= 511; int8_t r = u & 63; r = (u & b6) ? 63 - r: r; r = (u & b7) ? 127 - r: r; return (u & b8) ? -r: r; }
+int8_t Fcos(int16_t u) { return Fsin(u + 128); }
+
+void ycbcr_rgb(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b) {
+  int16_t Y  = (int16_t)y - 16, Cb = (int16_t)cb - 128, Cr = (int16_t)cr - 128;
+  int32_t r_ = (298 * Y + 409 * Cr + 128) >> 8, g_ = (298 * Y - 100 * Cb - 208 * Cr + 128) >> 8;
+  int32_t b_ = (298 * Y + 516 * Cb + 128) >> 8; *r = (r_ < 0) ? Off : (r_ > 255 ? 255 : (uint8_t)r_);
+  *g = (g_ < 0) ? Off : (g_ > 255 ? 255 : (uint8_t)g_); *b = (b_ < 0) ? Off : (b_ > 255 ? 255 : (uint8_t)b_); }
+void colour(uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b) { // n=N-1!
+  int16_t a = (i * 511) / n; ycbcr_rgb(a, 128 + Fsin(a), 128 + Fcos(a), r, g, b);
+  if (d < 8) { *r = ((uint16_t)(*r + *g + *b) > 384 ? 90 : 30) + (((*r > 127) << 2) | ((*g > 127) << 1) | (*b > 127)); }
+  else if (d < 24 ) { *r = 16 + (uint16_t)((36 * (*r * 5 + 127)) + (6 * (*g * 5 + 127)) + (*b * 5 + 127)) / 255; } }
+  
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
