@@ -27,9 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define CFDeep    24                          // Глубина {3 8 24} бита
-#define CFH       1                           // Вы гуманитарий?) На самом деле сложнее, нужна ли сортировка яркости {виновна в этом IBM},
-                                              // можно не менять создаётся две палитры {в альтернативной сортировки нет}
+#define CFDeep    8                           // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
     typedef int16_t  goc;
@@ -236,6 +234,10 @@ uint8_t PopKey(void);                                                 // Взя�
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
+int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
+int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
+void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);  // Переход YCbCr --> RBG!
+void ColourRGB(uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b);    // Генерация цвета для i [0....n] d глубина --> RGB!
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
