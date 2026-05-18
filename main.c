@@ -10,8 +10,8 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = 8; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v';
-  Print(Convas.Fone,Home); while(i--) { BPrint(7 - i," "); } Print(Convas.Fone,"\n"); i = 8;
+  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = Colours; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v';
+  Print(Convas.Fone,Home); while(i--) { BPrint(Colours - On - i," "); } Print(Convas.Fone,"\n"); i = 8;
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d                    ", s, K_Mouse, c, r);
   if (StrLen(b) > 43) { *(b + 43) = Off; } if (StrLen(b) >= c) { *(b + c - On) = Off; } Print(oliveB,b); if (r < 3) return;
   snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d                           ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
@@ -33,7 +33,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Convas.Fone,AltBufOff); Print(fuchsiaB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(marsalaC," in 07.02.2026 version 9.03 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(marsalaC," in 07.02.2026 version 9.04 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

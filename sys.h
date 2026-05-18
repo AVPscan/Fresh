@@ -27,7 +27,8 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define CFDeep    8                           // Глубина {3 8 24} бита
+#define Colours   8                           // Максимальное количество цветов
+#define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
     typedef int16_t  goc;
@@ -64,16 +65,16 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
-enum { Fblack, Fnavy, Folive, Fcyan, Fmarsala, Ffuchsia, Fochre, Fwhite };
+enum { Fblack, Fnavy, Fmarsala, Ffuchsia, Folive, Fochre, Fcyan, Fwhite, };
 enum {
-    black, navy, olive, cyan, marsala, fuchsia, ochre, white,
-    blackI, navyI, oliveI, cyanI, marsalaI, fuchsiaI, ochreI, whiteI,
-    blackB, navyB, oliveB, cyanB, marsalaB, fuchsiaB, ochreB, whiteB,
-    blackBI, navyBI, oliveBI, cyanBI, marsalaBI, fuchsiaBI, ochreBI, whiteBI,
-    blackC, navyC, oliveC, cyanC, marsalaC, fuchsiaC, ochreC, whiteC,
-    blackCI, navyCI, oliveCI, cyanCI, marsalaCI, fuchsiaCI, ochreCI, whiteCI,
-    blackCB, navyCB, oliveCB, cyanCB, marsalaCB, fuchsiaCB, ochreCB, whiteCB,
-    blackCBI, navyCBI, oliveCBI, cyanCBI, marsalaCBI, fuchsiaCBI, ochreCBI, whiteCBI };
+    black, navy, marsala, fuchsia, olive, ochre, cyan, white,
+    blackI, navyI, marsalaI, fuchsiaI, oliveI, ochreI, cyanI, whiteI,
+    blackB, navyB, marsalaB, fuchsiaB, oliveB, ochreB, cyanB, whiteB,
+    blackBI, navyBI, marsalaBI, fuchsiaBI, oliveBI, ochreBI, cyanBI, whiteBI,
+    blackC, navyC, marsalaC, fuchsiaC, oliveC, ochreC, cyanC, whiteC,
+    blackCI, navyCI, marsalaCI, fuchsiaCI, oliveCI, ochreCI, cyanCI, whiteCI,
+    blackCB, navyCB, marsalaCB, fuchsiaCB, oliveCB, ochreCB, cyanCB, whiteCB,
+    blackCBI, navyCBI, marsalaCBI, fuchsiaCBI, oliveCBI, ochreCBI, cyanCBI, whiteCBI };
 #define FFone   Fwhite
 #define FBorder Fblack
 typedef struct {
@@ -124,8 +125,8 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SFon = 2 * 8 * sizeof(PalBuf),                                            // Размер 2х буферов фона (8 цветов)
-    SPal = 2 * 8 * 8 * sizeof(PalBuf),                                        // Размер 2х буферов палитр (8 режимов по 8 цветов)
+    SFon = 2 * Colours * sizeof(PalBuf),                                      // Размер 2х буферов фона (Colours цветов)
+    SPal = 2 * Colours * 8 * sizeof(PalBuf),                                  // Размер 2х буферов палитр (8 режимов по Colours цветов)
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
@@ -236,8 +237,11 @@ void Print(uint8_t pal, char *str);                                   // Выв�
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
 int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
-void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);  // Переход YCbCr --> RBG!
-void ColourRGB(uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b);    // Генерация цвета для i [0....n] d глубина --> RGB!
+void RGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);   // Преобразовать i/n часть спектра глубиной 24 бита в RGB
+void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);        // Переход YCbCr --> RBG!
+void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b); // Генерация цвета для i/n части спектра глубиной d --> RGB!
+void SetPalette(uint8_t set, uint8_t deep);                           // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
+void SwitchPal(void);                                                 // Переключить палитру
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -250,7 +254,6 @@ void RPEncode(void);                                                  // Про�
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
-void SwitchPal(void);                                                 // Переключить палитру
 void WSwitch(void);                                                   // Показать окно {Спрятать окно}
 void WASwitch(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
