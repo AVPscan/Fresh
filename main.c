@@ -10,8 +10,9 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = Colours; ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v';
-  Print(Convas.Fone,Home); while(i--) { BPrint(Colours - On - i," "); } Print(Convas.Fone,"\n"); i = 8;
+  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, i = Colours; if (i > b5) { i = b5; } else { if (i < b1) i = b1; } w = i - On;
+  Print(Convas.Fone,Home); while(i--) { BPrint(w - i," "); } Print(Convas.Fone,"\n");
+  ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 8;
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d                    ", s, K_Mouse, c, r);
   if (StrLen(b) > 43) { *(b + 43) = Off; } if (StrLen(b) >= c) { *(b + c - On) = Off; } Print(oliveB,b); if (r < 3) return;
   snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d                           ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
@@ -23,7 +24,7 @@ void body(void) {  // пока не дописано WinData,Render
   snprintf(p, 30, "                   "); if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c) = Off; } if (r > 3) Print(navyCB,b); } }
 
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
-void sb(void) { Convas.Border++; Convas.Border &= b210; BPrint(Convas.Border,Cls); }
+void sb(void) { if (++Convas.Border > Colours) { Convas.Border = Off; } BPrint(Convas.Border,Cls); }
 void Init(void) {
   ugoc control = Window(On,olive, -2, -2), W1 = Window(Off,oliveBI, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Off,Rand(64), Rand(10), Rand(10), 80, 24);
   VKeys(K_ALT_ESC,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp);
@@ -33,7 +34,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Convas.Fone,AltBufOff); Print(fuchsiaB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(marsalaC," in 07.02.2026 version 9.04 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(marsalaC," in 07.02.2026 version 9.05 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

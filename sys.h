@@ -28,7 +28,7 @@
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
 #define Colours   8                           // Максимальное количество цветов
-#define CFDeep    24                          // Глубина {3 8 24} бита
+#define CFDeep    8                           // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
     typedef int16_t  goc;
@@ -77,45 +77,39 @@ enum {
     blackCBI, navyCBI, marsalaCBI, fuchsiaCBI, oliveCBI, ochreCBI, cyanCBI, whiteCBI };
 #define FFone   Fwhite
 #define FBorder Fblack
-typedef struct {
-    uint8_t color   : 3;                      // бит 210    цвет
-    uint8_t inverse : 1;                      // бит 3      инверсия
-    uint8_t bold    : 1;                      // бит 4      толстый
-    uint8_t cursive : 1;                      // бит 5      курсив
-    uint8_t reserve : 1;                      // бит 6      
-    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
-} Info;   
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
     uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
-    uint8_t NoFull  : 1;                      // бит 6      {1} не влезло в буфер {0} всё норм (UTF8infoTile)
-    uint8_t Error   : 1;                      // бит 7      {1} ошибка {0} UTF8info признак содержимого ячейки
+    uint8_t ds      : 1;                      // бит 6      {0} Data {1} Structure
+    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
 } Data;
 typedef struct {
-    uint8_t len     : 5;                      // бит 43210  длина = 1+(0-31) ascii {32...126} визуальная длина равна длине в байтах (числа)
-    uint8_t format  : 2;                      // бит 65     {10}/{11} к левому {01} к правому {00} по центру (как заполнять поле структуры)
-    uint8_t type    : 1;                      // бит 7      {1} структура {0} UTF8 признак содержимого ячейки
+    uint8_t len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
+    uint8_t right   : 1;                      // бит 4      {1} к правому
+    uint8_t left    : 1;                      // бит 5      {1} к левому {00}/{11} по центру (как заполнять поле структуры)
+    uint8_t ds      : 1;                      // бит 6      {1} Structure {0} Data
+    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
 } Structure;
+typedef struct {
+    uint8_t col        ;                      // бит x      цвет {максимум 32 цветовых оттенка из за трёх атрибутов}
+    uint8_t inverse : 1;                      // бит x + 1  инверсия
+    uint8_t bold    : 1;                      // бит x + 2  толстый
+    uint8_t cursive : 1;                      // бит x + 3  курсив
+} palette;
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct {
-    uint8_t color   : 4;                      // бит 210    цвет
-    uint8_t inverse : 1;                      // бит 3      инверсия
-    uint8_t bold    : 1;                      // бит 4      толстый
-    uint8_t cursive : 1;                      // бит 5      курсив
-    uint8_t cursor  : 1;                      // бит 6      {1} показывать {0} не показывать - курсор окна
-    uint8_t nowrap  : 1;                      // бит 7      {1} включен {0} выключен авто перенос строк окна
-} WF;
-typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
     uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
-    uint8_t wait    : 1;                      // бит 2      {1} занято заливаются данные из файла/порта {0} свободно
+    uint8_t cursor  : 1;                      // бит 2      {1} показывать {0} не показывать - курсор окна
+    uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
+    uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
-typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t WF, EF; } Windows;
+typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
     CellLine = 1 << CellPow,                                                  // Определение ширины холста
@@ -153,8 +147,8 @@ _Static_assert((1 << P_shift) == sizeof(PalBuf), "P_shift mismatch");
 _Static_assert((1 << K_shift) == sizeof(KeyBuf), "K_shift mismatch");
 _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Data(r)       (Cdata + ((r) << D_shift))                              // адрес начала буфера строки холста
-#define Info(c, r)    (Cinfo + (c) + ((r) << Ds_shift))                       // адрес атрибута ячейки холста
-#define Ds(c, r)      (Cds + (c) + ((r) << Ds_shift))                         // адрес данных ячейки холста
+#define Info(c, r)    (Cinfo + (c) + ((r) << Ds_shift))                       // адрес данных ячейки холста
+#define Cpal(c, r)    (Cds + (c) + ((r) << Ds_shift))                         // адрес данных палитры ячейки холста
 #define Offset(c, r)  (Coffset + (c) + ((r) << O_shift))                      // адрес ячейки в которой смещение указывающее на конец данных в буфере строки холста
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
@@ -239,8 +233,8 @@ void IRnd(void);                                                      // Ини�
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
 int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
-void FRGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);  // Преобразовать i/n часть спектра глубиной 24 бита в RGB
-void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);        // Переход YCbCr --> RBG!
+void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);        // Переход YCbCr --> RBG
+void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr);        // Переход RGB --> YCbCr
 void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b); // Генерация цвета для i/n части спектра глубиной d --> RGB!
 void SetPalette(uint8_t set, uint8_t deep);                           // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
 void SwitchPal(void);                                                 // Переключить палитру
