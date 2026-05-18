@@ -24,7 +24,7 @@ void body(void) {  // пока не дописано WinData,Render
   snprintf(p, 30, "                   "); if (StrLen(b) > 44) { *(b + 44) = Off; } if (StrLen(b) >= c) { *(b + c) = Off; } if (r > 3) Print(navyCB,b); } }
 
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
-void sb(void) { if (++Convas.Border > Colours) { Convas.Border = Off; } BPrint(Convas.Border,Cls); }
+void sb(void) { if (++Convas.Border >= Colours) { Convas.Border = Off; } BPrint(Convas.Border,Cls); }
 void Init(void) {
   ugoc control = Window(On,olive, -2, -2), W1 = Window(Off,oliveBI, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Off,Rand(64), Rand(10), Rand(10), 80, 24);
   VKeys(K_ALT_ESC,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp);
@@ -34,7 +34,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Convas.Fone,AltBufOff); Print(fuchsiaB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(marsalaC," in 07.02.2026 version 9.05 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(marsalaC," in 07.02.2026 version 9.06 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }

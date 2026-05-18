@@ -119,14 +119,12 @@ void BPrint(uint8_t n, char *str) { if (!str) return;
 void IRnd(void) { VP.Rnd = GetDelay() | On; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
-int8_t Fsin(int16_t u) { u &= 511; int8_t r = u & 63; r = (u & b6) ? 63 - r : r; r = (u & b7) ? 127 - r : r; return (u & b8) ? -r : r; }
-void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b) {
-  int32_t r_ = y + (1402 * (cr - 128) / 1000), g_ = y - ((3441 * (cb - 128) + 7141 * (cr - 128)) / 10000), b_ = y + (1772 * (cb - 128) / 1000);
-  *r = (r_ < 0) ? Off : (r_ > 255) ? 255 : r_; *g = (g_ < 0) ? Off : (g_ > 255) ? 255 : g_; *b = (b_ < 0) ? Off : (b_ > 255) ? 255 : b_; }
-void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr) {
-  int32_t y_ = ((299 * r + 587 * g + 114 * b) / 1000); y_ = (y_ < 0) ? Off : (y_ > 255) ? 255 : y_;
-  int32_t cb_ = 128 + (((b - y_) * 564) / 1000), cr_ = 128 + (((r - y_) * 7141) / 10000); *y = y_;
-  *cb = (cb_ < 0) ? Off : (cb_ > 255) ? 255 : cb_; *cr = (cr_ < 0) ? Off : (cr_ > 255) ? 255 : cr_; }
+int8_t Fsin(int16_t u) { u &= 511; static int8_t s[] = { 0, 1, 3, 4, 6, 7, 9, 10, 12, 13, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30, 
+  32, 33, 35, 36, 38, 39, 41, 42, 44, 45, 47, 48, 50, 51, 52, 54, 55, 57, 58, 59, 61, 62, 64, 65, 66, 68, 69, 70, 72, 73, 74, 76, 77,
+  78, 80, 81, 82, 83, 85, 86, 87, 88, 89 }; int8_t r = u & 63; r = (u & b6) ? 63 - s[r] : s[r]; r = (u & b7) ? 127 - r : r; return (u & b8) ? -r : r; }
+void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b) { *g = y - ((cb + cr) >> 1); *r = (cr << 1) + *g; *b = (cb << 1) + *g; }
+void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr) { if ((r + b + g)) { if (!r) r++; if (!g) g++; if (!b) b++; }
+  *y = (r + (g << 1) + b) >> 2; *cb = (b - g) >> 1; *cr = (r - g) >> 1; }
 void Colour(uint8_t set, uint8_t i, uint8_t n, uint8_t deep, uint8_t *r, uint8_t *g, uint8_t *b) {
   uint8_t y = Off, cb = Off, cr = Off;
   if (set) { uint16_t a = (i * 511) / n; y = a >> 1; cb = 128 + Fsin(a); cr = 128 + Fcos(a);
