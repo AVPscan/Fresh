@@ -235,9 +235,11 @@ uint8_t PopKey(void);                                                 // Взя�
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
+void IRnd(void);                                                      // Инициализация генератора случайных чисел
+ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
 int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
-void RGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);   // Преобразовать i/n часть спектра глубиной 24 бита в RGB
+void FRGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);  // Преобразовать i/n часть спектра глубиной 24 бита в RGB
 void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);        // Переход YCbCr --> RBG!
 void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b); // Генерация цвета для i/n части спектра глубиной d --> RGB!
 void SetPalette(uint8_t set, uint8_t deep);                           // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
@@ -248,8 +250,6 @@ void MoveConvas(goc dx, goc dy);                                      // Вза�
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
 void Mouse(void);                                                     // Обработка событий мыши
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
-void IRnd(void);                                                      // Инициализация генератора случайных чисел
-ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 void RPEncode(void);                                                  // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}

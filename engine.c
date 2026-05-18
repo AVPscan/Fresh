@@ -115,7 +115,8 @@ void BPrint(uint8_t n, char *str) { if (!str) return;
   char *dst = Cdbuf; ugoc len = StrLen(str); n &= b210; PalBuf* pal = AFon(n); MemCpy(dst, pal->d, pal->l); dst += pal->l;
   MemCpy(dst, str, len); if (n != Convas.Fone) { dst += len; pal = AFon(Convas.Fone); len = pal->l; MemCpy(dst, pal->d, len); }
   SysWrite(Cdbuf, dst + len - Cdbuf); }
-
+void IRnd(void) { VP.Rnd = GetDelay() | On; }
+ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
 int8_t Fsin(int16_t u) { u &= 511; int8_t r = u & 63; r = (u & b6) ? 63 - r : r; r = (u & b7) ? 127 - r : r; return (u & b8) ? -r : r; }
 void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b) {
@@ -123,13 +124,13 @@ void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_
   int32_t g_ = (298 * Y - 100 * Cb - 208 * Cr + 128) >> 8; int32_t b_ = (298 * Y + 516 * Cb + 128) >> 8;
   *r = (r_ < 0) ? Off : (r_ > 255 ? 255 : (uint8_t)r_); *g = (g_ < 0) ? Off : (g_ > 255 ? 255 : (uint8_t)g_);
   *b = (b_ < 0) ? Off : (b_ > 255 ? 255 : (uint8_t)b_); }
-void RGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b) {
+void FRGB(uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b) {
   static uint8_t h[] = { 0, 4, 2, 6, 1, 3, 5, 7 }; if (Colours == b3) i = h[i];
   uint32_t in = (i) ? (((1 << 24) * i) / n) - On : Off; *r = in & 255; in >>= 8; *g = in & 255; in >>= 8; *b = in & 255; }
 void Colour(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b) {
   if (set) { int16_t a = (i * 511) / n; YCbCr_RGB(a >> 1, 128 + (Fsin(a)), 128 + (Fcos(a)), r, g, b);
     if (!i) { *r = 0; *g = 0; *b = 0; } else if (i == n) { *r = 255; *g = 255; *b = 255; } }
-  else RGB(i, n, r, g, b);
+  else FRGB(i, n, r, g, b);
   if (d < 8) { *r = ((((299 * (*r) + 587 * (*g) + 114 * (*b)) / 1000) > 127) ? 90 : 30) + (((*r > 127) << 2) | ((*g > 127) << 1) | (*b > 127)); }
   else if (d < 24 ) { uint8_t ri = (*r * 5 + 128) / 255, gi = (*g * 5 + 128) / 255, bi = (*b * 5 + 128) / 255; *r = 16 + ri * 36 + gi * 6 + bi; } }
 void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); Cdpal = (a + SFon);
@@ -212,9 +213,6 @@ uint8_t ViewPort(void) { Buf.Ctrl = Off;
   if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Convas.Border,Cls); }
   else {  }
   return VP.Loop; }
-
-void IRnd(void) { VP.Rnd = GetDelay() | On; }
-ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B)) * n) >> (sizeof(ugoc) * 8)); }
   
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
