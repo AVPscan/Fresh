@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define Colours   8                           // Максимальное количество цветов
+#define Fcolour   8                           // Максимальное количество цветов
 #define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
@@ -66,15 +66,7 @@ enum {
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
 enum { Fblack, Fnavy, Fmarsala, Ffuchsia, Folive, Fochre, Fcyan, Fwhite, };
-enum {
-    black, navy, marsala, fuchsia, olive, ochre, cyan, white,
-    blackI, navyI, marsalaI, fuchsiaI, oliveI, ochreI, cyanI, whiteI,
-    blackB, navyB, marsalaB, fuchsiaB, oliveB, ochreB, cyanB, whiteB,
-    blackBI, navyBI, marsalaBI, fuchsiaBI, oliveBI, ochreBI, cyanBI, whiteBI,
-    blackC, navyC, marsalaC, fuchsiaC, oliveC, ochreC, cyanC, whiteC,
-    blackCI, navyCI, marsalaCI, fuchsiaCI, oliveCI, ochreCI, cyanCI, whiteCI,
-    blackCB, navyCB, marsalaCB, fuchsiaCB, oliveCB, ochreCB, cyanCB, whiteCB,
-    blackCBI, navyCBI, marsalaCBI, fuchsiaCBI, oliveCBI, ochreCBI, cyanCBI, whiteCBI };
+enum { black, navy, marsala, fuchsia, olive, ochre, cyan, white };
 #define FFone   Fwhite
 #define FBorder Fblack
 typedef struct {                              //UTFinfo  
@@ -108,7 +100,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border, Deep, Colours, AShift, Res; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -119,8 +111,8 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SFon = 2 * Colours * sizeof(PalBuf),                                      // Размер 2х буферов фона (Colours цветов)
-    SPal = 2 * Colours * 8 * sizeof(PalBuf),                                  // Размер 2х буферов палитр (8 режимов по Colours цветов)
+    SFon = 2 * Fcolour * sizeof(PalBuf),                                      // Размер 2х буферов фона (Fcolour цветов)
+    SPal = 2 * Fcolour * 8 * sizeof(PalBuf),                                  // Размер 2х буферов палитр (8 режимов по Fcolour цветов)
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
@@ -187,6 +179,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
+extern uint8_t  aB,aI,aC,aBI,aCI,aCB,aCBI,aShift,aColours,aDeep,aR,aG,aB,aY,aCb,aCr;
+extern uint32_t aRGB,aYCbCr;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \

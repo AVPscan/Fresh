@@ -120,7 +120,7 @@ ugoc Rand(ugoc n) { return (ugoc)(((Cell)(VP.Rnd = (ugoc)(RNG_A * VP.Rnd + RNG_B
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
 int8_t Fsin(int16_t u) { u &= 511; static int8_t s[64] = { 0,1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17,18,19,20,21,22,23,25,26,27,28,29,30,31,
   32,32,33,34,35,36,37,38,39,40,41,41,42,43,44,45,46,46,47,48,49,49,50,51,51,52,53,53,54,54,55,55,56,57 }; int8_t r = u & 63;
-  r = (u & b6) ? 63 - s[r] : s[r]; r = (u & b7) ? 127 - r : r; return (u & b8) ? -r : r; }
+  r = (u & b6) ? 63 - s[r] : s[r]; r = (u & b7) ? 127 - r : r; return (128 + (u & b8) ? -r : r); }
 void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b) { *g = y - ((cb + cr) >> 1); *r = (cr << 1) + *g; *b = (cb << 1) + *g; }
 void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr) { if ((r + b + g)) { if (!r) r++; if (!g) g++; if (!b) b++; }
   *y = (r + (g << 1) + b) >> 2; *cb = (b - g) >> 1; *cr = (r - g) >> 1; }
@@ -128,7 +128,7 @@ void Colour(uint8_t set, uint8_t i, uint8_t n, uint8_t deep, uint8_t *r, uint8_t
   uint8_t y = Off, cb = Off, cr = Off;
   if (set) { uint16_t a = (i * 511) / n; y = a >> 1; cb = 128 + Fsin(a); cr = 128 + Fcos(a);
     YCbCr_RGB(y, cb, cr, r, g, b); if (!i) { *r = 0; *g = 0; *b = 0; } else if (i == n) { *r = 255; *g = 255; *b = 255; } }
-  else { static uint8_t h[] = { 0, 4, 2, 6, 1, 3, 5, 7 }; if (Colours == b3) i = h[i];
+  else { static uint8_t h[] = { 0, 4, 2, 6, 1, 3, 5, 7 }; if (Fcolour == b3) i = h[i];
     uint32_t in = (i) ? (((1 << 24) * (i)) / n) - On : Off; *r = in & 255; in >>= 8; *g = in & 255; in >>= 8; *b = in & 255;
     RGB_YCbCr(*r, *g, *b, &y, &cb, &cr); }
   if (deep < 8) { *r = ((y > 127) ? 90 : 30) + (((*r > 127) << 2) | ((*g > 127) << 1) | (*b > 127)); }
@@ -139,7 +139,7 @@ void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); Cdpal = (a + SFon);
 void SetPalette(uint8_t set, uint8_t deep) {
   PalBuf *pal, *mode, *src; char *base, *cbase[] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; uint32_t in, t;
   char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
-  uint8_t i, j, l, c = Colours, r = Off, g = Off, b = Off, m = On, k = On; if (deep < b3) { k--; } else if (deep > b3) { k++; }
+  uint8_t i, j, l, c = Fcolour, r = Off, g = Off, b = Off, m = On, k = On; if (deep < b3) { k--; } else if (deep > b3) { k++; }
   if (c > b5) { c = b5; } else { if (c < b1) c = b1; } l = c - On; j = l; while((j >>= 1)) m++;
   if ((char*)(Coffset + SOffset) != Cdfon) { if (set) SwitchPal(); } else { if (!set) SwitchPal(); }
   while(c--) { Colour(set, c, l, deep, &r, &g, &b);
