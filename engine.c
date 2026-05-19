@@ -28,9 +28,8 @@ void MemMove(void* dst, void* src, Cell len) {
       Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
       Cell i = len / SCell; len &= (SCell - 1); while(i--) *--dW = *--sW;
       d = (uint8_t*)dW; s = (uint8_t*)sW; }
-    while(len--) *--d = *--s ; }
-  else if (dst == src ) return; 
-  MemCpy(dst, src, len); }
+    while(len--) { *--d = *--s ; } return; }
+  else if (dst != src ) { MemCpy(dst, src, len); } }
 void MemCpy(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
   while(len && ((Cell)d & (SCell - 1))) { *d++ = *s++; len--; }
   if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
@@ -149,7 +148,9 @@ void SetPalette(uint8_t set, uint8_t deep) {
     while(j--) { t = in & 255; in >>= b3; if (k) { *base++ = ';'; i++; } if (t / 100) { *base++ = 0x30 + (t / 100); t %= 100; i++; }
       if (t / 10) { *base++ = 0x30 + (t / 10); t %= 10; i++; } *base++ = 0x30 + t; i++; } *base = 'm'; src->l = i + On; i = b3;
     while(i--) { pal = APal((i << m) + c); mode = (PalBuf*)modes[i]; pal->l = src->l + mode->l - On;
-      MemCpy(pal->d, src->d, src->l - On); MemCpy(pal->d + src->l - On, mode->d, mode->l); } *(src->d + b1) = '4'; } }
+      MemCpy(pal->d, src->d, src->l - On); MemCpy(pal->d + src->l - On, mode->d, mode->l); }
+    if (*(src->d + 2) == '9') { src->l += On; MemMove(src->d + 3, src->d + 2, 3 ); *(src->d + 2) = '1'; *(src->d + 3) = '0'; }
+    else *(src->d + 2) = '4'; } }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdfon = (char*)(Coffset + SOffset);
   Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdcon = (ugoc*)(Cdkey + SKeys); Cdwin = Cdcon + SConvas; Cvsw = Cdwin + SWin;
