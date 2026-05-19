@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define Fcolour   8                           // Максимальное количество цветов
+#define Fcolour   8                           // Количество цветов на старте + 24 пользовательских
 #define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
@@ -54,8 +54,10 @@ typedef uintptr_t Cell;                       // Разрядность проц
 #define SCell sizeof(Cell)
 
 enum {
-    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, b3210 = 0x0F,
-    b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, Fps = 0x14, On = 0x01, Off = 0x00 };
+    b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,
+    b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, 
+    aB = 0x40, aI = 0x20, aC = 0x80 , aBI = 0x60, aCI = 0xA0, aCB = 0xC0, aCBI = 0xE0, aShift = 0x05,
+    aColours = 0x20, Fps = 0x14, On = 0x01, Off = 0x00 };
 enum {
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
@@ -86,9 +88,9 @@ typedef struct {
 } Structure;
 typedef struct {
     uint8_t col        ;                      // бит x      цвет {максимум 32 цветовых оттенка из за трёх атрибутов}
-    uint8_t inverse : 1;                      // бит x + 1  инверсия
-    uint8_t bold    : 1;                      // бит x + 2  толстый
-    uint8_t cursive : 1;                      // бит x + 3  курсив
+    uint8_t inverse : 1;                      // бит 5  aI  инверсия
+    uint8_t bold    : 1;                      // бит 6  aB  толстый
+    uint8_t cursive : 1;                      // бит 7  aC  курсив
 } palette;
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
@@ -100,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border, Deep, Colours, AShift, Res; } Canalysis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border, Deep, Colours; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -111,8 +113,8 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SFon = 2 * Fcolour * sizeof(PalBuf),                                      // Размер 2х буферов фона (Fcolour цветов)
-    SPal = 2 * Fcolour * 8 * sizeof(PalBuf),                                  // Размер 2х буферов палитр (8 режимов по Fcolour цветов)
+    SFon = 32 * sizeof(PalBuf),                                               // Размер буфера фона (32 цветов)
+    SPal = 32 * 8 * sizeof(PalBuf),                                           // Размер буфера палитры (8 режимов по 32 цветов)
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
@@ -179,8 +181,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
-extern uint8_t  aB,aI,aC,aBI,aCI,aCB,aCBI,aShift,aColours,aDeep,aR,aG,aB,aY,aCb,aCr;
-extern uint32_t aRGB,aYCbCr;
+extern uint8_t  cR,cG,cB,cY,cCb,cCr;
+extern uint32_t cRGB,cYCbCr;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \
@@ -231,7 +233,6 @@ void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_
 void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr);        // Переход RGB --> YCbCr
 void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b); // Генерация цвета для i/n части спектра глубиной d --> RGB!
 void SetPalette(uint8_t set, uint8_t deep);                           // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
-void SwitchPal(void);                                                 // Переключить палитру
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат

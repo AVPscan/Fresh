@@ -134,14 +134,11 @@ void Colour(uint8_t set, uint8_t i, uint8_t n, uint8_t deep, uint8_t *r, uint8_t
   if (deep < 8) { *r = ((y > 127) ? 90 : 30) + (((*r > 127) << 2) | ((*g > 127) << 1) | (*b > 127)); }
   else if (deep < 24 ) { *r = 16 + 36 * ((*r * 5 + 128) / 255) + 6 * ((*g * 5 + 128)/ 255) + ((*b * 5 + 128)/ 255); } }
 
-void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); Cdpal = (a + SFon);
-  if (a == Cdfon) { a += SFon / 2; Cdpal += SPal / 2; } Cdfon = a; }
 void SetPalette(uint8_t set, uint8_t deep) {
   PalBuf *pal, *mode, *src; char *base, *cbase[] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; uint32_t in, t;
   char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
   uint8_t i, j, l, c = Fcolour, r = Off, g = Off, b = Off, m = On, k = On; if (deep < b3) { k--; } else if (deep > b3) { k++; }
   if (c > b5) { c = b5; } else { if (c < b1) c = b1; } l = c - On; j = l; while((j >>= 1)) m++;
-  if ((char*)(Coffset + SOffset) != Cdfon) { if (set) SwitchPal(); } else { if (!set) SwitchPal(); }
   while(c--) { Colour(set, c, l, deep, &r, &g, &b);
     in = r; if (k > On) { in += (b << 16) | (g << 8); } src = AFon(c); mode = (PalBuf*)cbase[k]; src->l = mode->l;
     MemCpy(src->d, mode->d, src->l); base = (char*)(src->d + src->l); i = src->l; j = On; if (k > On) j += b1;
@@ -157,7 +154,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; VP.Win = MAX_WIN; Convas.Win = VP.Win; 
   Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine; Convas.W = Convas.CW; Convas.CH = CellStr;
   Convas.H = Convas.CH; Convas.Fone = FFone; Convas.Border = FBorder; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
-  SetPalette(Off, CFDeep); SetPalette(On, CFDeep); SwitchPal(); }
+  SetPalette(Off, CFDeep); }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off); IRnd();
@@ -203,7 +200,7 @@ uint8_t ViewPort(void) { Buf.Ctrl = Off;
   if (Buf.Ctrl) {
     if (Buf.Cod == VP.scs) { if (!(VP.Mode ^= b2)) VP.dXY = On; }
     else if (Buf.Cod == VP.Anchor) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
-    else if (Buf.Cod == VP.bcu) { SwitchPal(); BPrint(Convas.Border,Cls); }
+    else if (Buf.Cod == VP.bcu) { BPrint(Convas.Border,Cls); }
     else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
     else if (Buf.Cod == VP.Exit) VP.Loop = Off;
     else { goc dx = Off, dy = Off;
