@@ -229,10 +229,10 @@ void IRnd(void);                                                      // Ини�
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
 int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
-void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);        // Переход YCbCr --> RBG
-void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr);        // Переход RGB --> YCbCr
-void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t d, uint8_t *r, uint8_t *g, uint8_t *b); // Генерация цвета для i/n части спектра глубиной d --> RGB!
-void SetPalette(uint8_t set, uint8_t deep);                           // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
+void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);// Переход YCbCr --> RBG
+void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr);// Переход RGB --> YCbCr
+void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);    // Генерация цвета для i/n части спектра глубиной d --> RGB!
+void SetPalette(uint8_t set);                                         // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
