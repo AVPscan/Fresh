@@ -69,8 +69,6 @@ enum {
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
 enum { Fblack, Fnavy, Fmarsala, Ffuchsia, Folive, Fochre, Fcyan, Fwhite, };
 enum { black, navy, marsala, fuchsia, olive, ochre, cyan, white };
-#define FFone   Fwhite
-#define FBorder Fblack
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
@@ -181,8 +179,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
-extern uint8_t  cR,cG,cB,cY,cCb,cCr;
-extern uint32_t cRGB,cYCbCr;
+extern uint8_t  cR, cG, cB, cY, cCb, cCr;
+extern uint32_t cRGB, cYCbCr;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \
@@ -198,6 +196,8 @@ extern uint32_t cRGB,cYCbCr;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
+    uint8_t   cR = 0, cG = 0, cB = 0, cY = 0, cCb = 0, cCr = 0; \
+    uint32_t  cRGB = 0, cYCbCr = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_ALT_ESC}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
@@ -228,11 +228,11 @@ void BPrint(uint8_t border, char *str);                               // Выв�
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
-int8_t Fcos(int16_t u);                                               // -127...+127 полный круг 512 для угла!
-void YCbCr_RGB(uint8_t y, uint8_t cb, uint8_t cr, uint8_t *r, uint8_t *g, uint8_t *b);// Переход YCbCr --> RBG
-void RGB_YCbCr(uint8_t r, uint8_t g, uint8_t b, uint8_t *y, uint8_t *cb, uint8_t *cr);// Переход RGB --> YCbCr
-void Colou(uint8_t set, uint8_t i, uint8_t n, uint8_t *r, uint8_t *g, uint8_t *b);    // Генерация цвета для i/n части спектра глубиной d --> RGB!
-void SetPalette(uint8_t set);                                         // Установить палитру {On}YCbCr/{Off}RGB с глубиной цвета deep
+int8_t Fcos(int16_t u);                                               // -127...+127 полный круг [0...511] {360 градусов}
+void YCbCr_RGB(void);                                                 // Переход cY cCb cCr
+void RGB_YCbCr(void);                                                 // Переход cR cG cB
+void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void SetPalette(void);                                                // Установить палитру по умолчанию
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
