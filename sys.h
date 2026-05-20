@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define Fcolour   32                           // Количество цветов на старте + 24 пользовательских
+#define Fcolour   8                           // Количество цветов на старте + 24 пользовательских
 #define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
@@ -67,8 +67,8 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
-enum { Fblack, Fnavy, Fmarsala, Ffuchsia, Folive, Fochre, Fcyan, Fwhite, };
-enum { black, navy, marsala, fuchsia, olive, ochre, cyan, white };
+enum { Fblack, Fnavy, Folive, Fcyan, Ffuchsia, Fmarsala, Fochre, Fwhite, };
+enum { black, navy, olive, cyan, fuchsia, marsala, ochre, white };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
@@ -223,12 +223,12 @@ void PushKey(void);                                                   // Пол�
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
-void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
-void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 uint8_t Fsin(int16_t u);                                              // Синус/Косинус для всего диапазона int16_t дают
 uint8_t Fcos(int16_t u);                                              // 128 + {-127...+127} полный круг [0...511] {360 градусов}
+void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
+void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SwitchPal(void);                                                 // Переключить палитру
 void SetPalette(uint8_t n, uint8_t deep);                             // Установить палитру {0/1},deep глубина цвета
