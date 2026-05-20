@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define Fcolour   8                           // Количество цветов на старте + 24 пользовательских
+#define Fcolour   32                           // Количество цветов на старте + 24 пользовательских
 #define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
@@ -179,8 +179,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
-extern uint8_t  cR, cG, cB, cY, cCb, cCr;
-extern uint32_t cRGB, cYCbCr;
+extern uint8_t  cR, cG, cB;
+extern uint32_t cRGB;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \
@@ -196,8 +196,8 @@ extern uint32_t cRGB, cYCbCr;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
-    uint8_t   cR = 0, cG = 0, cB = 0, cY = 0, cCb = 0, cCr = 0; \
-    uint32_t  cRGB = 0, cYCbCr = 0; \
+    uint8_t   cR = 0, cG = 0, cB = 0; \
+    uint32_t  cRGB = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_ALT_ESC}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
@@ -227,10 +227,8 @@ void Print(uint8_t pal, char *str);                                   // Выв�
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
-int8_t Fsin(int16_t u);                                               // Синус/Косинус для всего диапазона int16_t дают
-int8_t Fcos(int16_t u);                                               // -127...+127 полный круг [0...511] {360 градусов}
-void YCbCr_RGB(void);                                                 // Переход cY cCb cCr
-void RGB_YCbCr(void);                                                 // Переход cR cG cB
+uint8_t Fsin(int16_t u);                                              // Синус/Косинус для всего диапазона int16_t дают
+uint8_t Fcos(int16_t u);                                              // 128 + {-127...+127} полный круг [0...511] {360 градусов}
 void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SwitchPal(void);                                                 // Переключить палитру
 void SetPalette(uint8_t n, uint8_t deep);                             // Установить палитру {0/1},deep глубина цвета
