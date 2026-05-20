@@ -111,8 +111,8 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SFon = 32 * sizeof(PalBuf),                                               // Размер буфера фона (32 цветов)
-    SPal = 32 * 8 * sizeof(PalBuf),                                           // Размер буфера палитры (8 режимов по 32 цветов)
+    SFon = 2 * 32 * sizeof(PalBuf),                                           // Размер буфера фона (32 цветов) под 2 палитры
+    SPal = 2 * 32 * 8 * sizeof(PalBuf),                                       // Размер буфера палитры (8 режимов по 32 цветов) под 2 палитры
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
@@ -232,7 +232,8 @@ int8_t Fcos(int16_t u);                                               // -127...
 void YCbCr_RGB(void);                                                 // Переход cY cCb cCr
 void RGB_YCbCr(void);                                                 // Переход cR cG cB
 void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
-void SetPalette(void);                                                // Установить палитру по умолчанию
+void SwitchPal(void);                                                 // Переключить палитру
+void SetPalette(uint8_t n, uint8_t deep);                             // Установить палитру {0/1},deep глубина цвета
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
