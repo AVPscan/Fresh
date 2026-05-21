@@ -27,8 +27,8 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define Fcolour   8                           // Количество цветов на старте + 24 пользовательских
-#define CFDeep    24                          // Глубина {3 8 24} бита
+#define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
+#define CFDeep    8                           // Глубина {0 3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
     typedef int16_t  goc;
@@ -47,8 +47,8 @@
 #endif
 #define UGOC_MAX ((ugoc)~(ugoc)0)             // Вычисляем пределы для нового типа данных
 #define GOC_MAX  ((goc)(UGOC_MAX >> 1))
-#define GOC_MIN  (~GOC_MAX)
-
+#define GOC_INF  (~GOC_MAX)
+#define GOC_MIN  (~GOC_MAX) + 1
 typedef void (*AFunction)(void);
 typedef uintptr_t Cell;                       // Разрядность процессора, создали абстракцию
 #define SCell sizeof(Cell)
@@ -225,8 +225,10 @@ uint8_t PopKey(void);                                                 // Взя�
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
-uint8_t Fsin(int16_t u);                                              // Синус/Косинус для всего диапазона int16_t дают
-uint8_t Fcos(int16_t u);                                              // 128 + {-127...+127} полный круг [0...511] {360 градусов}
+int8_t Fsin(int16_t u);                                               // Синус      для всего диапазона int16_t дают [-127...+127]
+int8_t Fcos(int16_t u);                                               // Косинус    полный круг 360 градусов [0...511]
+int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128]
+int8_t Fctg(int16_t u);                                               // Котангенс
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
