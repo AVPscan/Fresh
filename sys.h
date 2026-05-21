@@ -27,6 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
+#define FSTime    4                           // Количество 2*FSTime байт отведено на таймер и время
 #define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
 #define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
@@ -100,7 +101,8 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border, Deep, Colours; } Canalysis;
+typedef struct { ugoc W, H, CW, CH, MaS, MiS, Speed; uint16_t MW, Win, Min, Max, D, S, Timer[FSTime], Start[FSTime];
+                 uint8_t Fone, Border, Deep, Colours, CP, Time; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами

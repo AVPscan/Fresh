@@ -15,7 +15,7 @@ void body(void) {  // пока не дописано WinData,Render
   ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 8;
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d                    ", s, K_Mouse, c, r);
   if ((uint8_t)StrLen(b) > (j - 1)) { *(b + j - 1) = Off; } if (StrLen(b) >= c) { *(b + c - On) = Off; } Print(olive,b); if (r < 3) return;
-  snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d                           ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
+  snprintf(b, 100, "\nx%d y%d %d %d b%d x%d y%d timer %d                   ", VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY, Convas.Timer[0]);
   if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= c) { *(b + c) = Off; } Print(cyan,b); if (r < 4) return;
   if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; 
   if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
@@ -34,7 +34,7 @@ Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) {
     if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Convas.Fone,AltBufOff); Print(fuchsia | aCB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(fuchsia | aC," in 07.02.2026 version 9.23 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(fuchsia | aC," in 07.02.2026 version 9.24 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) {
   Cell c_argc = (Cell)argc, flag = SystemSwitch(); flag = Help(c_argc, argv, flag);
   if (flag) { Init(); while (ViewPort()) Delay_ms(Fps); }
