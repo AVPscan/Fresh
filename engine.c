@@ -121,14 +121,15 @@ void SetColour(uint8_t c) { Convas.Deep &= b10; if (c >= aColours) c = aColours 
   char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
   char *deep[] = { "\6\33[38;2", "\2\33[", "\6\33[38;5", "\6\33[38;2" }; uint8_t i, j, t; PalBuf *pal, *mode, *src;
     if (Convas.Deep == b1 ) { cR = 16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255); }
-    else if (Convas.Deep == On ) { cR = ((((cR + cG + cB + cB) >> 2) > 127) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
+    else if (Convas.Deep == On ) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127000) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
   cRGB = cR | (cG << 8) | (cB << 16); i = Off; j = On; if (!Convas.Deep || Convas.Deep == b10) j += b1;
   src = AFon(c); mode = (PalBuf*)deep[Convas.Deep]; src->l = mode->l; MemCpy(src->d, mode->d, src->l); char* base = (char*)(src->d + src->l);
   while(j--) { t = (uint8_t)(cRGB); cRGB >>= b3; if (Convas.Deep != On) { *base++ = ';'; i++; } if (t / 100) { *base++ = 0x30 + (t / 100); t %= 100; i++; }
     if (t / 10) { *base++ = 0x30 + (t / 10); t %= 10; i++; } *base++ = 0x30 + t; i++; } *base = 'm'; src->l += i + On;
   while(++j < b3) { pal = APal((j << aShift) + c); pal->l = src->l; MemCpy(pal->d, src->d, src->l); if (!Convas.Deep) break;
     mode = (PalBuf*)modes[j]; MemCpy(pal->d + pal->l - On, mode->d, mode->l); pal->l += mode->l - On; }
-  *(src->d + 2) = '4'; }
+  *(src->d + 2) = '4'; if (Convas.Deep == On) {
+    if (APal(c)->d[2] == '9') { src->d[2] = '1'; i = src->d[3]; src->d[3] = '0'; src->d[4] = i; src->d[5] = 'm'; src->l++; } } }
 void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); Cdpal = (a + SFon);
   if (a == Cdfon) { a += SFon / 2; Cdpal += SPal / 2; } Cdfon = a; }
 void SetPalette(uint8_t set, uint8_t deep) {
