@@ -145,9 +145,10 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdcon = (ugoc*)(Cdkey + SKeys); Cdwin = Cdcon + SConvas; Cvsw = Cdwin + SWin;
   Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; VP.Win = MAX_WIN; Convas.MW = VP.Win;
   Convas.Win = Convas.MW; Convas.CP = CellPow; Convas.MaS = MaxSpeed; Convas.MiS = b3; Convas.Speed = Convas.MaS; Convas.Time = FSTime;
-  Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine; Convas.W = Convas.CW; Convas.CH = CellStr;
-  Convas.H = Convas.CH; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode; SetPalette(On,CFDeep); SetPalette(Off,CFDeep);
-  uint8_t i = FSTime; while(i--) { Convas.Timer[i] = Off; Convas.Start[i] = Off; } }
+  Convas.CT = Off; Convas.Fps = ((FFps + 49) / 50) > 5 ? 500 : ((FFps + 49) / 50) == 3 ? 100 : (((FFps + 49) / 50) * 50); Convas.PT = (Convas.Fps / 10);
+  Convas.Delay = (1000 / Convas.Fps); Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win; Convas.CW = CellLine;
+  Convas.W = Convas.CW; Convas.CH = CellStr; Convas.H = Convas.CH; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
+  SetPalette(On,CFDeep); SetPalette(Off,CFDeep); uint8_t i = FSTime; while(i--) { Convas.Timer[i] = Off; Convas.Start[i] = Off; } }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off); IRnd();
@@ -204,7 +205,7 @@ uint8_t ViewPort(void) { uint8_t p = Off; Buf.Ctrl = Off;
       MoveConvas(dx, dy); } }
   if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Convas.Border,Cls); }
   else {  }
-  p = (uint8_t)~Off; while((++p < Convas.Time) && (!++Convas.Timer[p]));
+  if (++Convas.CT > Convas.PT) { Convas.CT = Off; p = (uint8_t)~Off; while((++p < Convas.Time) && (!++Convas.Timer[p])); }
   return VP.Loop; }
   
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }

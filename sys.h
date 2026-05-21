@@ -27,6 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
+#define FFps      180                         // Частота регенерации монитора
 #define FSTime    4                           // Количество 2*FSTime байт отведено на таймер и время
 #define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
 #define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
@@ -58,7 +59,7 @@ enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, 
     aB = 0x40, aI = 0x20, aC = 0x80 , aBI = 0x60, aCI = 0xA0, aCB = 0xC0, aCBI = 0xE0, aShift = 0x05,
-    aColours = 0x20, Fps = 0x14, On = 0x01, Off = 0x00 };
+    aColours = 0x20, On = 0x01, Off = 0x00 };
 enum {
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
@@ -102,7 +103,7 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc W, H, CW, CH, MaS, MiS, Speed; uint16_t MW, Win, Min, Max, D, S, Timer[FSTime], Start[FSTime];
-                 uint8_t Fone, Border, Deep, Colours, CP, Time; } Canalysis;
+                 uint8_t Fone, Border, Deep, Colours, CP, CT, PT, Time, Fps, Delay; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
