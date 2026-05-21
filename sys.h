@@ -238,7 +238,6 @@ void InitVram(Cell addr, Cell size);                                  // Ини�
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
-void Mouse(void);                                                     // Обработка событий мыши
 uint8_t ViewPort(void);                                               // Полёт над пространством с возможностью приземления на холст
 void RPEncode(void);                                                  // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция
