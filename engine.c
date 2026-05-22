@@ -118,37 +118,37 @@ void BPrint(uint8_t n, char *str) { if (!str) return;
   char *dst = Cdbuf; ugoc len = StrLen(str); PalBuf* pal = AFon(n); MemCpy(dst, pal->d, pal->l); dst += pal->l;
   MemCpy(dst, str, len); if (n != Convas.Fone) { dst += len; pal = AFon(Convas.Fone); len = pal->l; MemCpy(dst, pal->d, len); }
   SysWrite(Cdbuf, dst + len - Cdbuf); }
-void SetColour(uint8_t c) { Convas.Deep &= b10; if (c >= aColours) c = aColours - On;
+void SetColour(uint8_t c) { Sys.Deep &= b10; if (c >= aColours) c = aColours - On;
   char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
-  char *deep[] = { "\6\33[38;2", "\2\33[", "\6\33[38;5", "\6\33[38;2" }; uint8_t i, j = On; PalBuf *pal, *mode = (PalBuf*)deep[Convas.Deep], *src = AFon(c);
-  if (Convas.Deep == b1 ) { cR = 16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255); }
-  else if (Convas.Deep == On ) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127000) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
-  if (!Convas.Deep || Convas.Deep == b10) { j += b1; } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
-  while(j--) { i = (uint8_t)(cRGB); cRGB >>= b3; if (Convas.Deep != On) { src->d[src->l++] = ';'; } if (i / 100) { src->d[src->l++] = 0x30 + (i / 100); i %= 100; }
+  char *deep[] = { "\6\33[38;2", "\2\33[", "\6\33[38;5", "\6\33[38;2" }; uint8_t i, j = On; PalBuf *pal, *mode = (PalBuf*)deep[Sys.Deep], *src = AFon(c);
+  if (Sys.Deep == b1 ) { cR = 16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255); }
+  else if (Sys.Deep == On ) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127000) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
+  if (!Sys.Deep || Sys.Deep == b10) { j += b1; } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
+  while(j--) { i = (uint8_t)(cRGB); cRGB >>= b3; if (Sys.Deep != On) { src->d[src->l++] = ';'; } if (i / 100) { src->d[src->l++] = 0x30 + (i / 100); i %= 100; }
     if (i / 10) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; } src->d[src->l++] = 'm';
-  while(++j < b3) { pal = APal((j << aShift) + c); pal->l = src->l; MemCpy(pal->d, src->d, src->l); if (!Convas.Deep) break;
+  while(++j < b3) { pal = APal((j << aShift) + c); pal->l = src->l; MemCpy(pal->d, src->d, src->l); if (!Sys.Deep) break;
     mode = (PalBuf*)modes[j]; MemCpy(pal->d + src->l - On, mode->d, mode->l); pal->l += mode->l - On; } src->d[2] = '4';
-  if (Convas.Deep == On) { if (APal(c)->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } } } //!!!
+  if (Sys.Deep == On) { if (APal(c)->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } } } //!!!
 void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); Cdpal = (a + SFon);
   if (a == Cdfon) { a += SFon / 2; Cdpal += SPal / 2; } Cdfon = a; }
 void SetPalette(uint8_t set, uint8_t deep) {
-  Convas.Colours = Fcolour; if ((Convas.Deep = deep)) { Convas.Deep = b1; if (deep > b3) { Convas.Deep++; } else if (deep < b3) { Convas.Deep--; } }
-  if (Convas.Colours > aColours) { Convas.Colours = aColours; } else { if (Convas.Colours < b1) Convas.Colours = b1; }
+  Sys.Colours = Fcolour; if ((Sys.Deep = deep)) { Sys.Deep = b1; if (deep > b3) { Sys.Deep++; } else if (deep < b3) { Sys.Deep--; } }
+  if (Sys.Colours > aColours) { Sys.Colours = aColours; } else { if (Sys.Colours < b1) Sys.Colours = b1; }
   if ((char*)(Coffset + SOffset) == Cdfon) { if (set) SwitchPal(); } else { if (!set) SwitchPal(); }
-  Convas.Fone = Convas.Colours - On; Convas.Border = Off; uint8_t c = Convas.Colours;
+  Convas.Fone = Sys.Colours - On; Convas.Border = Off; uint8_t c = Sys.Colours;
   while(c--) { if (set) { uint16_t a = (c * 511) / Convas.Fone; cB = 128 + Fsin(a); cG = 128 + Fsin(a + 171); cR = 128 + Fsin(a + 342);
       if (!c) { cR = 0; cG = 0; cB = 0; } else if (c == Convas.Fone) { cR = 255; cG = 255; cB = 255; } }
     else { cRGB = (c) ? (((1 << 24) * (c)) / (Convas.Fone)) - On : Off; cG = (uint8_t)cRGB; cRGB >>= 8; cB = (uint8_t)cRGB;
       cRGB >>= 8; cR = (uint8_t)cRGB; } SetColour(c); } }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdfon = (char*)(Coffset + SOffset);
-  Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdcon = (ugoc*)(Cdkey + SKeys); Cdwin = Cdcon + SConvas; Cvsw = Cdwin + SWin;
-  Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; VP.Win = MAX_WIN; Convas.MW = VP.Win;
-  Convas.Win = Convas.MW; Convas.CP = CellPow; Convas.MaS = MaxSpeed; Convas.MiS = b3; Convas.Speed = Convas.MaS; Convas.Time = 5;
-  Convas.CT = Off; Convas.Fps = ((FFps / 50) < 1) ? 50 : ((FFps / 50) > 4) ? 250 : ((FFps / 50) == 3) ? 100 : ((FFps / 50) * 50);
-  Convas.PT = (Convas.Fps / 10); Convas.Delay = (1000 / Convas.Fps); Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win;
+  Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
+  Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec; VP.Win = MAX_WIN;
+  Sys.MWin = VP.Win; Convas.Win = Sys.MWin; Sys.CellP = CellPow; Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.Ctb = 5;
+  Sys.Time = Off; Sys.Fps = ((FFps / 50) < 2) ? 50 : ((FFps / 50) > 4) ? 250 : ((FFps / 50) == 3) ? 100 : ((FFps / 50) * 50);
+  Sys.Trap = (Sys.Fps / 10); Sys.Delay = (1000 / Sys.Fps); Convas.Min = Off; Convas.Max = VP.Win; Convas.D = Off; Convas.S = VP.Win;
   Convas.CW = CellLine; Convas.W = Convas.CW; Convas.CH = CellStr; Convas.H = Convas.CH; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
-  SetPalette(On,CFDeep); SetPalette(Off,CFDeep); uint8_t i = Convas.Time; while(i--) { Convas.Timer[i] = Off; Convas.Start[i] = Off; } }
+  SetPalette(On,CFDeep); SetPalette(Off,CFDeep); uint8_t i = Sys.Ctb; while(i--) { Sys.T[i] = Off; Sys.S[i] = Off; } }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay_ms(Off); IRnd();
@@ -190,14 +190,14 @@ uint8_t ViewPort(void) { uint8_t p = Off; Buf.Ctrl = Off;
       if (!Buf.Ctrl) PushKey(); }
     if (Buf.Cod) { ++Buf.tic; Buf.Ctrl = On; } }
   if (Buf.Ctrl) {
-    if (Buf.Cod == VP.scs) { VP.dXY = On; Convas.Speed = (VP.Mode ^= b2) ? Convas.MaS : Convas.MiS; }
+    if (Buf.Cod == VP.scs) { VP.dXY = On; Sys.Speed = (VP.Mode ^= b2) ? Sys.Spd1 : Sys.Spd0; }
     else if (Buf.Cod == VP.Anchor) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
     else if (Buf.Cod == VP.bcu) { SwitchPal(); BPrint(Convas.Border,Cls); }
     else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
     else if (Buf.Cod == VP.Exit) VP.Loop = Off;
     else { goc dx = Off, dy = Off;
       if (Buf.Cod != VP.Cod) { VP.dXY = On; VP.Cod = Buf.Cod; }
-      if ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < Convas.Speed)) VP.dXY <<= On;
+      if ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < Sys.Speed)) VP.dXY <<= On;
       if (Buf.Cod == VP.le) dx = -VP.dXY;
       else if (Buf.Cod == VP.ri) dx = VP.dXY;
       else if (Buf.Cod == VP.up) dy = -VP.dXY;
@@ -205,7 +205,7 @@ uint8_t ViewPort(void) { uint8_t p = Off; Buf.Ctrl = Off;
       MoveConvas(dx, dy); } }
   if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Convas.Border,Cls); }
   else {  }
-  if (++Convas.CT > Convas.PT) { Convas.CT = Off; p = (uint8_t)~Off; while((++p < Convas.Time) && (!++Convas.Timer[p])); }
+  if (++Sys.Time > Sys.Trap) { Sys.Time = Off; p = (uint8_t)~Off; while((++p < Sys.Ctb) && (!++Sys.T[p])); }
   return VP.Loop; }
   
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }

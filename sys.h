@@ -67,7 +67,8 @@ enum {
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC, K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC,
+    K_Mouse };
 enum { Fblack, Fnavy, Folive, Fcyan, Ffuchsia, Fmarsala, Fochre, Fwhite, };
 enum { black, navy, olive, cyan, fuchsia, marsala, ochre, white };
 typedef struct {                              //UTFinfo  
@@ -101,8 +102,8 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc W, H, CW, CH, MaS, MiS, Speed; uint16_t MW, Win, Min, Max, D, S, Timer[5], Start[5];
-                 uint8_t Fone, Border, Deep, Colours, CP, CT, PT, Time, Fps, Delay; } Canalysis;
+typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Time, Trap, Ginf, Gmin, Gmax, A, B; uint16_t MWin, T[5], S[5], Tb[5]; uint8_t Deep, Colours, CellP, Ctb; } Sis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -116,6 +117,7 @@ enum {
     SFon = 2 * 32 * sizeof(PalBuf),                                           // Размер буфера фона (32 цветов) под 2 палитры
     SPal = 2 * 32 * 8 * sizeof(PalBuf),                                       // Размер буфера палитры (8 режимов по 32 цветов) под 2 палитры
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
+    SSys = sizeof(Sis) / 2,                                                   // Размер данных под разбивку холста для организации окон
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
     SWin = MAX_WIN * sizeof(Windows) / 2,                                     // Размер данных для окон
     SVsw = MAX_WIN * CellStr * sizeof(ugoc) / 2,                              // Размер для визуальных длин строк окон на холсте
@@ -123,7 +125,7 @@ enum {
     SEvent = SKey * sizeof(Events),                                           // Размер данных для событий (привязка вызова функций к событиям)
     SExec = SKey * sizeof(AFunction),                                         // Размер вектора событий
     SBuf = 8192,                                                              // Размер буфера Print/File
-    SizeVram = SDCell + SInfo + SDs + SFon + SPal + SKeys + 2 * (SOffset + SVsw + SCsw + SWin + SConvas) + SEvent + SExec + SBuf,
+    SizeVram = SDCell + SInfo + SDs + SFon + SPal + SKeys + 2 * (SOffset + SVsw + SCsw + SWin + SSys + SConvas) + SEvent + SExec + SBuf,
     D_shift = CellPow + 2,                                                    // Смещение между строк холста в байтах
     O_shift = CellPow + 1,                                                    // Смещение между смещениями строк холста
     Ds_shift = CellPow,                                                       // Смещение между атрибутами строк холста
@@ -147,13 +149,14 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
-#define Vsw(n, r)     (Cvsw + (r) + ((n) << VCsw_shift))                      // адрес визуальной длины строки r окна n
-#define Csw(n, r)     (Ccsw + (r) + ((n) << VCsw_shift))                      // адрес числа ячеек строки r окна n
-#define Win(n)        ((Windows*)(Cdwin + ((n) << W_shift)))                  // адрес начала данных окна n
-#define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
 #define AFon(f)       ((PalBuf*)(Cdfon + ((f) << P_shift)))                   // адрес начала кода фона
 #define APal(c)       ((PalBuf*)(Cdpal + ((c) << P_shift)))                   // адрес начала кода цвета
 #define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
+#define Sys           (*(Sis*)Cdsys)                                          // адрес полное состояние системы при входе и режимы
+#define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
+#define Win(n)        ((Windows*)(Cdwin + ((n) << W_shift)))                  // адрес начала данных окна n
+#define Vsw(n, r)     (Cvsw + (r) + ((n) << VCsw_shift))                      // адрес визуальной длины строки r окна n
+#define Csw(n, r)     (Ccsw + (r) + ((n) << VCsw_shift))                      // адрес числа ячеек строки r окна n
 #define Event(m)      ((Events*)(Cevent + ((m) << V_shift)))                  // адрес начала структуры события
 #define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
@@ -171,6 +174,7 @@ extern ugoc     *Coffset;
 extern char     *Cdfon;
 extern char     *Cdpal;
 extern uint8_t  *Cdkey;
+extern ugoc     *Cdsys;
 extern ugoc     *Cdcon;
 extern ugoc     *Cdwin;
 extern ugoc     *Cvsw;
@@ -191,6 +195,7 @@ extern uint32_t cRGB;
     char      *Cdfon      = 0; \
     char      *Cdpal      = 0; \
     uint8_t   *Cdkey      = 0; \
+    ugoc      *Cdsys      = 0; \
     ugoc      *Cdcon      = 0; \
     ugoc      *Cdwin      = 0; \
     ugoc      *Cvsw       = 0; \
