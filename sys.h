@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define FFps      200                         // Частота регенерации монитора
+#define FFps      50                         // Частота регенерации монитора
 #define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
 #define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
@@ -238,9 +238,9 @@ int8_t Ftg(int16_t u);                                                // Тан�
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
-void SetColour(uint8_t c);                                            // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void SetColour(uint8_t c,  uint8_t deep);                             // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SwitchPal(void);                                                 // Переключить палитру
-void SetPalette(uint8_t n, uint8_t deep);                             // Установить палитру {0/1},deep глубина цвета
+void SetPalette(uint8_t set);                                         // Установить палитру {0/1},deep глубина цвета
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
