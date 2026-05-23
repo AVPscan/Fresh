@@ -102,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Time, Trap, Ginf, Gmin, Gmax, A, B; uint16_t MWin, T[5], S[5], Tb[5]; uint8_t Deep, Colours, CellP, Ctb; } Sis;
+typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Time, Ginf, Gmin, Gmax, A, B; uint16_t MWin, T[5], S[5], Tb[5]; uint8_t Deep, Colours, CellP, Ctb; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -273,7 +273,7 @@ ugoc TermCR(ugoc *r);                                                 // Счи�
 ugoc GetDelay(void);                                                  // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
-void Delay_ms(uint8_t ms);                                            // Адаптивная задержка, гарантия точности ms
+void Delay_ms(ugoc ms);                                           // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)

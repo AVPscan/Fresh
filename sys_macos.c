@@ -67,21 +67,15 @@ uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
     
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
-
-Cell GetSC(Cell addr) { 
-  if (!addr || !TS.col) return 1;
-  char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-  Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
-  Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
     
 static mach_timebase_info_data_t timebase = {0};
-void Delay_ms(uint8_t ms) {
+void Delay_ms(ugoc ms) {
   if (timebase.denom == 0) mach_timebase_info(&timebase);
   if (!Flag.Delay_ms) { Cell start = GetCycles(); 
     struct timespec ts = {0, 10000000L}; nanosleep(&ts, NULL); Flag.Delay_ms = (GetCycles() - start) / 10;
     if (!Flag.Delay_ms) Flag.Delay_ms++; }
-  Cell total_ticks = (Cell)(ms * Flag.Delay_ms); Cell start_time = GetCycles();
-  if (ms > 2) { struct timespec sleep_ts = {0, (ms - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
+  Cell total_ticks = (Cell)(ms * Flag.Delay_ms / 10); Cell start_time = GetCycles();
+  if (ms > 19) { struct timespec sleep_ts = {0, ((ms / 10) - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
   Cell check_start = GetCycles(), safety = 0, sec_ticks = (1000000000ULL * timebase.denom / timebase.numer);
   while ((GetCycles() - start_time) < total_ticks) {
         #if defined(__arm64__) || defined(__aarch64__)
@@ -92,3 +86,10 @@ void Delay_ms(uint8_t ms) {
     if (++safety > 2000) { Cell now = GetCycles();
        if ((now - check_start) > sec_ticks) { Flag.Delay_ms = 0; break; }
        safety = 0; check_start = now; } } }
+
+
+Cell GetSC(Cell addr) { 
+  if (!addr || !TS.col) return 1;
+  char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
+  Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
+  Cell end = GetCycles(); return (end - start) / (TS.col * 10); }

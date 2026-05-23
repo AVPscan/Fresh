@@ -81,22 +81,22 @@ uint8_t SyncSize(Cell addr) {
 
 Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
     
+void Delay_ms(ugoc ms) {
+  static LARGE_INTEGER freq, start, after_sleep; static uint64_t total_target = 0; uint64_t target;
+  if (!Flag.Delay_ms) { QueryPerformanceFrequency(&freq); Flag.Delay_ms = 1; }
+  if (ms == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
+  if (ms > 19) { Sleep((ms / 10) - 1); QueryPerformanceCounter(&after_sleep);
+    uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * ms) / 10;
+    if (elapsed < target) {
+      while (1) { QueryPerformanceCounter(&after_sleep); if ((uint64_t)(after_sleep.QuadPart - now.QuadPart) >= target) break;
+                  __asm__ volatile ("pause"); } } }
+  else { target = now.QuadPart + (freq.QuadPart * ms) / 10;
+    while (1) { QueryPerformanceCounter(&now); if ((uint64_t)now.QuadPart >= target) break;
+                __asm__ volatile ("pause"); } } }
+
 Cell GetSC(Cell addr) {
   if (!addr || !TS.col) return 1;
   char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
   LARGE_INTEGER start, end, freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&start);
   for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.col * 10)); }
-    
-void Delay_ms(uint8_t ms) {
-  static LARGE_INTEGER freq, start, after_sleep; static uint64_t total_target = 0; uint64_t target;
-  if (!Flag.Delay_ms) { QueryPerformanceFrequency(&freq); Flag.Delay_ms = 1; }
-  if (ms == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
-  if (ms > 2) { Sleep(ms - 2); QueryPerformanceCounter(&after_sleep);
-    uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * ms) / 1000;
-    if (elapsed < target) {
-      while (1) { QueryPerformanceCounter(&after_sleep); if ((uint64_t)(after_sleep.QuadPart - now.QuadPart) >= target) break;
-                  __asm__ volatile ("pause"); } } }
-  else { target = now.QuadPart + (freq.QuadPart * ms) / 1000;
-    while (1) { QueryPerformanceCounter(&now); if ((uint64_t)now.QuadPart >= target) break;
-                __asm__ volatile ("pause"); } } }
