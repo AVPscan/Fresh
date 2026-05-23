@@ -62,12 +62,13 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
   
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
 
 uint8_t SyncSize(Cell addr) { if (!addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
   if (ws.ws_col == TS.col && ws.ws_row == TS.row) return Off;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return On; }
+
+ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
   
 Cell GetCycles(void) {
   Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
@@ -77,15 +78,15 @@ Cell GetCycles(void) {
     return lo; }
   #endif
 
-void Delay_ms(ugoc ms) {
-  if (!Flag.Delay_ms) { struct timespec ts = {0, 100000L}; Cell start = GetCycles();
-    nanosleep(&ts, NULL); if (!(Flag.Delay_ms = (GetCycles() - start))) Flag.Delay_ms++; }
-  Cell total_cycles = (Cell)ms * Flag.Delay_ms; Cell start_time = GetCycles();
-  if (ms > 2) { struct timespec sleep_ts = {0, ((ms - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
+void Delay(ugoc n) {
+  if (!Flag.Delay) { struct timespec ts = {0, 100000L}; Cell start = GetCycles();
+    nanosleep(&ts, NULL); if (!(Flag.Delay = (GetCycles() - start))) Flag.Delay++; }
+  Cell total_cycles = (Cell)n * Flag.Delay; Cell start_time = GetCycles();
+  if (n > 2) { struct timespec sleep_ts = {0, ((n - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
   struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); Cell safety = 0;
   while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
     if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-      if (now.tv_sec > check_start.tv_sec) { Flag.Delay_ms = 0; break; }
+      if (now.tv_sec > check_start.tv_sec) { Flag.Delay = 0; break; }
       safety = 0; } } }
 
 Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;

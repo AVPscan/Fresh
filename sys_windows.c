@@ -69,7 +69,7 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
+ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
 
 uint8_t SyncSize(Cell addr) {
   if (!addr) return 0;
@@ -81,16 +81,16 @@ uint8_t SyncSize(Cell addr) {
 
 Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
     
-void Delay_ms(ugoc ms) {
-  static LARGE_INTEGER freq, start, after_sleep; static uint64_t total_target = 0; uint64_t target;
-  if (!Flag.Delay_ms) { QueryPerformanceFrequency(&freq); Flag.Delay_ms = 1; }
-  if (ms == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
-  if (ms > 19) { Sleep((ms / 10) - 1); QueryPerformanceCounter(&after_sleep);
-    uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * ms) / 10;
+void Delay(ugoc n) {
+  static LARGE_INTEGER freq, start, after_sleep; uint64_t target;
+  if (!Flag.Delay) { QueryPerformanceFrequency(&freq); Flag.Delay = 1; }
+  if (n == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
+  if (n > 19) { Sleep((n / 10) - 1); QueryPerformanceCounter(&after_sleep);
+    uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * n) / 10;
     if (elapsed < target) {
       while (1) { QueryPerformanceCounter(&after_sleep); if ((uint64_t)(after_sleep.QuadPart - now.QuadPart) >= target) break;
                   __asm__ volatile ("pause"); } } }
-  else { target = now.QuadPart + (freq.QuadPart * ms) / 10;
+  else { target = now.QuadPart + (freq.QuadPart * n) / 10;
     while (1) { QueryPerformanceCounter(&now); if ((uint64_t)now.QuadPart >= target) break;
                 __asm__ volatile ("pause"); } } }
 

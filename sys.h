@@ -27,7 +27,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
-#define FFps      50                         // Частота регенерации монитора
+#define FFps      50                          // Частота регенерации монитора
 #define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
 #define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
@@ -102,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Time, Ginf, Gmin, Gmax, A, B; uint16_t MWin, T[5], S[5], Tb[5]; uint8_t Deep, Colours, CellP, Ctb; } Sis;
+typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Time, Trap, Ginf, Gmin, Gmax, A, B; uint16_t MWin, T[5], S[5], Tb[5]; uint8_t Deep, Colours, CellP, Ctb; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -164,7 +164,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
-typedef struct { Cell Delay_ms; uint8_t SwitchRaw; } F_;
+typedef struct { Cell Delay; uint8_t SwitchRaw; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern char     *Cdata;
@@ -241,6 +241,7 @@ void BPrint(uint8_t border, char *str);                               // Выв�
 void SetColour(uint8_t c,  uint8_t deep);                             // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SwitchPal(void);                                                 // Переключить палитру
 void SetPalette(uint8_t set);                                         // Установить палитру {0/1},deep глубина цвета
+void SysInit(void);                                                   // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -273,7 +274,7 @@ ugoc TermCR(ugoc *r);                                                 // Счи�
 ugoc GetDelay(void);                                                  // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
-void Delay_ms(ugoc ms);                                           // Адаптивная задержка, гарантия точности ms
+void Delay(ugoc n);                                                   // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)

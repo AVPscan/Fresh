@@ -59,22 +59,23 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetDelay (void) { return (ugoc)Flag.Delay_ms; }
 
 uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
   if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
+
+ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
     
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
     
 static mach_timebase_info_data_t timebase = {0};
-void Delay_ms(ugoc ms) {
+void Delay(ugoc n) {
   if (timebase.denom == 0) mach_timebase_info(&timebase);
-  if (!Flag.Delay_ms) { Cell start = GetCycles(); 
-    struct timespec ts = {0, 100000L}; nanosleep(&ts, NULL); if (!(Flag.Delay_ms = GetCycles() - start)) Flag.Delay_ms++; }
-  Cell total_ticks = (Cell)(ms * Flag.Delay_ms); Cell start_time = GetCycles();
-  if (ms > 1) { struct timespec sleep_ts = {0, ((ms - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
+  if (!Flag.Delay) { Cell start = GetCycles(); 
+    struct timespec ts = {0, 100000L}; nanosleep(&ts, NULL); if (!(Flag.Delay = GetCycles() - start)) Flag.Delay++; }
+  Cell total_ticks = (Cell)(n * Flag.Delay); Cell start_time = GetCycles();
+  if (n > 1) { struct timespec sleep_ts = {0, ((n - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
   Cell check_start = GetCycles(), safety = 0, sec_ticks = (1000000000ULL * timebase.denom / timebase.numer);
   while ((GetCycles() - start_time) < total_ticks) {
         #if defined(__arm64__) || defined(__aarch64__)
@@ -83,9 +84,8 @@ void Delay_ms(ugoc ms) {
           __asm__ volatile("pause");
         #endif
     if (++safety > 2000) { Cell now = GetCycles();
-       if ((now - check_start) > sec_ticks) { Flag.Delay_ms = 0; break; }
+       if ((now - check_start) > sec_ticks) { Flag.Delay = 0; break; }
        safety = 0; check_start = now; } } }
-
 
 Cell GetSC(Cell addr) { 
   if (!addr || !TS.col) return 1;
