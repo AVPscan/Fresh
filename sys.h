@@ -241,7 +241,7 @@ void BPrint(uint8_t border, char *str);                               // Выв�
 void SetColour(uint8_t c,  uint8_t deep);                             // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SwitchPal(void);                                                 // Переключить палитру
 void SetPalette(uint8_t set);                                         // Установить палитру {0/1},deep глубина цвета
-void SysInit(void);                                                   // Установка переменных среды
+void SysInit(ugoc fps, uint8_t deep, uint8_t col);                    // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -263,6 +263,7 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Нас�
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _VKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
+void _SSet(ugoc fps, uint8_t count, uint8_t *args);                   // Изменить fps{,deep{,colours}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
@@ -283,5 +284,6 @@ Cell GetSC(Cell addr);                                                // Изм�
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define VKeys(...) _VKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define SysSet(n, ...) _SSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */

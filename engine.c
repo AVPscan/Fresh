@@ -137,26 +137,25 @@ void SetPalette(uint8_t set) { uint8_t c = Sys.Colours; if ((char*)(Coffset + SO
       if (!c) { cR = 0; cG = 0; cB = 0; } else if (c == Sys.Colours - On) { cR = 255; cG = 255; cB = 255; } }
     else { cRGB = (c) ? (((1 << 24) * (c)) / (Sys.Colours - On)) - On : Off; cG = (uint8_t)cRGB; cRGB >>= 8; cB = (uint8_t)cRGB;
       cRGB >>= 8; cR = (uint8_t)cRGB; } SetColour(c, Sys.Deep); } }
-void SysInit(void) {
-  Sys.Fps = (Sys.Fps < 100) ? 50 : (Sys.Fps < 250) ? 200 : (Sys.Fps < 500) ? 250 : 500; Sys.Tic = Sys.Fps / 10;
-  Sys.Deep = (Sys.Deep > b3) ? 24 : (Sys.Deep < b3) ? b10 : b3; Sys.Delay = (1000 / Sys.Fps);
-  Sys.Colours = (Sys.Colours > aColours) ? aColours : (Sys.Colours < b1) ? b1 : Sys.Colours; }
-void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  Cdata = (char*)addr; Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdfon = (char*)(Coffset + SOffset);
+void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
+  Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdfon = (char*)(Coffset + SOffset);
   Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF; Sys.MT = 5;
-  Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; Sys.A = RNG_A; Sys.B = RNG_B; Sys.Colours = Fcolour; Sys.Deep = CFDeep; Sys.Fps = FFps;
-  VP.Win = Sys.MWin; Convas.Win = Sys.MWin; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine;
-  Convas.W = Convas.CW; Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Fone = Sys.Colours - On; Convas.Border = Off; VP.Mode = b2; VP.Loop = On;
-  Vector(K_Mouse) = RPEncode; SysInit(); SetPalette(On); SetPalette(Off); uint8_t i = Sys.MT; while(i--) Sys.Time[i] = Off; }
+  Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; Sys.A = RNG_A; Sys.B = RNG_B; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
+  Sys.Fps = (fps < 100) ? 50 : (fps < 250) ? 200 : (fps < 500) ? 250 : 500; Sys.Tic = Sys.Fps / 10; Sys.Delay = (1000 / Sys.Fps);
+  deep = (deep > b3) ? 24 : (deep < b3) ? b10 : b3; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off; VP.Win = Sys.MWin;
+  col = (col > aColours) ? aColours : (col < b1) ? b1 : col; Convas.Win = Sys.MWin; Convas.S = Sys.MWin; Convas.Max = Sys.MWin;
+  if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; SetPalette(On); SetPalette(Off); } 
+  Convas.Fone = Sys.Colours - On; Convas.Border = Off; Convas.D = Off; Convas.Min = Off; Convas.CW = CellLine; Convas.W = Convas.CW;
+  Convas.CH = CellStr; Convas.H = Convas.CH; }
+void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) { return; } Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay(Off); IRnd();
     SyncSize(VRam.addr); Print(Convas.Fone,AltBufOn HideCur WrapOn MouseX10on); BPrint(Convas.Border, HideCur Cls); }
   else { VRam.SystemSwitch++; if (VRam.size) { SwitchRaw(); Print(Convas.Fone,AltBufOff Reset ShowCur WrapOn MouseX10off);
-    FreeRam(VRam.addr, VRam.size); } }
-  return On; }
+    FreeRam(VRam.addr, VRam.size); } } return On; }
 
 void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy;
   if (VP.Mode & b1) { return; }
@@ -248,5 +247,7 @@ void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = 
     if (Event(k)->C && count) { uint8_t j, c = Event(k)->C, i = Off; while(c-- && count--) { j = K_Mouse;
         while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } } break; } } }
 void _VKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
+void _SSet(ugoc fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours;
+  if (count--) { deep = args[Off]; if (count) { col = args[On]; } } SysInit(fps, deep, col); }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) { if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }
