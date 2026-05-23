@@ -78,10 +78,10 @@ Cell GetCycles(void) {
   #endif
 
 void Delay_ms(ugoc ms) {
-  if (!Flag.Delay_ms) { struct timespec ts = {0, 1000000L}; Cell start = GetCycles();
-    nanosleep(&ts, NULL); Flag.Delay_ms = (GetCycles() - start); if (Flag.Delay_ms == 0) Flag.Delay_ms++; }
-  Cell total_cycles = (Cell)ms * Flag.Delay_ms / 10; Cell start_time = GetCycles();
-  if (ms > 19) { struct timespec sleep_ts = {0, ((ms / 10) - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
+  if (!Flag.Delay_ms) { struct timespec ts = {0, 100000L}; Cell start = GetCycles();
+    nanosleep(&ts, NULL); if (!(Flag.Delay_ms = (GetCycles() - start))) Flag.Delay_ms++; }
+  Cell total_cycles = (Cell)ms * Flag.Delay_ms; Cell start_time = GetCycles();
+  if (ms > 2) { struct timespec sleep_ts = {0, ((ms - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
   struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); Cell safety = 0;
   while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
     if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);

@@ -72,10 +72,9 @@ static mach_timebase_info_data_t timebase = {0};
 void Delay_ms(ugoc ms) {
   if (timebase.denom == 0) mach_timebase_info(&timebase);
   if (!Flag.Delay_ms) { Cell start = GetCycles(); 
-    struct timespec ts = {0, 10000000L}; nanosleep(&ts, NULL); Flag.Delay_ms = (GetCycles() - start) / 10;
-    if (!Flag.Delay_ms) Flag.Delay_ms++; }
-  Cell total_ticks = (Cell)(ms * Flag.Delay_ms / 10); Cell start_time = GetCycles();
-  if (ms > 19) { struct timespec sleep_ts = {0, ((ms / 10) - 1) * 1000000L}; nanosleep(&sleep_ts, NULL); }
+    struct timespec ts = {0, 100000L}; nanosleep(&ts, NULL); if (!(Flag.Delay_ms = GetCycles() - start)) Flag.Delay_ms++; }
+  Cell total_ticks = (Cell)(ms * Flag.Delay_ms); Cell start_time = GetCycles();
+  if (ms > 1) { struct timespec sleep_ts = {0, ((ms - 1) * 100000L)}; nanosleep(&sleep_ts, NULL); }
   Cell check_start = GetCycles(), safety = 0, sec_ticks = (1000000000ULL * timebase.denom / timebase.numer);
   while ((GetCycles() - start_time) < total_ticks) {
         #if defined(__arm64__) || defined(__aarch64__)
