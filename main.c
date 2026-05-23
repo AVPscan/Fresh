@@ -10,7 +10,7 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, w, j = 41, i = Sys.Colours; if (i > aColours) { i = aColours; } else { if (i < b1) i = b1; } w = i - On;
+  char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 41, i = Sys.Colours, w = i - On;
   BPrint(Convas.Fone,Home); while(i--) { BPrint(w - i," "); } BPrint(Convas.Fone,"\n");
   ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 8;
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d Time %d%d             ", s, K_Mouse, c, r, Sys.T[3], Sys.T[4]);
