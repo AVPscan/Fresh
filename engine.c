@@ -121,7 +121,7 @@ void BPrint(uint8_t n, char *str) { if (!str) return;
   
 void SetColour(uint8_t c,  uint8_t deep) {
   uint8_t i, k, j = On; k = (!deep) ? 0 : (deep > b3) ? 3 : (deep < b3) ? 1 : 2; c = (c >= aColours) ? aColours - On : c;
-  char* modes[] = { "\12;22;23;27m", "\11;22;23;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
+  char* modes[] = { "\12;23;22;27m", "\11;23;22;7m", "\11;23;27;1m", "\10;23;1;7m", "\11;22;27;3m", "\10;22;3;7m", "\10;27;1;3m", "\7;1;3;7m" };
   char *dcol[] = { "\6\33[38;2", "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *pal, *mode = (PalBuf*)dcol[k], *src = AFon(c);
   if (k == b1 ) { cR = 16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255); }
   else if (k == On ) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127000) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
@@ -142,14 +142,15 @@ void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   Cdpal = Cdfon + SFon; Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF; Sys.MT = 5;
-  Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; Sys.A = RNG_A; Sys.B = RNG_B; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
+  Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; Sys.A = RNG_A; Sys.B = RNG_B;
   Sys.Fps = (fps < 100) ? 50 : (fps < 250) ? 200 : (fps < 500) ? 250 : 500; Sys.Tic = Sys.Fps / 10; Sys.Delay = (1000 / Sys.Fps);
-  deep = (deep > b3) ? 24 : (deep < b3) ? b10 : b3; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off; VP.Win = Sys.MWin;
-  col = (col > aColours) ? aColours : (col < b1) ? b1 : col; Convas.Win = Sys.MWin; Convas.S = Sys.MWin; Convas.Max = Sys.MWin;
+  deep = (deep > b3) ? 24 : (deep < b3) ? b10 : b3; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off;
+  col = (col > aColours) ? aColours : (col < b1) ? b1 : col; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; SetPalette(On); SetPalette(Off); } 
-  Convas.Fone = Sys.Colours - On; Convas.Border = Off; Convas.D = Off; Convas.Min = Off; Convas.CW = CellLine; Convas.W = Convas.CW;
-  Convas.CH = CellStr; Convas.H = Convas.CH; }
-void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) { return; } Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); }
+  Convas.Fone = Sys.Colours - On; Convas.Border = Off; }
+void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
+  Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW;
+  Convas.CH = CellStr; Convas.H = Convas.CH; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     VRam.SystemSwitch--; SWD(VRam.addr); InitVram(VRam.addr,VRam.size); SwitchRaw(); Delay(Off); IRnd();
@@ -246,7 +247,7 @@ void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = 
   while(k--) { if (Event(k)->W == Convas.Win) {
     if (Event(k)->C && count) { uint8_t j, c = Event(k)->C, i = Off; while(c-- && count--) { j = K_Mouse;
         while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } } break; } } }
-void _VKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
+void _SKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
 void _SSet(ugoc fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours;
   if (count--) { deep = args[Off]; if (count) { col = args[On]; } } SysInit(fps, deep, col); }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) { if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
