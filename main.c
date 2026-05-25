@@ -33,8 +33,6 @@ void Init(void) {
 Cell Help(Cell argc, char *argv[], Cell flag) { 
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Sys.Fone,AltBufOff); Print(fuchsia | aCB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(fuchsia | aC," in 07.02.2026 version 9.35 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(fuchsia | aC," in 07.02.2026 version 9.36 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 
-int main(int argc, char *argv[]) {
-  Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag);
-  if (flag) { Init(); while(ViewPort()) Delay(Sys.Delay); } return (int)SystemSwitch(); }
+int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); Fresh(); } return (int)SystemSwitch(); }

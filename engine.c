@@ -170,13 +170,13 @@ uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   else if (((dx ^ VP.X) & Sys.Ginf) || ((dy ^ VP.Y) & Sys.Ginf)) return Off;
   VP.X = dx; VP.Y = dy; VP.Xs -= mx; VP.Ys -= my; return On; }
   
-uint8_t ViewPort(void) {
-  uint8_t p = Off; Buf.Ctrl = Off;
-    if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
-    Vector(K_Mouse)(); if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
-    else { Buf.Cod = (*Buf.Key == K_ESC) ? *(Buf.Key + On) : (*Buf.Key & b7) ? Off : *Buf.Key;
+void Fresh(void) { uint8_t p, *n;
+  while(VP.Loop) { Buf.Ctrl = Off;
+    if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); } Vector(K_Mouse)();
+    if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
+    else { Buf.Cod = (*Buf.Key & b7) ? Off : (*Buf.Key == K_ESC) ? *(Buf.Key + On) : *Buf.Key;
       if (Buf.Cod == K_Mouse) {
-        Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21;
+        Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; p = Off;
         if (Buf.Mkey == Buf.Ru) Buf.Cod = VP.up;
         else if (Buf.Mkey == Buf.Rd) Buf.Cod = VP.ud;
         else if (Buf.Mkey == Buf.cRu) Buf.Cod = VP.ri;
@@ -188,7 +188,7 @@ uint8_t ViewPort(void) {
       else {
         if (Buf.Cod) {
           if (Vector(Buf.Cod)) { VP.Wec = Event(Buf.Cod)->W; Vector(Buf.Cod)(); Buf.Ctrl++; }
-          uint8_t *n = &VP.Key, t = *n++; while (t--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
+          n = &VP.Key; p = *n++; while (p--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
         if (!Buf.Ctrl) PushKey(); }
       if (Buf.Cod) { ++Buf.tic; Buf.Ctrl = On; } }
     if (Buf.Ctrl) {
@@ -205,10 +205,10 @@ uint8_t ViewPort(void) {
         else if (Buf.Cod == VP.up) dy = -VP.dXY;
         else if (Buf.Cod == VP.ud) dy = VP.dXY;
         MoveConvas(dx, dy); } }
-  if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Sys.Border,Cls); }
-  else {  }
-  if (!--Sys.Tic) { p = Sys.MT; while(--p && (!++Sys.Time[p])) { } Sys.Tic = Sys.Fps / 10; }
-  return VP.Loop; }
+    if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Sys.Border,Cls); }
+    else {  }
+    if (!--Sys.Tic) { p = Sys.MT; while(--p && (!++Sys.Time[p])) { } Sys.Tic = Sys.Fps / 10; }
+    Delay(Sys.Delay); } }
 
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
