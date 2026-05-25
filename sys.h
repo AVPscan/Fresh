@@ -258,7 +258,7 @@ void WinUp(void);                                                     // Рот�
 void WinTop(ugoc n);                                                  // Установить окно выше остальных подобных
 void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
 uint16_t _Window(uint8_t t, int8_t col, uint8_t count, ugoc *args);   // Создание окна с палитрой col при col<0 статичное окно
-void _WEvent(uint16_t n, uint8_t cur, uint8_t count, AFunction *args);// Настройка статического окна привязка функций к кодам клавиш
+void _WExec(uint16_t n, uint8_t cur, uint8_t count, AFunction *args); // Настройка статического окна привязка функций к кодам клавиш
 void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
@@ -279,7 +279,7 @@ void Delay(ugoc n);                                                   // Ада�
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
-#define WinEvent(n, cur, ...) _WEvent(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define WinExecs(n, cur, ...) _WExec(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define WinSet(n, ...) _WSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
