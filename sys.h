@@ -32,7 +32,7 @@
 #define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
 #define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
-    typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {VP.Rnd текущее значение генератора} 
+    typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {Sys.Rnd текущее значение генератора} 
     typedef int16_t  goc;
     #define RNG_A 0x4F2D
     #define RNG_B 0x3A7B
@@ -47,10 +47,10 @@
     #define RNG_A 0x9E3779B97F4A7C15ULL
     #define RNG_B 0xBF58476D1CE4E5B9ULL
 #endif
-#define UGOC_MAX ((ugoc)~(ugoc)0)             // Вычисляем пределы для нового типа данных
-#define GOC_MAX  ((goc)(UGOC_MAX >> 1))
+#define UGOC_MAX ((ugoc)~(ugoc)0)             // Максимум беззнаковый
+#define GOC_MAX  ((goc)(UGOC_MAX >> 1))       // Максимум в положительной части
 #define GOC_INF  (~GOC_MAX)                   // Бесконечность!
-#define GOC_MIN  (~GOC_MAX) + 1
+#define GOC_MIN  (~GOC_MAX) + 1               // Минимум в отрицательной части
 typedef void (*AFunction)(void);
 typedef uintptr_t Cell;                       // Разрядность процессора, создали абстракцию
 #define SCell sizeof(Cell)
@@ -68,8 +68,7 @@ enum {
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_ALT_ESC,
-    K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
 enum { Fblack, Fnavy, Folive, Fcyan, Ffuchsia, Fmarsala, Fochre, Fwhite, };
 enum { black, navy, olive, cyan, fuchsia, marsala, ochre, white };
 typedef struct {                              //UTFinfo  
@@ -88,13 +87,13 @@ typedef struct {
     uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
 } Structure;
 typedef struct {
-    uint8_t col        ;                      // бит x      цвет {максимум 32 цветовых оттенка из за трёх атрибутов}
+    uint8_t col        ;                      // бит x      код цвета {максимум 32 цветовых оттенка}
     uint8_t inverse : 1;                      // бит 5  aI  инверсия
     uint8_t bold    : 1;                      // бит 6  aB  толстый
     uint8_t cursive : 1;                      // бит 7  aC  курсив
 } palette;
 typedef struct { uint8_t l, d[31]; } PalBuf;
-typedef struct { uint8_t data1, tic1, data2, tic2, utf8[4]; } KeyBuf; 
+typedef struct { uint8_t d[4], u[4]; } KeyBuf; 
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
@@ -103,8 +102,8 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Spd0, Spd1, Speed, Fps, Delay, Tic, Time[5], Ginf, Gmin, Gmax, A, B; uint16_t MWin; uint8_t Deep, Colours, CellP, MT; } Sis;
-typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; uint8_t Fone, Border; } Canalysis;
+typedef struct { ugoc Tic, Delay, Spd0, Spd1, Ginf, Gmin, Gmax, A, B, Time[5], Speed, Rnd, Fps; uint16_t MWin; uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, res; } Sis;
+typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
     SKey = 256,                                                               // Буфер клавиатуры на 255/510 клавиш с автоповторами
@@ -152,7 +151,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
 #define AFon(f)       ((PalBuf*)(Cdfon + ((f) << P_shift)))                   // адрес начала кода фона
 #define APal(c)       ((PalBuf*)(Cdpal + ((c) << P_shift)))                   // адрес начала кода цвета
-#define AKey(k)       (Cdkey + ((k) << K_shift))                              // адрес начала ячейки в буфере клавиатуры
+#define AKey(k)       ((KeyBuf*)(Cdkey + ((k) << K_shift)))                   // адрес начала ячейки в буфере клавиатуры
 #define Sys           (*(Sis*)Cdsys)                                          // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
 #define Win(n)        ((Windows*)(Cdwin + ((n) << W_shift)))                  // адрес начала данных окна n
@@ -163,7 +162,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
-typedef struct { goc X, Y; ugoc Rnd, dXY, Xs, Ys; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } V_;
+typedef struct { goc X, Y; ugoc Xs, Ys, dXY; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell Delay; uint8_t SwitchRaw; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
@@ -207,7 +206,7 @@ extern uint32_t cRGB;
     uint8_t   cR = 0, cG = 0, cB = 0; \
     uint32_t  cRGB = 0; \
     R_ VRam = {0,0,1}; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_ALT_ESC}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
@@ -218,7 +217,7 @@ extern uint32_t cRGB;
         {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
         {"[21~", K_F10}, {"[23~", K_F11}, {"[24~", K_F12}, {"[3~", K_DEL}, {"[4~", K_END}, {"[5~", K_PUP}, \
         {"[6~", K_PDN}, {"[F", K_END}, {"[H", K_HOM}, {"OP", K_F1}, {"OQ", K_F2}, {"OR", K_F3}, {"OS", K_F4}, \
-        {"\t", K_ALT_TAB}, {"\r", K_ALT_ENT}, {"\033", K_ALT_ESC} };
+        {"\t", K_ALT_TAB}, {"\r", K_ALT_ENT} };
 
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
