@@ -170,25 +170,24 @@ uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   else if (((dx ^ VP.X) & Sys.Ginf) || ((dy ^ VP.Y) & Sys.Ginf)) return Off;
   VP.X = dx; VP.Y = dy; VP.Xs -= mx; VP.Ys -= my; return On; }
   
-void Fresh(void) { uint8_t p, *n;
+void Fresh(void) { goc dx, dy; uint8_t i, *n;
   while(VP.Loop) { Buf.Ctrl = Off;
-    if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); } Vector(K_Mouse)();
+    Vector(K_Mouse)();
     if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
     else { Buf.Cod = (*Buf.Key & b7) ? Off : (*Buf.Key == K_ESC) ? *(Buf.Key + On) : *Buf.Key;
-      if (Buf.Cod == K_Mouse) {
-        Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; p = Off;
+      if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; i = Off;
         if (Buf.Mkey == Buf.Ru) Buf.Cod = VP.up;
         else if (Buf.Mkey == Buf.Rd) Buf.Cod = VP.ud;
         else if (Buf.Mkey == Buf.cRu) Buf.Cod = VP.ri;
         else if (Buf.Mkey == Buf.cRd) Buf.Cod = VP.le;
-        else if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; p++; }
-        else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; p = b10; }
-        else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; p = b1; }
-        if (p && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } }
+        else if (Buf.Mkey == Buf.Lk) { Buf.LkX = Buf.MX; Buf.LkY = Buf.MY; i++; }
+        else if (Buf.Mkey == Buf.Mk) { Buf.MkX = Buf.MX; Buf.MkY = Buf.MY; i = b10; }
+        else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; i = b1; }
+        if (i && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } }
       else {
         if (Buf.Cod) {
           if (Vector(Buf.Cod)) { VP.Wec = Event(Buf.Cod)->W; Vector(Buf.Cod)(); Buf.Ctrl++; }
-          n = &VP.Key; p = *n++; while (p--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
+          n = &VP.Key; i = *n++; while (i--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
         if (!Buf.Ctrl) PushKey(); }
       if (Buf.Cod) { ++Buf.tic; Buf.Ctrl = On; } }
     if (Buf.Ctrl) {
@@ -197,17 +196,18 @@ void Fresh(void) { uint8_t p, *n;
       else if (Buf.Cod == VP.bcu) { SwitchPal(); BPrint(Sys.Border,Cls); }
       else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
       else if (Buf.Cod == VP.Exit) VP.Loop = Off;
-      else { goc dx = Off, dy = Off;
+      else { dx = Off, dy = Off;
         if (Buf.Cod != VP.Cod) { VP.dXY = On; VP.Cod = Buf.Cod; }
         if ((Buf.tic > 7) && !(Buf.tic & b10) && (VP.dXY < Sys.Speed)) VP.dXY <<= On;
         if (Buf.Cod == VP.le) dx = -VP.dXY;
         else if (Buf.Cod == VP.ri) dx = VP.dXY;
         else if (Buf.Cod == VP.up) dy = -VP.dXY;
         else if (Buf.Cod == VP.ud) dy = VP.dXY;
-        MoveConvas(dx, dy); } }
+        MoveConvas(dx, dy); } } 
     if (SyncSize(VRam.addr) || Buf.Ctrl > On) { BPrint(Sys.Border,Cls); }
     else {  }
-    if (!--Sys.Tic) { p = Sys.MT; while(--p && (!++Sys.Time[p])) { } Sys.Tic = Sys.Fps / 10; }
+    if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
+    if (!--Sys.Tic) { Sys.Tic = Sys.Fps / 10; i = Sys.MT; while(--i && (!++Sys.Time[i])) { } }
     Delay(Sys.Delay); } }
 
 void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
