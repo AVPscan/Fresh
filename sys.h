@@ -239,8 +239,9 @@ int8_t Fctg(int16_t u);                                               // Кот�
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
 void SetColour(uint8_t c,  uint8_t deep);                             // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPal(void);                                                 // Переключить палитру
-void SetPalette(uint8_t set);                                         // Установить палитру {0/1},deep глубина цвета
+void GenPalette(void);                                                // Автогенерация оттенков света в установленную палитру
 void SysInit(ugoc fps, uint8_t deep, uint8_t col);                    // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
