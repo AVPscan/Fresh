@@ -29,8 +29,8 @@
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
 #define FFps      100                         // Частота регенерации монитора
-#define Fcolour   8                           // Количество цветов на старте {максимум 32} 2 палитры
-#define CFDeep    24                          // Глубина {0 3 8 24} бита {0 значит создаётся чистый цвет без наложения 8 состояний}
+#define Fcolour   7                           // Количество оттенков света на старте {максимум 31} 0 всегда есть {2 палитры}
+#define CFDeep    24                          // Глубина {3 8 24} бита
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {Sys.Rnd текущее значение генератора} 
     typedef int16_t  goc;
@@ -59,7 +59,7 @@ enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, 
     aB = 0x40, aI = 0x20, aC = 0x80 , aBI = 0x60, aCI = 0xA0, aCB = 0xC0, aCBI = 0xE0, aShift = 0x05,
-    aColours = 0x20, On = 0x01, Off = 0x00 };
+    aColours = 0x1F, On = 0x01, Off = 0x00 };
 enum {
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,

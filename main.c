@@ -10,7 +10,7 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 42, i = Sys.Colours, w = i - On;
+  char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 42, w = Sys.Colours, i = On + w;
   Print(Sys.Inc,Home); while(i--) { BPrint(w - i," "); } BPrint(Sys.Fone,"\n");
   ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 3;
   while (i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d Time %d %d           ", s, K_Mouse, c, r, Sys.Time[3], Sys.Time[4]);
@@ -24,15 +24,15 @@ void body(void) {  // пока не дописано WinData,Render
   snprintf(p, 30, "                     "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= c) { *(b + c) = Off; } if (r > 3) Print(black | aCI,b); } }
 
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
-void sb(void) { if (++Sys.Border >= Sys.Colours) { Sys.Border = Off; } BPrint(Sys.Border,Cls); }
+void sb(void) { if (++Sys.Border > Sys.Colours) { Sys.Border = Off; } BPrint(Sys.Border,Cls); }
 void Init(void) {
   ugoc control = Window(On,olive, -2, -2), W1 = Window(Off,navy, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Off,Rand(Sys.Colours), Off, Off, 80, 24);
   WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), cyan, cyan); WinExecs(control, K_Ctrl_K, WSwitch); WinExecs(control, K_NO, body); 
-  WinSet(W1, On, On); WinSet(W2, Off, Off); WinView(W2, 10, 3); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp); SysSet(50, 24, 8);
+  WinSet(W1, On, On); WinSet(W2, Off, Off); WinView(W2, 10, 3); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp); SysSet(50, 24, 7);
   SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); }
 
 Cell Help(Cell argc, char *argv[], Cell flag) { 
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Sys.Fone,AltBufOff); Print(fuchsia | aCB,"Created by Alexey Pozdnyakov"); flag = Off;
-        Print(fuchsia | aC," in 07.02.2026 version 9.38 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(fuchsia | aC," in 07.02.2026 version 9.39 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); Fresh(); } return (int)SystemSwitch(); }
