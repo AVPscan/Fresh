@@ -236,8 +236,9 @@ int8_t Ftg(int16_t u);                                                // Тан�
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
 void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
-void SwitchPal(void);                                                 // Переключить палитру
+void SwitchPalette(void);                                             // Переключить палитру
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(ugoc fps, uint8_t deep, uint8_t col);                    // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
@@ -249,7 +250,6 @@ void RPEncode(void);                                                  // Про�
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
-void ChangeBorder(void);                                              // Установить цвет бордюра и осчистить экран
 void WSwitch(void);                                                   // Показать окно {Спрятать окно}
 void WASwitch(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
