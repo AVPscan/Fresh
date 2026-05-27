@@ -69,7 +69,7 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
-enum { Fblack, black, Fnavy, navy, Folive, olive, Fcyan, cyan, Ffuchsia, fuchsia, Fmarsala, marsala, Fochre, ochre, Fwhite, white };
+enum { black, navy, olive, cyan, fuchsia, marsala, ochre, white, Fblack = 128, Fnavy, Folive, Fcyan, Ffuchsia, Fmarsala, Fochre, Fwhite };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
@@ -101,7 +101,8 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Tic, Delay, Spd0, Spd1, Ginf, Gmin, Gmax, A, B, Time[5], Speed, Rnd, Fps; uint16_t MWin; uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, res; } Sis;
+typedef struct { ugoc Time[5], Syn, Loop, Delay, Spd0, Spd1, Ginf, Gmin, Gmax, A, B, Speed, Rnd, Fps; uint16_t MWin;
+                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr, Li, La; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -113,7 +114,7 @@ enum {
     SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
     SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
     SOffset = ConvasArea * sizeof(ugoc) / 2,                                  // Размер смещений для ячеек холста
-    SPal = 2 * SKey * sizeof(PalBuf),                                         // Размер буфера палитры (0я пара чёрный и 127 пар оттенков фона и оттенков света) под 2 палитры
+    SPal = 2 * SKey * sizeof(PalBuf),                                         // Размер буфера под 2 палитры
     SKeys = SKey * sizeof(KeyBuf),                                            // Размер данных кольцевого буфера клавиатуры
     SSys = sizeof(Sis) / 2,                                                   // Размер данных под разбивку холста для организации окон
     SConvas = sizeof(Canalysis) / 2,                                          // Размер данных под разбивку холста для организации окон
@@ -232,8 +233,7 @@ int8_t Fcos(int16_t u);                                               // Кос�
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127] 256 значений)
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
-void BPrint(uint8_t border, char *str);                               // Вывод строки с фоном напрямую игнорируя Fresh.
-void SetColour(uint8_t c,  uint8_t deep);                             // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPal(void);                                                 // Переключить палитру
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
