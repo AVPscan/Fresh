@@ -111,26 +111,26 @@ int8_t Fsin(int16_t u) { static int8_t s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,1
 int8_t Ftg(int16_t u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 int8_t Fctg(int16_t u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 
-void Print(uint8_t n, char *str) { if (!str) return;
-  char *dst = Cdbuf; ugoc len = StrLen(str); PalBuf* pal = APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l; MemCpy(dst, str, len);
-  if (n & b7) { if (n != Sys.Fone) { dst += len; pal = APal(Sys.Fone); len = pal->l; MemCpy(dst, pal->d, len); } }
-  else { if (n != Sys.Inc) { dst += len; pal = APal(Sys.Inc); len = pal->l; MemCpy(dst, pal->d, len); } }
-  SysWrite(Cdbuf, dst + len - Cdbuf); }
+void Print(uint8_t n, char *str) {
+  char *dst = Cdbuf; if (!str) return;
+  if (n & b7) { if (n != cF) { cF = n; PalBuf* pal = APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l; } }
+  else { if (n != cI) { cI = n; PalBuf* pal = APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l; } }
+  ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
   
 void GenFonCol(uint8_t c,  uint8_t deep) {
-  uint8_t i, j = On, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > aColours) ? aColours : c;
-  char *dcol[] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *pal = APal(c), *mode = (PalBuf*)dcol[k], *src = APal(c + aColours + On);
-  if (k == On ) { cR = 16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255); }
-  else if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127000) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
-  if (k) { j += b1; } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
+  uint8_t i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > aColours) ? aColours : c;
+  char *dcol[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)dcol[k], *pal = APal(c), *src = APal(c + aColours + 1);
+  if (k == 1 ) { cR = (16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255)); }
+  else  { if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127999) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
+          else { j = 3; } } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
   while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if (i / 100) { src->d[src->l++] = 0x30 + (i / 100); i %= 100; }
     if (i / 10) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4';
-  if (!k && pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
+  if (pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetPalette(uint8_t set) { Cdpal = (char*)(Coffset + SOffset); if (set) { Cdpal += SPal / 2; } }
 void SwitchPal(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal) { a += SPal / 2; } Cdpal = a; }
 void GenPalette(uint8_t set) { uint8_t c = On + Sys.Colours; SetPalette(set);
-  while(c--) { if (set) { if (!c) { cR = 0; cG = 0; cB = 0; } else { uint16_t a = ((c - On) * 511) / Sys.Colours;
+  while(c--) { if (set) { if (!c) { cR = 0; cG = 0; cB = 0; } else { uint16_t a = cU + (c * 511) / Sys.Colours;
       cB = 128 + Fsin(a); cG = 128 + Fsin(a + 171); cR = 128 + Fsin(a + 342); } }
     else { cRGB = (c) ? (((1 << 24) * (c)) / Sys.Colours) - On : Off;
       cG = (uint8_t)cRGB; cRGB >>= 8; cB = (uint8_t)cRGB; cRGB >>= 8; cR = (uint8_t)cRGB; }
@@ -144,8 +144,8 @@ void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   Sys.Fps = (fps < 51) ? 50 : (fps < 101) ? 100 : (fps < 201) ? 200 : (fps < 500) ? 250 : 500; Sys.Delay = (1000 / Sys.Fps);
   deep = (deep < b3) ? b10 : (deep > b3) ? 24 : b3; Sys.Loop = Sys.Fps / 10; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off;
   col = (col < b0) ? b0 : (col > aColours) ? aColours : col; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
-  if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; GenPalette(On); GenPalette(Off); } 
-  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = aColours + 1; Sys.Inc = Off; }
+  if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = 490; GenPalette(Off); GenPalette(On); }
+  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = aColours + 1; Sys.Inc = Off; cI = Sys.Border; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW - On;
   Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
@@ -191,7 +191,7 @@ void Fresh(void) { Sys.Syn = Sys.Loop; goc dx, dy; uint8_t i, *n;
     if (Buf.Ctrl) {
       if (Buf.Cod == VP.scs) { VP.dXY = On; Sys.Speed = (VP.Mode ^= b2) ? Sys.Spd1 : Sys.Spd0; }
       else if (Buf.Cod == VP.Anchor) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
-      else if (Buf.Cod == VP.bcu) { SwitchPal(); Print(Sys.Border,Cls); }
+      else if (Buf.Cod == VP.bcu) { SwitchPal(); ChangeBorder(); }
       else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
       else if (Buf.Cod == VP.Exit) VP.Loop = Off;
       else { dx = Off, dy = Off;
@@ -202,7 +202,7 @@ void Fresh(void) { Sys.Syn = Sys.Loop; goc dx, dy; uint8_t i, *n;
         else if (Buf.Cod == VP.up) dy = -VP.dXY;
         else if (Buf.Cod == VP.ud) dy = VP.dXY;
         MoveConvas(dx, dy); } }
-    if (SyncSize(VRam.addr) || Buf.Ctrl > On) { Print(Sys.Border,Cls); }
+    if (SyncSize(VRam.addr) || Buf.Ctrl > On) { ChangeBorder(); }
     else {  }
     if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
     if (!--Sys.Syn) { Sys.Syn = Sys.Loop; i = Sys.MT; while(--i && (!++Sys.Time[i])) { } }
@@ -212,6 +212,7 @@ void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
 void Bye(void) { VP.Loop = Off; }
+void ChangeBorder(void) { cT = cF; Print(Sys.Border,Cls); cF = cT; }
 void WSwitch(void) { if (Win(VP.Wec)->Xr) Win(VP.Wec)->EF ^= b1; }
 void WASwitch(void) { if (Win(VP.Wec)->EF ^= b1) WinView(VP.Wec); }
 void WinDown(void) { if (Convas.D) { uint16_t l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }

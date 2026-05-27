@@ -102,7 +102,7 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc Time[5], Syn, Loop, Delay, Spd0, Spd1, Ginf, Gmin, Gmax, A, B, Speed, Rnd, Fps; uint16_t MWin;
-                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr, Li, La; } Sis;
+                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -182,7 +182,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
-extern uint8_t  cR, cG, cB, cI, cF, cA;
+extern uint8_t  cR, cG, cB, cI, cF, cA, cT, cC;
+extern int16_t  cU;
 extern uint32_t cRGB;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
@@ -199,7 +200,8 @@ extern uint32_t cRGB;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
-    uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0; \
+    uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cT = 0, cC = 0; \
+    int16_t   cU = 0; \
     uint32_t  cRGB = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
@@ -247,6 +249,7 @@ void RPEncode(void);                                                  // Про�
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
+void ChangeBorder(void);                                              // Установить цвет бордюра и осчистить экран
 void WSwitch(void);                                                   // Показать окно {Спрятать окно}
 void WASwitch(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WinDown(void);                                                   // Ротация динамических окон
