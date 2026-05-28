@@ -42,33 +42,31 @@ int8_t MemCmp(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s =
   while(len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
   return Off; }
 
-void UTFinfoTile(uint8_t *s, Cell len) { Buf.Data = 0xC0;
-  if (!len) return;
+void UTFinfoTile(uint8_t *s, Cell len) { Buf.Data = 0xC0; if (!len) return;
   if ((*s & 0xE0) == 0xC0 && len < 0x02) return;
   else if ((*s & 0xF0) == 0xE0 && len < 0x03) return;
   else if ((*s & 0xF8) == 0xF0 && len < 0x04) return;
   UTFinfo(s); }
-void UTFinfo(uint8_t *s) { uint32_t cp; uint8_t c = *s++; Buf.Data = Off;
-  if (c < 0x80) cp = (uint32_t) c;
-  else if ((c & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80) { Buf.Data++; cp = ((c & 0x1F) << 0x06) | (*s & 0x3F); }
-  else if ((c & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
-    { Buf.Data = 0x02; cp = ((c & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
-  else if ((c & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
-    { Buf.Data = 0x03; cp = ((c & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
+void UTFinfo(uint8_t *s) { cY = *s++; Buf.Data = Off; if (cY < 0x80) cRGB = (uint32_t)cY;
+  else if ((cY & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80) { Buf.Data++; cRGB = ((cY & 0x1F) << 0x06) | (*s & 0x3F); }
+  else if ((cY & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
+    { Buf.Data = 0x02; cRGB = ((cY & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
+  else if ((cY & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
+    { Buf.Data = 0x03; cRGB = ((cY & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
   else { Buf.Data |= b7; return; }
-  if (cp < 0x20 || (cp >= 0x7F && cp < 0xA0)) { Buf.Data |= b5; return; }
-  if (cp < 0x100) { Buf.Data |= b2; return; }
-  if (cp >= 0x0590 && cp <= 0x08FF) Buf.Data |= b4;
-  if (((Buf.Data & 0x03) == 0x01 && cp < 0x80) || ((Buf.Data & 0x03) == 0x02 && (cp < 0x800 || (cp >= 0xD800 && cp <= 0xDFFF))) || 
-      ((Buf.Data & 0x03) == 0x03 && (cp < 0x10000 || cp > 0x10FFFF))) { Buf.Data |= b7; return; }
-  if ((cp >= 0x0300 && cp <= 0x036F) || (cp >= 0x1DC0 && cp <= 0x1DFF) || (cp >= 0x20D0 && cp <= 0x20FF) ||
-      (cp == 0x200D || (cp >= 0xFE00 && cp <= 0xFE0F))) { Buf.Data &= 0xF3; return; }
-  if (cp == 0x200B || cp == 0x200C || cp == 0x200E || cp == 0x200F || (cp >= 0xFE20 && cp <= 0xFE2F) ||
-      (cp >= 0xE0100 && cp <= 0xE01EF)) { Buf.Data &= 0xF3; return; }
-  if ((cp >= 0x1100 && cp <= 0x115F) || (cp == 0x2329 || cp == 0x232A) || (cp >= 0x2E80 && cp <= 0xA4CF && cp != 0x303F) || 
-      (cp >= 0xAC00 && cp <= 0xD7A3) || (cp >= 0xF900 && cp <= 0xFAFF) || (cp >= 0xFE10 && cp <= 0xFE19) || 
-      (cp >= 0xFE30 && cp <= 0xFE6F) || (cp >= 0xFF00 && cp <= 0xFF60) || (cp >= 0xFFE0 && cp <= 0xFFE6) || 
-      (cp >= 0x20000 && cp <= 0x2FFFD) || (cp >= 0x30000 && cp <= 0x3FFFD) || (cp >= 0x1F300)) { Buf.Data |= 0x08; return; }
+  if (cRGB < 0x20 || (cRGB >= 0x7F && cRGB < 0xA0)) { Buf.Data |= b5; return; }
+  if (cRGB < 0x100) { Buf.Data |= b2; return; }
+  if (cRGB >= 0x0590 && cRGB <= 0x08FF) Buf.Data |= b4;
+  if (((Buf.Data & 0x03) == 0x01 && cRGB < 0x80) || ((Buf.Data & 0x03) == 0x02 && (cRGB < 0x800 || (cRGB >= 0xD800 && cRGB <= 0xDFFF))) || 
+      ((Buf.Data & 0x03) == 0x03 && (cRGB < 0x10000 || cRGB > 0x10FFFF))) { Buf.Data |= b7; return; }
+  if ((cRGB >= 0x0300 && cRGB <= 0x036F) || (cRGB >= 0x1DC0 && cRGB <= 0x1DFF) || (cRGB >= 0x20D0 && cRGB <= 0x20FF) ||
+      (cRGB == 0x200D || (cRGB >= 0xFE00 && cRGB <= 0xFE0F))) { Buf.Data &= 0xF3; return; }
+  if (cRGB == 0x200B || cRGB == 0x200C || cRGB == 0x200E || cRGB == 0x200F || (cRGB >= 0xFE20 && cRGB <= 0xFE2F) ||
+      (cRGB >= 0xE0100 && cRGB <= 0xE01EF)) { Buf.Data &= 0xF3; return; }
+  if ((cRGB >= 0x1100 && cRGB <= 0x115F) || (cRGB == 0x2329 || cRGB == 0x232A) || (cRGB >= 0x2E80 && cRGB <= 0xA4CF && cRGB != 0x303F) || 
+      (cRGB >= 0xAC00 && cRGB <= 0xD7A3) || (cRGB >= 0xF900 && cRGB <= 0xFAFF) || (cRGB >= 0xFE10 && cRGB <= 0xFE19) || 
+      (cRGB >= 0xFE30 && cRGB <= 0xFE6F) || (cRGB >= 0xFF00 && cRGB <= 0xFF60) || (cRGB >= 0xFFE0 && cRGB <= 0xFFE6) || 
+      (cRGB >= 0x20000 && cRGB <= 0x2FFFD) || (cRGB >= 0x30000 && cRGB <= 0x3FFFD) || (cRGB >= 0x1F300)) { Buf.Data |= 0x08; return; }
   Buf.Data |= b2; }
   
 void PushKey(void) { uint8_t l, d, i = Off; KeyBuf* k;
@@ -133,11 +131,8 @@ void SwitchPalette(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal)
 void GenPalette(uint8_t set) { SetPalette(set); cX = On + Sys.Colours;
   while(cX--) { if (cX == Sys.Colours) { cR = 255; cG = cR; cB = cR; } 
     else if (!cX) { cR = 0; cG = 0; cB = 0; } 
-    else if (set) { cZ = cU + (cX * 511) / Sys.Colours; cB = 128 + Fsin(cZ); cG = 128 + Fsin(cZ + 171);
-          cR = 128 + Fsin(cZ + 342); }
-        else { cRGB = (((1 << 24) * (cX)) / Sys.Colours) - On; cG = (uint8_t)cRGB; cRGB >>= 8;
-          cB = (uint8_t)cRGB; cRGB >>= 8; cR = (uint8_t)cRGB; }
-    GenFonCol(cX, Sys.Deep); } }
+    else { cZ = cU + (cX * 512) / Sys.Colours; cR = 128 + Fsin(cZ); cG = 128 + Fsin(cZ + 171); cB = cR;
+      if (set) { cR = 128 + Fsin(cZ + 342); } else { cB = 128 + Fsin(cZ + 342); } } GenFonCol(cX, Sys.Deep); } }
 void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdpal = (char*)(Coffset + SOffset);
   Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
