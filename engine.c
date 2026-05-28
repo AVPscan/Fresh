@@ -112,7 +112,7 @@ int8_t Fctg(int16_t u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 void Print(uint8_t n, uint8_t m, char *str) { static char *d[] = { "27;", "7;", "22;", "1;", "23;", "3;" };
   char *src, *dst = Cdbuf; PalBuf* pal = APal(n); if (!str) return;
   if ((cA ^= m)) { cX = 8; *dst++ = '\33'; *dst++ = '['; while((cX >>= 1)) { if ((cA & cX)) {
-      src = d[(((cX == 1) ? 0 : cX) + (m && cX))]; *dst++ = *src++; *dst++ = *src++; if (!(m & cX)) *dst++ = *src++; } } cA = 2; }
+      src = d[((cX & 6) + ((m & cX) ? 1 : 0))]; *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } } cA = 2; }
   if (n & b7) { if (n == cF) { if (cA) *(dst - 1) = 'm'; } else { cF = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   else { if (n == cI) { if (cA) *(dst - 1) = 'm'; } else { cI = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   ugoc len = StrLen(str); MemCpy(dst, str, len); cA = m; SysWrite(Cdbuf, dst + len - Cdbuf); }
