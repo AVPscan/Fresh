@@ -127,13 +127,17 @@ void GenFonCol(uint8_t c, uint8_t deep) {
     if (i / 10) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4';
   if (pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
-void SetBorder(void) { cT = cF; Print(Sys.Border,Cls); cF = cT; }
+void SetBorder(void) { cY = cF; Print(Sys.Border,Cls); cF = cY; }
 void SetPalette(uint8_t set) { Cdpal = (char*)(Coffset + SOffset); if (set) { Cdpal += SPal / 2; } }
 void SwitchPalette(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal) { a += SPal / 2; } Cdpal = a; }
-void GenPalette(uint8_t set) { uint8_t c = On + Sys.Colours; SetPalette(set); while(c--) {
-    if (!set) { cRGB = (c) ? (((1 << 24) * (c)) / Sys.Colours) - On : Off; cG = (uint8_t)cRGB; cRGB >>= 8; cB = (uint8_t)cRGB; cRGB >>= 8; cR = (uint8_t)cRGB; }
-    else { if (c == Sys.Colours) { cR = 255; cG = cR; cB = cR; } else { if (!c) { cR = 0; cG = 0; cB = 0; } else { uint16_t a = cU + (c * 511) / Sys.Colours;
-      cB = 128 + Fsin(a); cG = 128 + Fsin(a + 171); cR = 128 + Fsin(a + 342); } } } GenFonCol(c, Sys.Deep); } }
+void GenPalette(uint8_t set) { SetPalette(set); cX = On + Sys.Colours;
+  while(cX--) { if (cX == Sys.Colours) { cR = 255; cG = cR; cB = cR; } 
+    else if (!cX) { cR = 0; cG = 0; cB = 0; } 
+    else if (set) { cZ = cU + (cX * 511) / Sys.Colours; cB = 128 + Fsin(cZ); cG = 128 + Fsin(cZ + 171);
+          cR = 128 + Fsin(cZ + 342); }
+        else { cRGB = (((1 << 24) * (cX)) / Sys.Colours) - On; cG = (uint8_t)cRGB; cRGB >>= 8;
+          cB = (uint8_t)cRGB; cRGB >>= 8; cR = (uint8_t)cRGB; }
+    GenFonCol(cX, Sys.Deep); } }
 void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdpal = (char*)(Coffset + SOffset);
   Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
@@ -244,7 +248,8 @@ void _SEvent(uint8_t count, uint8_t *args) { uint8_t a, k = count; while(k--) { 
 void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = Convas.D; Convas.Max = Convas.S;
   while(k--) { if (Event(k)->W == Convas.Win) {
     if (Event(k)->C && count) { uint8_t j, c = Event(k)->C, i = Off; while(c-- && count--) { j = K_Mouse;
-        while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } } break; } } }
+        while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } }
+    break; } } }
 void _SKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
 void _SSet(ugoc fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours; char *a = Cdpal;
   if (count--) { deep = args[Off]; if (count) { col = args[On]; } } SysInit(fps, deep, col); Cdpal = a; }

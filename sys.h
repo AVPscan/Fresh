@@ -144,7 +144,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 #define Data(r)       (Cdata + ((r) << D_shift))                              // адрес начала буфера строки холста
 #define Info(c, r)    (Cinfo + (c) + ((r) << Ds_shift))                       // адрес данных ячейки холста
 #define Cpal(c, r)    (Cds + (c) + ((r) << Ds_shift))                         // адрес данных палитры ячейки холста
-#define Offset(c, r)  (Coffset + (c) + ((r) << O_shift))                      // адрес ячейки в которой смещение указывающее на конец данных в буфере строки холста
+#define Offset(c, r)  (Coffset + (c) + ((r) << O_shift))                      // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
@@ -182,8 +182,8 @@ extern char     *Cdbuf;
 extern V_ VP;
 extern B_ Buf;
 extern R_ VRam;
-extern uint8_t  cR, cG, cB, cI, cF, cA, cT, cC;
-extern int16_t  cU;
+extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
+extern int16_t  cU, cZ;
 extern uint32_t cRGB;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
@@ -200,8 +200,8 @@ extern uint32_t cRGB;
     char      *Cevent     = 0; \
     char      *Cexec      = 0; \
     char      *Cdbuf      = 0; \
-    uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cT = 0, cC = 0; \
-    int16_t   cU = 0; \
+    uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
+    int16_t   cU = 0, cZ = 0; \
     uint32_t  cRGB = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
@@ -226,7 +226,7 @@ void UTFinfoTile(uint8_t *s, Cell len);                               // Рас�
 void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
-uint8_t PopKey(void);                                                 // Взять клавишу из буфера {1/0} видна ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
+uint8_t PopKey(void);                                                 // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
@@ -255,7 +255,7 @@ void WASwitch(void);                                                  // Ада�
 void WinDown(void);                                                   // Ротация динамических окон
 void WinUp(void);                                                     // Ротация динамических окон в обратном направлении
 void WinTop(ugoc n);                                                  // Установить окно выше остальных подобных
-void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте(динамическое) либо на экране(статическое), при Off{,Off} не отображать
+void _WView(uint16_t n, uint8_t count, goc *args);                    // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
 uint16_t _Window(uint8_t t, int8_t col, uint8_t count, ugoc *args);   // Создание окна с палитрой col при col<0 статичное окно
 void _WExec(uint16_t n, uint8_t cur, uint8_t count, AFunction *args); // Настройка статического окна привязка функций к кодам клавиш
 void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Настройка окна включение/отключение {Cursor{,Warp}}
