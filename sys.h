@@ -234,8 +234,7 @@ int8_t Fsin(int16_t u);                                               // Син�
 int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127] 256 значений)
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
-void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh
-void SetMode(uint8_t m);                                              // Изменение потоковых атрибутов текста игнорируя Fresh
+void Print(uint8_t n, uint8_t m, char *str);                          // Вывод строки в палитре напрямую игнорируя Fresh
 void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
