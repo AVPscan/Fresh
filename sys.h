@@ -58,7 +58,7 @@ typedef uintptr_t Cell;                       // Разрядность проц
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, 
-    aB = 0x40, aI = 0x20, aC = 0x80 , aBI = 0x60, aCI = 0xA0, aCB = 0xC0, aCBI = 0xE0, aShift = 0x05,
+    aB = 0x02, aI = 0x01, aC = 0x04 , aBI = 0x03, aCI = 0x05, aCB = 0x06, aCBI = 0x07, aShift = 0x05,
     aColours = 0x7F, On = 0x01, Off = 0x00 };
 enum {
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
@@ -234,7 +234,8 @@ int8_t Fsin(int16_t u);                                               // Син�
 int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127] 256 значений)
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
-void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh.
+void Print(uint8_t pal, char *str);                                   // Вывод строки в палитре напрямую игнорируя Fresh
+void SetMode(uint8_t m);                                              // Изменение потоковых атрибутов текста игнорируя Fresh
 void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
 void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]

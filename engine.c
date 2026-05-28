@@ -114,10 +114,13 @@ void Print(uint8_t n, char *str) {
   if (n & b7) { if (n != cF) { cF = n; PalBuf* pal = APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l; } }
   else { if (n != cI) { cI = n; PalBuf* pal = APal(n); MemCpy(dst, pal->d, pal->l); dst += pal->l; } }
   ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(Cdbuf, dst + len - Cdbuf); }
-  
+void SetMode(uint8_t m) {
+  if ((cA ^= m)) { char *src, *dst = Cdbuf + 300, *d[] = { "27;", "7;", "22;", "1;", "23;", "3;" }; cX = 8; *dst++ = '\33'; *dst++ = '[';
+    while((cX >>= 1)) { if ((cA & cX)) { src = d[((cX == 1) ? 0 : cX) + (m && cX)]; *dst++ = *src++; *dst++ = *src++; if (!(m & cX)) *dst++ = *src++; } } 
+    *(dst - 1) = 'm'; SysWrite(Cdbuf + 300, dst - Cdbuf - 300); } cA = m; }
 void GenFonCol(uint8_t c, uint8_t deep) {
   uint8_t i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > aColours) ? aColours : c;
-  char *dcol[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)dcol[k], *pal = APal(c), *src = APal(c + aColours + 1);
+  char *d[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)d[k], *pal = APal(c), *src = APal(c + aColours + 1);
   if (k == 1 ) { cR = (16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255)); }
   else  { if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127999) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
           else { j = 3; } } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
@@ -143,7 +146,7 @@ void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Sys.Loop = Sys.Fps / 10; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off;
   col = (col < b0) ? b0 : (col > aColours) ? aColours : col; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
-  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = aColours + 1; Sys.Inc = Off; cI = Sys.Border; }
+  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = aColours + 1; Sys.Inc = Off; cI = Sys.Border; SetMode(Off); }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW - On;
   Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
