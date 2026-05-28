@@ -109,10 +109,10 @@ int8_t Fsin(int16_t u) { static int8_t s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,1
 int8_t Ftg(int16_t u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 int8_t Fctg(int16_t u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 
-void Print(uint8_t n, uint8_t m, char *str) { static char *d[] = { "27;", "7;", "22;", "1;", "23;", "3;" };
-  char *src, *dst = Cdbuf; PalBuf* pal = APal(n); if (!str) return;
-  if ((cA ^= m)) { cX = 8; *dst++ = '\33'; *dst++ = '['; while((cX >>= 1)) { if ((cA & cX)) {
-      src = d[((cX & 6) + ((m & cX) ? 1 : 0))]; *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } } cA = 2; }
+void Print(uint8_t n, uint8_t m, char *str) { char *src, *dst = Cdbuf; PalBuf* pal = APal(n);
+  static char *d[] = {"27;", "7;", "22;", "1;", "23;", "3;", "22;", "2;", "24;", "4;", "24;", "21;", "29;", "9;"}; if (!str) return;
+  if ((cA ^= m)) { cX = 128; cY = 14; *dst++ = '\33'; *dst++ = '['; while((cX >>= 1)) { cY -= 2; if ((cA & cX)) {
+      src = d[(cY + ((m & cX) ? 1 : 0))]; *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } } cA = 2; }
   if (n & b7) { if (n == cF) { if (cA) *(dst - 1) = 'm'; } else { cF = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   else { if (n == cI) { if (cA) *(dst - 1) = 'm'; } else { cI = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   ugoc len = StrLen(str); MemCpy(dst, str, len); cA = m; SysWrite(Cdbuf, dst + len - Cdbuf); }
