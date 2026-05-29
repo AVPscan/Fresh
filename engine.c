@@ -110,7 +110,7 @@ int8_t Ftg(int16_t u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 int8_t Fctg(int16_t u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 
 void Print(uint8_t n, uint8_t m, char *str) { char *src, *dst = Cdbuf; PalBuf* pal = APal(n);
-  static char *s = "27;7;\00022;1;\00023;3;\00022;2;\00024;4;\00024;21;29;9;"; if (!str) return;
+  static char *s = "24;21;22;1;\00022;2;\00023;3;\00024;4;\00027;7;\00029;9;\000"; if (!str) return;
   if ((cA ^= m)) { cX = 64; cY = 36; *dst++ = '\33'; *dst++ = '['; while(cX) { if ((cA & cX)) { src = s + cY + ((m & cX) ? 3 : 0);
       *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } cX >>= 1; cY -= 6; } cA = 2; }
   if (n & b7) { if (n == cF) { if (cA) *(dst - 1) = 'm'; } else { cF = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
@@ -122,8 +122,8 @@ void GenFonCol(uint8_t c, uint8_t deep) {
   if (k == 1 ) { cR = (16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255)); }
   else  { if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127999) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
           else { j = 3; } } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
-  while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if (i / 100) { src->d[src->l++] = 0x30 + (i / 100); i %= 100; }
-    if (i / 10) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; }
+  while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if ((cY = i / 100)) { src->d[src->l++] = 0x30 + cY; i %= 100; }
+    if (cY || (i / 10)) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4';
   if (pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetBorder(void) { cY = cF; Print(Sys.Border, cA, Cls); cF = cY; }
