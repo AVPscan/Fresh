@@ -110,9 +110,9 @@ int8_t Ftg(int16_t u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 int8_t Fctg(int16_t u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 
 void Print(uint8_t n, uint8_t m, char *str) { char *src, *dst = Cdbuf; PalBuf* pal = APal(n);
-  static char *d[] = {"27;", "7;", "22;", "1;", "23;", "3;", "22;", "2;", "24;", "4;", "24;", "21;", "29;", "9;"}; if (!str) return;
-  if ((cA ^= m)) { cX = 128; cY = 14; *dst++ = '\33'; *dst++ = '['; while((cX >>= 1)) { cY -= 2; if ((cA & cX)) {
-      src = d[(cY + ((m & cX) ? 1 : 0))]; *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } } cA = 2; }
+  static char *s = "27;7;\00022;1;\00023;3;\00022;2;\00024;4;\00024;21;29;9;"; if (!str) return;
+  if ((cA ^= m)) { cX = 64; cY = 36; *dst++ = '\33'; *dst++ = '['; while(cX) { if ((cA & cX)) { src = s + cY + ((m & cX) ? 3 : 0);
+      *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } cX >>= 1; cY -= 6; } cA = 2; }
   if (n & b7) { if (n == cF) { if (cA) *(dst - 1) = 'm'; } else { cF = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   else { if (n == cI) { if (cA) *(dst - 1) = 'm'; } else { cI = n; MemCpy(dst, pal->d + cA, pal->l - cA); dst += pal->l - cA; } }
   ugoc len = StrLen(str); MemCpy(dst, str, len); cA = m; SysWrite(Cdbuf, dst + len - Cdbuf); }
@@ -129,11 +129,11 @@ void GenFonCol(uint8_t c, uint8_t deep) {
 void SetBorder(void) { cY = cF; Print(Sys.Border, cA, Cls); cF = cY; }
 void SetPalette(uint8_t set) { Cdpal = (char*)(Coffset + SOffset); if (set) { Cdpal += SPal / 2; } }
 void SwitchPalette(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal) { a += SPal / 2; } Cdpal = a; }
-void GenPalette(uint8_t set) { SetPalette(set); cX = On + Sys.Colours;
-  while(cX--) { if (cX == Sys.Colours) { cR = 255; cG = cR; cB = cR; } 
-    else if (!cX) { cR = 0; cG = 0; cB = 0; } 
-    else { cZ = cU + (cX * 512) / Sys.Colours; cR = 128 + Fsin(cZ); cG = 128 + Fsin(cZ + 171); cB = cR;
-      if (set) { cR = 128 + Fsin(cZ + 342); } else { cB = 128 + Fsin(cZ + 342); } } GenFonCol(cX, Sys.Deep); } }
+void GenPalette(uint8_t set) { SetPalette(set); cX = On + Sys.Colours; cXYz = 1 << 24;
+  while(cX--) { if (cX == Sys.Colours) { cR = 255; cG = cR; cB = cR; } else if (!cX) { cR = 0; cG = 0; cB = 0; } 
+    else { if (set) { cRGB = ((cXYz * cX) / Sys.Colours) - On; cG = (uint8_t)cRGB; cRGB >>= 8; cB = (uint8_t)cRGB; cRGB >>= 8; cR = (uint8_t)cRGB; } 
+           else { cZ = cU + (cX * 512) / Sys.Colours; cB = 128 + Fsin(cZ); cG = 128 + Fsin(cZ + 171); cR = 128 + Fsin(cZ + 342); } }
+    GenFonCol(cX, Sys.Deep); } }
 void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdpal = (char*)(Coffset + SOffset);
   Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;

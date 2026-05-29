@@ -69,7 +69,7 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
-enum { black, navy, olive, cyan, fuchsia, marsala, ochre, white, Fblack = 128, Fnavy, Folive, Fcyan, Ffuchsia, Fmarsala, Fochre, Fwhite };
+enum { night, pine, iris, orchid, coral, sand, moss, snow, Fnight = 128, Fpine, Firis, Forchid, Fcoral, Fsand, Fmoss, Fsnow };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
@@ -184,7 +184,7 @@ extern B_ Buf;
 extern R_ VRam;
 extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
 extern int16_t  cU, cZ;
-extern uint32_t cRGB;
+extern uint32_t cRGB, cXYz;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \
@@ -202,7 +202,7 @@ extern uint32_t cRGB;
     char      *Cdbuf      = 0; \
     uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
     int16_t   cU = 0, cZ = 0; \
-    uint32_t  cRGB = 0; \
+    uint32_t  cRGB = 0, cXYz = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
