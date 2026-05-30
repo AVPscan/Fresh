@@ -28,6 +28,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
+#define FHz       500                         // Частота сети увеличенная в 10 раз
 #define FFps      100                         // Частота регенерации монитора
 #define Fcolour   7                           // Количество оттенков света на старте {максимум 31} 0 всегда есть {2 палитры}
 #define CFDeep    24                          // Глубина {3 8 24} бита
@@ -101,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Time[5], Syn, Loop, Delay, Spd0, Spd1, Ginf, Gmin, Gmax, A, B, Speed, Rnd, Fps; uint16_t MWin;
+typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Time[5], Syn, Loop, Delay, Spd0, Spd1, Speed, Fps, Hz;
                  uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
@@ -240,7 +241,7 @@ void SetBorder(void);                                                 // Уст�
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(ugoc fps, uint8_t deep, uint8_t col);                    // Установка переменных среды
+void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col);   // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -262,7 +263,7 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Нас�
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
-void _SSet(ugoc fps, uint8_t count, uint8_t *args);                   // Изменить fps{,deep{,colours}}
+void _SSet(uint16_t hz, uint16_t fps, uint8_t count, uint8_t *args);  // Изменить hz,fps{,deep{,colours}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
@@ -283,6 +284,6 @@ Cell GetSC(Cell addr);                                                // Изм�
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define SKeys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define SysSet(n, ...) _SSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define SysSet(hz, fps, ...) _SSet(hz, fps, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */
