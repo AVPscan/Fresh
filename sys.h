@@ -102,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Time[5], Syn, Loop, Delay, Spd0, Spd1, Speed, Hz, Fps;
+typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Time[6], Syn, Delay, Spd0, Spd1, Speed, Fps, Hz;
                  uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
