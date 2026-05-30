@@ -140,9 +140,10 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col) {
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF;
   Sys.MT = 5; Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; IRnd(); Sys.A = RNG_A; Sys.B = RNG_B;
-  Sys.Fps = fps ? fps : 60; Sys.Delay = (1000 / Sys.Fps); Sys.Loop = Sys.Fps * 10; Sys.Syn = Off; Sys.Hz = hz ? hz : 500;
-  deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off;
-  col = (col < b0) ? b0 : (col > aColours) ? aColours : col; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
+  Sys.Fps = fps ? ((fps > 1000) ? 1000 : fps) : 50; Sys.Hz = hz ? hz : 500; Sys.Loop = Sys.Fps * 10;
+  Sys.Delay = (1000 / ((Sys.Fps * 10 > Sys.Hz) ? Sys.Fps : (Sys.Hz / 10))); deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Sys.Syn = Off;
+  fps = Sys.MT; while(fps--) { Sys.Time[fps] = Off; } col = (col < b0) ? b0 : (col > aColours) ? aColours : col;
+  VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
