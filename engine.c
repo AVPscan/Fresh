@@ -123,9 +123,9 @@ void GenFonCol(uint8_t c, uint8_t deep) {
   else  { if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127999) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
           else { j = 3; } } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
   while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if ((cY = (i * 41) >> 12)) { src->d[src->l++] = 0x30 + cY; i -= cY * 100; }
-    if (cY || ((i * 205) >> 11)) { cY = (i * 205) >> 11; src->d[src->l++] = 0x30 + cY; i -= cY * 10; } src->d[src->l++] = 0x30 + i; }
-  src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4';
-  if (pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
+    if (cY || ((i * 205) >> 11)) { src->d[src->l++] = 0x30 + (cY = (i * 205) >> 11); i -= cY * 10; } src->d[src->l++] = 0x30 + i; }
+  src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4'; if (pal->d[2] == '9') {
+    src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetBorder(void) { cY = cF; Print(Sys.Border, cA, Cls); cF = cY; }
 void SetPalette(uint8_t set) { Cdpal = (char*)(Coffset + SOffset); if (set) { Cdpal += SPal / 2; } }
 void SwitchPalette(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal) { a += SPal / 2; } Cdpal = a; }
