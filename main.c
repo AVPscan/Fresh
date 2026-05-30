@@ -12,9 +12,9 @@
 void body(void) {  // пока не дописано WinData,Render
   char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 48, w = Sys.Colours, i = On + w; Print(Sys.Inc, Off, Home); while(i--) Print((w - i + Fdark), cA, " ");
   Sys.Fone = Firis; Print(Sys.Fone, cA, "\n"); ugoc r, c = TermCR(&r), s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 3;
-  while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d Time %d                    ", s, K_Mouse, c, r, Sys.Time[4]/(Sys.Loop/10));
+  while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d Time %d                    ", s, K_Mouse, c, r, Sys.Time[4]/(Sys.Hz/10));
   if ((uint8_t)StrLen(b) > (j - 1)) { *(b + j - 1) = Off; } if (StrLen(b) >= c) { *(b + c - On) = Off; } Print(moss, aD | aI, b); if (r < 3) return;
-  snprintf(b, 100, "\nH%d F%d D%d C%d x%d y%d %d %d b%d x%d y%d              ", Sys.Hz/10, Sys.Fps, Sys.Deep, Sys.Colours, VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
+  snprintf(b, 100, "\nH%d D%d C%d x%d y%d %d %d b%d x%d y%d                  ", Sys.Hz/10, Sys.Deep, Sys.Colours, VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY);
   if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= c) { *(b + c) = Off; } Print(moss, aC | aB, b); if (r < 4) return;
   if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data;
   if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b;
@@ -27,7 +27,7 @@ void sb(void) { if (!++Sys.Border || Sys.Border > (Sys.Colours + Fdark)) { Sys.B
 void Init(void) {
   ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,berry, Rand(10), Rand(10), Rand(40), Rand(10)), W2 = Window(Off,Rand(Sys.Colours), Off, Off, 80, 24);
   WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), moss, moss); WinExecs(control, K_Ctrl_K, WSwitch); WinExecs(control, K_NO, body); 
-  WinSet(W1, On, On); WinSet(W2, Off, Off); WinView(W2, 10, 3); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp); SysSet(500, 25, 24, 7);
+  WinSet(W1, On, On); WinSet(W2, Off, Off); WinView(W2, 10, 3); Events(' ', K_ALT_TAB, K_ALT_ENT); Execs(sb, WinDown, WinUp); SysSet(500, 24, 7);
   SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); }
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
