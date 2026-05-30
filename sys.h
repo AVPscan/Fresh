@@ -58,7 +58,7 @@ typedef uintptr_t Cell;                       // Разрядность проц
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0, 
-    aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,
+    aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,                        // Режимы вывода текста
     aColours = 0x7F, On = 0x01, Off = 0x00, aShift = 0x05 };
 enum {
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
@@ -69,7 +69,7 @@ enum {
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
-enum { night, sky, iris, berry, coral, clay, moss, snow, Fnight = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
+enum { dark, sky, iris, berry, coral, clay, moss, snow, Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
     uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)

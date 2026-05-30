@@ -122,8 +122,8 @@ void GenFonCol(uint8_t c, uint8_t deep) {
   if (k == 1 ) { cR = (16 + 36 * ((cR * 5 + 128) / 255) + 6 * ((cG * 5 + 128)/ 255) + ((cB * 5 + 128)/ 255)); }
   else  { if (!k) { cR = (((cR * 299 + cG * 587 + cB * 114) > 127999) ? 90 : 30) + (((cR > 127) << 2) | ((cG > 127) << 1) | (cB > 127)); }
           else { j = 3; } } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); cRGB = cR | (cG << 8) | (cB << 16);
-  while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if ((cY = i / 100)) { src->d[src->l++] = 0x30 + cY; i %= 100; }
-    if (cY || (i / 10)) { src->d[src->l++] = 0x30 + (i / 10); i %= 10; } src->d[src->l++] = 0x30 + i; }
+  while(j--) { i = (uint8_t)cRGB; cRGB >>= b3; if (k) { src->d[src->l++] = ';'; } if ((cY = (i * 41) >> 12)) { src->d[src->l++] = 0x30 + cY; i -= cY * 100; }
+    if (cY || ((i * 205) >> 11)) { cY = (i * 205) >> 11; src->d[src->l++] = 0x30 + cY; i -= cY * 10; } src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4';
   if (pal->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetBorder(void) { cY = cF; Print(Sys.Border, cA, Cls); cF = cY; }
@@ -144,7 +144,7 @@ void SysInit(ugoc fps, uint8_t deep, uint8_t col) {
   deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Sys.Loop = Sys.Fps / 10; fps = Sys.MT; while(fps--) Sys.Time[fps] = Off;
   col = (col < b0) ? b0 : (col > aColours) ? aColours : col; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Vector(K_Mouse) = RPEncode;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
-  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = aColours + 1; Sys.Inc = Off; cI = Sys.Border; cA = Off; }
+  Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; SysInit(FFps, CFDeep, Fcolour); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW - On;
   Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
