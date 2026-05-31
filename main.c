@@ -32,5 +32,5 @@ void Init(void) {
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Sys.Fone, cA, AltBufOff); Print(berry, cA, "Created by Alexey Pozdnyakov"); flag = Off;
-        Print(coral, cA, " in 07.02.2026 version 9.61 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
-int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); Fresh(); } return (int)SystemSwitch(); }
+        Print(coral, cA, " in 07.02.2026 version 9.62 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
