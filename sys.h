@@ -69,7 +69,7 @@ enum {
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, Timer, K_Mouse };
 enum { dark, sky, iris, berry, coral, clay, moss, snow, Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -103,7 +103,7 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Delay, Spd0, Spd1, Speed, Fps, Hz;
-                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr; } Sis;
+                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc; char T[9]; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -233,6 +233,7 @@ uint8_t PopKey(void);                                                 // Взя�
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
 void CSu(void);                                                       // Создание сумматора равного Дни:Время + Таймер
 uint16_t DSu(uint16_t d);                                             // Остаток от деления сумматора на делитель
+void Time(void);                                                      // Сформировать строку времени согласно длинне
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
@@ -244,6 +245,7 @@ void GenFonCol(uint8_t c, uint8_t deep);                              // Уст�
 void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
+void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col);   // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
