@@ -149,7 +149,7 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col) {
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF;
   Sys.MT = 6; Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; IRnd(); Sys.A = RNG_A; Sys.B = RNG_B; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On;
-  Vector(K_Mouse) = RPEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500;
+  Vector(RPU) = RPUEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500;
   Sys.Delay = 1000 / Sys.Fps; col = (col < b0) ? b0 : (col > aColours) ? aColours : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Loop = Sys.Fps * Sys.Hz;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); } Syn = Sys.Hz - Syn;
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
@@ -176,7 +176,7 @@ uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   else if (((dx ^ VP.X) & Sys.Ginf) || ((dy ^ VP.Y) & Sys.Ginf)) return Off;
   VP.X = dx; VP.Y = dy; VP.Xs -= mx; VP.Ys -= my; return On; }
 
-void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(K_Mouse)();
+void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
   if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
   else { Buf.Cod = (*Buf.Key & b7) ? Off : (*Buf.Key == K_ESC) ? *(Buf.Key + On) : *Buf.Key;
     if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; i = Off;
@@ -213,7 +213,7 @@ void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(K_Mouse)();
     if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); } }
   Delay(Sys.Delay); }
 
-void RPEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
+void RPUEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
 void Anchor(void) { if (VP.Mode ^= b1) { } else { Convas.W = Convas.CW; Convas.H = Convas.CH; } }
 void Bye(void) { VP.Loop = Off; }
@@ -249,7 +249,7 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args) { if ((n >= Convas.D && n <
 void _SEvent(uint8_t count, uint8_t *args) { uint8_t a, k = count; while(k--) { a = args[k]; Event(a)->W = Convas.Win; Event(a)->C = count; Event(a)->N = k; } }
 void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = Convas.D; Convas.Max = Convas.S;
   while(k--) { if (Event(k)->W == Convas.Win) {
-    if (Event(k)->C && count) { uint8_t j, c = Event(k)->C, i = Off; while(c-- && count--) { j = K_Mouse;
+    if (Event(k)->C && count) { uint8_t j, c = Event(k)->C, i = Off; while(c-- && count--) { j = RPU;
         while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } }
     break; } } }
 void _SKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }

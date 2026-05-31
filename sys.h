@@ -69,7 +69,8 @@ enum {
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, Timer, K_Mouse };
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, 
+    Timer, RPU = 255 };
 enum { dark, sky, iris, berry, coral, clay, moss, snow, Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -253,7 +254,7 @@ Cell SystemSwitch(void);                                              // Вхо�
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
 void Free(void);                                                      // Одна итерация Fresh
-void RPEncode(void);                                                  // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
+void RPUEncode(void);                                                 // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void Bye(void);                                                       // Выход из мира
