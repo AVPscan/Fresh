@@ -69,7 +69,7 @@ uint8_t SyncSize(Cell addr) { if (!addr) return Off;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return On; }
 
 ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
-  
+
 Cell GetCycles(void) {
   Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
   #if __SIZEOF_POINTER__ > 4

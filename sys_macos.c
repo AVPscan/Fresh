@@ -66,7 +66,7 @@ uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
 
 ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
-    
+
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
     
 static mach_timebase_info_data_t timebase = {0};

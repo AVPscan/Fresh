@@ -102,7 +102,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Time[6], Syn, Delay, Spd0, Spd1, Speed, Fps, Hz;
+typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Delay, Spd0, Spd1, Speed, Fps, Hz;
                  uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc, Atr; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
@@ -185,6 +185,7 @@ extern B_ Buf;
 extern R_ VRam;
 extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
 extern int16_t  cU, cZ;
+extern int32_t  Syn, Loop;
 extern uint32_t cRGB, cXYz;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
@@ -203,6 +204,7 @@ extern uint32_t cRGB, cXYz;
     char      *Cdbuf      = 0; \
     uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
     int16_t   cU = 0, cZ = 0; \
+    int32_t   Syn = 0, Loop = 0; \
     uint32_t  cRGB = 0, cXYz = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
@@ -229,6 +231,8 @@ void PushKey(void);                                                   // Пол�
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
+void CSu(void);                                                       // Создание сумматора равного Дни:Время + Таймер
+uint16_t DSu(uint16_t d);                                             // Остаток от деления сумматора на делитель
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
