@@ -28,6 +28,7 @@
 #define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
 #define MAX_WIN   512                         // Максимально число окон на холсте
 #define MaxSpeed  (1 << (CellPow - 4))        // Максимальное ускорение курсора
+#define FHow      2                           // Частота вызова Timer функции - осторожно изменять, пока я не автоматизировал связку FHz FFps и FHow
 #define FHz       500                         // Десятикратная частота сети 50Гц
 #define FFps      144                         // Частота обновления монитора
 #define CFDeep    24                          // Глубина {3 8 24} бита
@@ -104,7 +105,7 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Delay, Spd0, Spd1, Speed, Fps, Hz;
-                 uint8_t CellP, MT, Deep, Colours, Fone, Border, Inc; char T[9]; } Sis;
+                 uint8_t CellP, MT, DS, Deep, Colours, Fone, Border, Inc; char T[9]; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 enum {
@@ -186,7 +187,7 @@ extern B_ Buf;
 extern R_ VRam;
 extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
 extern int16_t  cU, cZ;
-extern int32_t  Syn, Loop;
+extern int32_t  Syn, Loop, Dis;
 extern uint32_t cRGB, cXYz;
 #define ENGINE_VARS_INIT \
     char      *Cdata      = 0; \
@@ -205,7 +206,7 @@ extern uint32_t cRGB, cXYz;
     char      *Cdbuf      = 0; \
     uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
     int16_t   cU = 0, cZ = 0; \
-    int32_t   Syn = 0, Loop = 0; \
+    int32_t   Syn = 0, Loop = 0, Dis = 0; \
     uint32_t  cRGB = 0, cXYz = 0; \
     R_ VRam = {0,0,1}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
@@ -248,7 +249,7 @@ void SetPalette(uint8_t set);                                         // Уст�
 void SwitchPalette(void);                                             // Переключить палитру
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col);   // Установка переменных среды
+void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how);  // Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
