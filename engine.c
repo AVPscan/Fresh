@@ -135,7 +135,7 @@ void GenFonCol(uint8_t c, uint8_t deep) {
     if (cY || ((i * 205) >> 11)) { src->d[src->l++] = 0x30 + (cY = (i * 205) >> 11); i -= cY * 10; } src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4'; if (pal->d[2] == '9') {
     src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
-void SetBorder(void) { cY = cF; Print(Sys.Border, cA, Cls); cF = cY; }
+void SetBorder(void) { cY = cF; Print(Sys.Border, cA, "\033[2J"); cF = cY; }
 void SetPalette(uint8_t set) { Cdpal = (char*)(Coffset + SOffset); if (set) { Cdpal += SPal / 2; } }
 void SwitchPalette(void) { char* a = (char*)(Coffset + SOffset); if (a == Cdpal) { a += SPal / 2; } Cdpal = a; }
 void Grgb(uint8_t mode, uint16_t c, uint16_t n) { if (c == n) { cR = 255; cG = cR; cB = cR; } else if (!c) { cR = 0; cG = 0; cB = 0; } 
@@ -160,8 +160,8 @@ Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
     SWD(VRam.addr); InitVram(VRam.addr,VRam.size); Delay(Off); cY = Sys.MT; while(cY) { Sys.Timer[--cY] = Off; Sys.Time[cY] = Off; Sys.T[cY] = '0'; }
     Sys.T[2] = ' '; Sys.T[5] = ' '; Sys.T[6] = '0'; Sys.T[7] = '0'; Sys.T[8] = 0; SwitchRaw(); SyncSize(VRam.addr);
-    Print(Sys.Fone, cA, AltBufOn HideCur WrapOn MouseX10on); Print(Sys.Border, cA, HideCur Cls); VRam.SystemSwitch--; }
-  else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, AltBufOff Reset ShowCur WrapOn MouseX10off); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
+    Print(Sys.Fone, cA, "\033[?1049;7;1000h\033[?25l"); Print(Sys.Border, cA, "\033[2J"); VRam.SystemSwitch--; }
+  else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
   return On; }
 
 void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy;
