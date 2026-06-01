@@ -104,7 +104,7 @@ void CSu(void) { cXYz = 0; cY = Sys.MT;
   while(cY--) { Sys.Su[cY] = (uint16_t)(cXYz += Sys.Time[cY] + Sys.Timer[cY]); cXYz >>= 16; } } 
 uint16_t DSu(uint16_t d) { cXYz = 0; cY = -1;
   while(++cY < Sys.MT) { Sys.Su[cY] = (uint16_t)((cXYz = (cXYz << 16) | Sys.Su[cY]) / d); cXYz %= d; } return (uint16_t)cXYz; }
-void Time(void) { CSu(); 
+void Time(void) { CSu(); cX = DSu(10);
   cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[7] = 0x30 + cX - (cY * 10); Sys.T[6] = 0x30 + cY;
   cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[4] = 0x30 + cX - (cY * 10); Sys.T[3] = 0x30 + cY;
   cX = DSu(24); cY = ((cX * 205) >> 11); Sys.T[1] = 0x30 + cX - (cY * 10); Sys.T[0] = 0x30 + cY; }
@@ -150,7 +150,7 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col) {
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF;
   Sys.MT = 6; Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; IRnd(); Sys.A = RNG_A; Sys.B = RNG_B; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On;
   Vector(RPU) = RPUEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500;
-  Sys.Delay = 1000 / Sys.Fps; col = (col < b0) ? b0 : (col > aColours) ? aColours : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Loop = Sys.Fps * Sys.Hz;
+  Sys.Delay = 1000 / Sys.Fps; col = (col < b0) ? b0 : (col > aColours) ? aColours : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Loop = Sys.Fps * Sys.Hz / 10;
   if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); } Syn = Sys.Hz - Syn;
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
