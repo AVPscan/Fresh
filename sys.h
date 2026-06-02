@@ -220,6 +220,7 @@ void PushKey(void);                                                   // Пол�
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Data Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Keys(void);                                                      // Сколько клавиш в буфере
+void ASu(uint32_t add);                                               // Прибавить к Timer[] число
 void CSu(void);                                                       // Создание сумматора равного Дни:Время + Таймер
 uint16_t DSu(uint16_t d);                                             // Остаток от деления сумматора на делитель
 void Time(void);                                                      // Сформировать строку времени согласно длинне

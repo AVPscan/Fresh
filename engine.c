@@ -100,14 +100,12 @@ uint8_t PopKey(void) { uint8_t d, i = Off;
   d = On + (k->d[i] & b10); while(d--) { *(Buf.Key + d) = k->u[i + d]; } return On; }
 ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push; while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; } return s; }
 
-void CSu(void) { cXYz = 0; cY = Sys.MT;
-  while(cY--) { Sys.Su[cY] = (uint16_t)(cXYz += Sys.Time[cY] + Sys.Timer[cY]); cXYz >>= 16; } } 
-uint16_t DSu(uint16_t d) { cXYz = 0; cY = -1;
-  while(++cY < Sys.MT) { Sys.Su[cY] = (uint16_t)((cXYz = (cXYz << 16) | Sys.Su[cY]) / d); cXYz %= d; } return (uint16_t)cXYz; }
-void Time(void) { CSu(); //cX = DSu(50 / Sys.DS);
-  cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[7] = 0x30 + cX - (cY * 10); Sys.T[6] = 0x30 + cY;
-  cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[4] = 0x30 + cX - (cY * 10); Sys.T[3] = 0x30 + cY;
-  cX = DSu(24); cY = ((cX * 205) >> 11); Sys.T[1] = 0x30 + cX - (cY * 10); Sys.T[0] = 0x30 + cY; }
+void ASu(uint32_t add) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Time[cY] = (uint16_t)(cRGB += Sys.Time[cY] + add); add = 0; if (!(cRGB >>= 16)) break; } } 
+void CSu(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(cRGB += Sys.Time[cY] + Sys.Timer[cY]); cRGB >>= 16; } } 
+uint16_t DSu(uint16_t d) { cXYz = 0; cY = -1; while(++cY < Sys.MT) { Sys.Su[cY] = (uint16_t)((cXYz = (cXYz << 16) | Sys.Su[cY]) / d); cXYz %= d; } return (uint16_t)cXYz; }
+void Time(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(cRGB += Sys.Time[cY] + Sys.Timer[cY]); cRGB >>= 16; } cX = DSu(60);
+  cY = ((cX * 205) >> 11); Sys.T[7] = 0x30 + cX - (cY * 10); Sys.T[6] = 0x30 + cY; cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[4] = 0x30 + cX - (cY * 10);
+  Sys.T[3] = 0x30 + cY; cX = DSu(24); cY = ((cX * 205) >> 11); Sys.T[1] = 0x30 + cX - (cY * 10); Sys.T[0] = 0x30 + cY; }
 
 void IRnd(void) { Sys.Rnd = GetDelay() | On; }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Sys.Rnd = (ugoc)(Sys.A * Sys.Rnd + Sys.B)) * n) >> (sizeof(ugoc) * 8)); }
@@ -149,9 +147,9 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how) 
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF;
   Sys.MT = 6; Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; IRnd(); Sys.A = RNG_A; Sys.B = RNG_B; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Sys.DS = how;
-  Vector(RPU) = RPUEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500;
-  Sys.Delay = 1000 / Sys.Fps; col = (col < b0) ? b0 : (col > aColours) ? aColours : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Loop = Sys.Fps * Sys.Hz / Sys.DS;
-  if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); } Syn = Sys.Hz - Syn; 
+  Vector(RPU) = RPUEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); col = (col < b0) ? b0 : (col > aColours) ? aColours : col;
+  Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500; Syn = Sys.Hz - Syn; Sys.Delay = 1000 / Sys.Fps; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8;
+  Loop = Sys.Fps * Sys.Hz / Sys.DS; if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Cdata = (char*)addr; SysInit(FHz, FFps, CFDeep, Fcolour, FHow); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW - On;
@@ -207,11 +205,11 @@ void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
       else if (Buf.Cod == VP.up) dy = -VP.dXY;
       else if (Buf.Cod == VP.ud) dy = VP.dXY;
       MoveConvas(dx, dy); } }
-  if (SyncSize(VRam.addr) || Buf.Ctrl > On) { SetBorder(); } else {  }
+  Delay(Sys.Delay); Syn += 0; if ((Syn += Sys.Hz) >= Loop) {
+    if ((Dis += (Syn / Loop)) >= Sys.DS) { ASu(Dis / Sys.DS); Time(); Dis = Off;  }
+    if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); } Syn %= Loop; }
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
-  if ((Syn += Sys.Hz) >= Loop) { Syn -= Loop; if (++Dis > Sys.DS) { Dis = Off; i = Sys.MT; while(i && (!++Sys.Timer[--i])) { } Time(); }
-    if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); } }
-  Delay(Sys.Delay); }
+  if (SyncSize(VRam.addr) || Buf.Ctrl > On) { SetBorder(); } else {  } }
 
 void RPUEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
@@ -254,6 +252,6 @@ void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = 
     break; } } }
 void _SKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
 void _SSet(uint16_t hz, uint16_t fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours, how = Sys.DS; char *a = Cdpal;
-  if (count--) { deep = args[Off]; if (count--) { col = args[b0]; if (count) { how = args[b1]; } } } SysInit(hz, fps, deep, col, how); Cdpal = a; }
+  if (count--) { deep = args[Off]; if (count--) { col = args[b0]; if (count) { if (!(how = args[b1])) how++; } } } SysInit(hz, fps, deep, col, how); Cdpal = a; }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) { if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }

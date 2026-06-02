@@ -73,21 +73,18 @@ ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
 Cell GetCycles(void) {
   Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
   #if __SIZEOF_POINTER__ > 4
-    return (lo + (hi << 32)); }
+    return ((Cell)lo + ((Cell)hi << 32)); }
   #else
     return lo; }
   #endif
 
-void Delay(ugoc n) {
-  if (!Flag.Delay) { struct timespec ts = {0, 1000000L}; Cell start = GetCycles();
-    nanosleep(&ts, NULL); if (!(Flag.Delay = (GetCycles() - start))) Flag.Delay++; }
-  Cell total_cycles = (Cell)n * Flag.Delay; Cell start_time = GetCycles();
-  if (n > 1) { struct timespec sleep_ts = {0, ((n - 1) * 1000000L)}; nanosleep(&sleep_ts, NULL); }
-  struct timespec check_start; clock_gettime(CLOCK_MONOTONIC_COARSE, &check_start); Cell safety = 0;
-  while ((GetCycles() - start_time) < total_cycles) { __asm__ volatile("pause");
-    if (++safety > 2000) { struct timespec now; clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-      if (now.tv_sec > check_start.tv_sec) { Flag.Delay = 0; break; }
-      safety = 0; } } }
+void Delay(ugoc n) { struct timespec now, ts = {0, 1000000L}; Cell t, s, a = 0; Flag.Delay = GetCycles();
+  nanosleep(&ts, NULL); Flag.Delay = ((s = GetCycles()) - Flag.Delay) ? s - Flag.Delay : 1;
+  t = Flag.Delay * n; if (n > 1) { ts.tv_sec = 0; ts.tv_nsec = (1000000L * (n - 1)); nanosleep(&ts, NULL); }
+  clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+  while ((GetCycles() - s) < t) { __asm__ volatile("pause");
+    if (++a > 2000) { clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
+      if (now.tv_sec > ts.tv_sec) { break; } a = 0; } } }
 
 Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
   char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
