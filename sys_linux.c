@@ -8,6 +8,7 @@
  */
  
 #define _POSIX_C_SOURCE 200809L
+#define _GNU_SOURCE
 #include <time.h>      // nanosleep, clock_gettime
 #include <termios.h>   // tcgetattr, tcsetattr
 #include <fcntl.h>     // fcntl, O_NONBLOCK
