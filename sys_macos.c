@@ -92,7 +92,7 @@ Cell GetSC(Cell addr) {
   Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
 
-goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
-  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Cell t, r;
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(_CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(_CLOCK_MONOTONIC_RAW, &f); Cell t, r;
   r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
