@@ -30,6 +30,14 @@ Given the architecture detailed below, software powered by Fresh features: no ob
 
 ---
 
+**Thu, Jun 4, 2026 20:33**
+
+Now you actually have a real opportunity to see the discrepancy in the electrical grid frequency, if the timer lags behind the system time! `SysSet(500, 1000, 24, 15, 10)` - adjust the first parameter, in the example it's 500 for Russia `(mains frequency * 10)`, so that the time doesn't lag behind...
+
+Note that in the alternative palette mode with 16 colors, a black-and-white spectrum is generated, but the timer data still changes color — it turned out even stylish somehow. I've never seen anything like it, but apparently precise mathematics can always surprise you...
+
+---
+
 **Сб, 30 мая 2026 08:49 Промежуточные итоги с момента появления Fresh на github.com.**
 
 Изначально целью было создать визуализацию без боли utf8 раз и навсегда причём кроссплатформенно и поэтому основа холст, исходя из следующих соображений `[1;4] байта на символ, визуальная длина [0;2] знакоместа и направление письменности [-;+], так появилось строка 8192*4 байт для поддержки 8к разрешений, но строка это начало, строк нужно несколько и почему бы не завязать на пропорции золотого сечения их количество и размер строки`, заложена ДНК - переписывать не нужно. С учётом нижеизложенного, программы в основе которых лежит Fresh: не устаревают, абсолютно переносимы, не нуждаются в видеокартах, минимальны в размере, не тормозят, всегда RealTime...
