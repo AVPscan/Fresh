@@ -271,7 +271,6 @@ ugoc TermCR(ugoc *r);                                                 // Счи�
 ugoc GetNs(void);                                                     // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
-void Delay(ugoc n);                                                   // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
 goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)

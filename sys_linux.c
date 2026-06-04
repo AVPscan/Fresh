@@ -78,14 +78,6 @@ Cell GetCycles(void) {
     return lo; }
   #endif
 
-void Delay(ugoc n) { struct timespec now, ts = {0, 1000000L}; Cell t, s, a = 0; Flag.ns = GetCycles();
-  nanosleep(&ts, NULL); Flag.ns = ((s = GetCycles()) - Flag.ns) ? s - Flag.ns : 1;
-  t = Flag.ns * n; if (n > 1) { ts.tv_sec = 0; ts.tv_nsec = (1000000L * (n - 1)); nanosleep(&ts, NULL); }
-  clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
-  while ((GetCycles() - s) < t) { __asm__ volatile("pause");
-    if (++a > 2000) { clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
-      if (now.tv_sec > ts.tv_sec) { break; } a = 0; } } }
-
 Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
   char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
   Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);

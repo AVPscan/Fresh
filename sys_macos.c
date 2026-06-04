@@ -67,24 +67,6 @@ uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
 
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
-    
-static mach_timebase_info_data_t timebase = {0};
-void Delay(ugoc n) {
-  if (timebase.denom == 0) mach_timebase_info(&timebase);
-  if (!Flag.ns) { Cell start = GetCycles(); 
-    struct timespec ts = {0, 1000000L}; nanosleep(&ts, NULL); if (!(Flag.ns = GetCycles() - start)) Flag.ns++; }
-  Cell total_ticks = (Cell)(n * Flag.ns); Cell start_time = GetCycles();
-  if (n > 1) { struct timespec sleep_ts = {0, ((n - 1) * 1000000L)}; nanosleep(&sleep_ts, NULL); }
-  Cell check_start = GetCycles(), safety = 0, sec_ticks = (1000000000ULL * timebase.denom / timebase.numer);
-  while ((GetCycles() - start_time) < total_ticks) {
-        #if defined(__arm64__) || defined(__aarch64__)
-          __asm__ volatile("yield");
-        #else
-          __asm__ volatile("pause");
-        #endif
-    if (++safety > 2000) { Cell now = GetCycles();
-       if ((now - check_start) > sec_ticks) { Flag.ns = 0; break; }
-       safety = 0; check_start = now; } } }
 
 Cell GetSC(Cell addr) { 
   if (!addr || !TS.col) return 1;
@@ -92,7 +74,7 @@ Cell GetSC(Cell addr) {
   Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
 
-goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
-  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Cell t, r;
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_RAW, &f); Cell t, r;
   r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }

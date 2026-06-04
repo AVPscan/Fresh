@@ -80,19 +80,6 @@ uint8_t SyncSize(Cell addr) {
   TS.col = w + 1; TS.row = h + 1; return 1; }
 
 Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
-    
-void Delay(ugoc n) {
-  static LARGE_INTEGER freq, start, after_sleep; uint64_t target;
-  if (!Flag.ns) { QueryPerformanceFrequency(&freq); Flag.ns = 1; }
-  if (n == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
-  if (n > 1) { Sleep(n - 1); QueryPerformanceCounter(&after_sleep);
-    uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * n);
-    if (elapsed < target) {
-      while (1) { QueryPerformanceCounter(&after_sleep); if ((uint64_t)(after_sleep.QuadPart - now.QuadPart) >= target) break;
-                  __asm__ volatile ("pause"); } } }
-  else { target = now.QuadPart + (freq.QuadPart * n);
-    while (1) { QueryPerformanceCounter(&now); if ((uint64_t)now.QuadPart >= target) break;
-                __asm__ volatile ("pause"); } } }
 
 Cell GetSC(Cell addr) {
   if (!addr || !TS.col) return 1;

@@ -156,7 +156,7 @@ void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
   Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
-    SWD(VRam.addr); InitVram(VRam.addr,VRam.size); Delay(Off); cY = Sys.MT; while(cY) { Sys.Timer[--cY] = Off; Sys.Time[cY] = Off; Sys.T[cY] = '0'; }
+    SWD(VRam.addr); InitVram(VRam.addr,VRam.size); RealFps(Off); cY = Sys.MT; while(cY) { Sys.Timer[--cY] = Off; Sys.Time[cY] = Off; Sys.T[cY] = '0'; }
     Sys.T[2] = ' '; Sys.T[5] = ' '; Sys.T[6] = '0'; Sys.T[7] = '0'; Sys.T[8] = 0; SwitchRaw(); SyncSize(VRam.addr);
     Print(Sys.Fone, cA, "\033[?1049;7;1000h\033[?25l"); Print(Sys.Border, cA, "\033[2J"); VRam.SystemSwitch--; }
   else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
