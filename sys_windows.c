@@ -69,7 +69,7 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
+ugoc GetNs(void) { return (ugoc)Flag.ns; }
 
 uint8_t SyncSize(Cell addr) {
   if (!addr) return 0;
@@ -83,7 +83,7 @@ Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (C
     
 void Delay(ugoc n) {
   static LARGE_INTEGER freq, start, after_sleep; uint64_t target;
-  if (!Flag.Delay) { QueryPerformanceFrequency(&freq); Flag.Delay = 1; }
+  if (!Flag.ns) { QueryPerformanceFrequency(&freq); Flag.ns = 1; }
   if (n == 0) { SwitchToThread(); return; } LARGE_INTEGER now; QueryPerformanceCounter(&now);
   if (n > 1) { Sleep(n - 1); QueryPerformanceCounter(&after_sleep);
     uint64_t elapsed = after_sleep.QuadPart - now.QuadPart; target = (freq.QuadPart * n);
@@ -100,3 +100,8 @@ Cell GetSC(Cell addr) {
   LARGE_INTEGER start, end, freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&start);
   for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.col * 10)); }
+
+goc RealFps(ugoc fps) { LARGE_INTEGER n,f;   
+    if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
+      Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
+    QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }

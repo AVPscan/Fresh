@@ -91,7 +91,7 @@ typedef struct {
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
-typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Delay, Spd0, Spd1, Speed, Fps, Hz;
+typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Spd0, Spd1, Speed, Fps, Hz;
                  uint8_t CellP, MT, DS, Deep, Colours, Fone, Border, Inc; char T[9]; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
@@ -152,7 +152,7 @@ _Static_assert((1 << V_shift) == sizeof(Events), "V_shift mismatch");
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } B_;
 typedef struct { goc X, Y; ugoc Xs, Ys, dXY; uint16_t Win, Wec; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } V_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
-typedef struct { Cell Delay; uint8_t SwitchRaw; } F_;
+typedef struct { Cell s, ns; uint8_t SwitchRaw; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { ugoc col, row; } T_;
 extern char     *Cdata;
@@ -200,7 +200,7 @@ extern uint32_t cRGB, cXYz;
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
 #define SYS_VARS_INIT \
     static T_ TS = {0}; \
-    static F_ Flag = {0,1}; \
+    static F_ Flag = {0,0,1}; \
     static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, \
         {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
@@ -268,11 +268,12 @@ Cell GetRam(Cell *size);                                              // Взя�
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
 void SWD(Cell addr);                                                  // Установить рабочую директорию
 ugoc TermCR(ugoc *r);                                                 // Считать рамки терминала
-ugoc GetDelay(void);                                                  // Считать колибровачные данные
+ugoc GetNs(void);                                                     // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
 Cell GetCycles(void);                                                 // Тики
 void Delay(ugoc n);                                                   // Адаптивная задержка, гарантия точности ms
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
+goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinExecs(n, cur, ...) _WExec(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)

@@ -63,13 +63,12 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
   
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
+ugoc GetNs(void) { return (ugoc)Flag.ns; }
 
 uint8_t SyncSize(Cell addr) { if (!addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
   if (ws.ws_col == TS.col && ws.ws_row == TS.row) return Off;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return On; }
-
-ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
 
 Cell GetCycles(void) {
   Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
@@ -79,9 +78,9 @@ Cell GetCycles(void) {
     return lo; }
   #endif
 
-void Delay(ugoc n) { struct timespec now, ts = {0, 1000000L}; Cell t, s, a = 0; Flag.Delay = GetCycles();
-  nanosleep(&ts, NULL); Flag.Delay = ((s = GetCycles()) - Flag.Delay) ? s - Flag.Delay : 1;
-  t = Flag.Delay * n; if (n > 1) { ts.tv_sec = 0; ts.tv_nsec = (1000000L * (n - 1)); nanosleep(&ts, NULL); }
+void Delay(ugoc n) { struct timespec now, ts = {0, 1000000L}; Cell t, s, a = 0; Flag.ns = GetCycles();
+  nanosleep(&ts, NULL); Flag.ns = ((s = GetCycles()) - Flag.ns) ? s - Flag.ns : 1;
+  t = Flag.ns * n; if (n > 1) { ts.tv_sec = 0; ts.tv_nsec = (1000000L * (n - 1)); nanosleep(&ts, NULL); }
   clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
   while ((GetCycles() - s) < t) { __asm__ volatile("pause");
     if (++a > 2000) { clock_gettime(CLOCK_MONOTONIC_COARSE, &now);
@@ -91,3 +90,8 @@ Cell GetSC(Cell addr) { if (!addr || !TS.col) return 1;
   char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
   Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
+
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Cell t, r;
+  r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }

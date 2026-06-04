@@ -59,22 +59,21 @@ void SWD(Cell addr) { if (!addr) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
 ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
+ugoc GetNs(void) { return (ugoc)Flag.ns; }
 
 uint8_t SyncSize(Cell addr) { if (!addr) return 0;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
   if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
   TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
 
-ugoc GetDelay (void) { return (ugoc)Flag.Delay; }
-
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
     
 static mach_timebase_info_data_t timebase = {0};
 void Delay(ugoc n) {
   if (timebase.denom == 0) mach_timebase_info(&timebase);
-  if (!Flag.Delay) { Cell start = GetCycles(); 
-    struct timespec ts = {0, 1000000L}; nanosleep(&ts, NULL); if (!(Flag.Delay = GetCycles() - start)) Flag.Delay++; }
-  Cell total_ticks = (Cell)(n * Flag.Delay); Cell start_time = GetCycles();
+  if (!Flag.ns) { Cell start = GetCycles(); 
+    struct timespec ts = {0, 1000000L}; nanosleep(&ts, NULL); if (!(Flag.ns = GetCycles() - start)) Flag.ns++; }
+  Cell total_ticks = (Cell)(n * Flag.ns); Cell start_time = GetCycles();
   if (n > 1) { struct timespec sleep_ts = {0, ((n - 1) * 1000000L)}; nanosleep(&sleep_ts, NULL); }
   Cell check_start = GetCycles(), safety = 0, sec_ticks = (1000000000ULL * timebase.denom / timebase.numer);
   while ((GetCycles() - start_time) < total_ticks) {
@@ -84,7 +83,7 @@ void Delay(ugoc n) {
           __asm__ volatile("pause");
         #endif
     if (++safety > 2000) { Cell now = GetCycles();
-       if ((now - check_start) > sec_ticks) { Flag.Delay = 0; break; }
+       if ((now - check_start) > sec_ticks) { Flag.ns = 0; break; }
        safety = 0; check_start = now; } } }
 
 Cell GetSC(Cell addr) { 
@@ -92,3 +91,8 @@ Cell GetSC(Cell addr) {
   char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
   Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
   Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
+
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Cell t, r;
+  r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
