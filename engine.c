@@ -205,9 +205,10 @@ void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
       else if (Buf.Cod == VP.up) dy = -VP.dXY;
       else if (Buf.Cod == VP.ud) dy = VP.dXY;
       MoveConvas(dx, dy); } }
-  Syn += RealFps(Sys.Fps); if ((Syn += Sys.Hz) >= Loop) {
-    if ((Dis += (Syn / Loop)) >= Sys.DS) { ASu(Dis / Sys.DS); Time(); Dis = Off;  }
-    if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); } Syn %= Loop; }
+  if ((Syn += RealFps(Sys.Fps) + Sys.Hz) >= Loop) {
+    if ((Dis += (Syn / Loop)) >= Sys.DS) { ASu(Dis / Sys.DS); Time(); Dis %= Sys.DS;  }
+    if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); }
+    Syn %= Loop; }
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
   if (SyncSize(VRam.addr) || Buf.Ctrl > On) { SetBorder(); } else {  } }
 
