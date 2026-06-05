@@ -106,15 +106,15 @@ ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void ASu(uint32_t add) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Time[cY] = (uint16_t)(cRGB += Sys.Time[cY] + add); add = 0; if (!(cRGB >>= 16)) break; } } 
-void CSu(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(cRGB += Sys.Time[cY] + Sys.Timer[cY]); cRGB >>= 16; } } 
-uint16_t DSu(uint16_t d) { cXYz = 0; cY = -1; while(++cY < Sys.MT) { Sys.Su[cY] = (uint16_t)((cXYz = (cXYz << 16) | Sys.Su[cY]) / d); cXYz %= d; } return (uint16_t)cXYz; }
-void Time(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(cRGB += Sys.Time[cY] + Sys.Timer[cY]); cRGB >>= 16; } cX = DSu(60);
-  cY = ((cX * 205) >> 11); Sys.T[7] = 0x30 + cX - (cY * 10); Sys.T[6] = 0x30 + cY; cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[4] = 0x30 + cX - (cY * 10);
-  Sys.T[3] = 0x30 + cY; cX = DSu(24); cY = ((cX * 205) >> 11); Sys.T[1] = 0x30 + cX - (cY * 10); Sys.T[0] = 0x30 + cY; }
+void ASu(uint32_t add) { cRGB = 0; cY = Base.Count; while(cY--) { Base.Time[cY] = (uint16_t)(cRGB += Base.Time[cY] + add); add = 0; if (!(cRGB >>= 16)) break; } } 
+void CSu(void) { cRGB = 0; cY = Base.Count; while(cY--) { Base.Su[cY] = (uint16_t)(cRGB += Base.Time[cY] + Base.Timer[cY]); cRGB >>= 16; } } 
+uint16_t DSu(uint16_t d) { cXYz = 0; cY = -1; while(++cY < Base.Count) { Base.Su[cY] = (uint16_t)((cXYz = (cXYz << 16) | Base.Su[cY]) / d); cXYz %= d; } return (uint16_t)cXYz; }
+void Time(void) { cRGB = 0; cY = Base.Count; while(cY--) { Base.Su[cY] = (uint16_t)(cRGB += Base.Time[cY] + Base.Timer[cY]); cRGB >>= 16; } cX = DSu(60);
+  cY = ((cX * 205) >> 11); Base.T[7] = 0x30 + cX - (cY * 10); Base.T[6] = 0x30 + cY; cX = DSu(60); cY = ((cX * 205) >> 11); Base.T[4] = 0x30 + cX - (cY * 10);
+  Base.T[3] = 0x30 + cY; cX = DSu(24); cY = ((cX * 205) >> 11); Base.T[1] = 0x30 + cX - (cY * 10); Base.T[0] = 0x30 + cY; }
 
-void IRnd(void) { Sys.Rnd = (ugoc)(Flag.ns | On); }
-ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Sys.Rnd = (ugoc)(Sys.A * Sys.Rnd + Sys.B)) * n) >> (sizeof(ugoc) * 8)); }
+void IRnd(void) { Base.Rnd = (ugoc)(Flag.ns | On); }
+ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Base.Rnd = (ugoc)(Base.A * Base.Rnd + Base.B)) * n) >> (sizeof(ugoc) * 8)); }
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
 int8_t Fsin(int16_t u) { static int8_t s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,18,19,20,21,23,24,25,26,27,28,30,31,
   32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,51,52,53,54,55,55,56,57,58,58,59,60,60,61,62,62,63 };
@@ -151,32 +151,30 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how) 
   Cinfo = (uint8_t*)(Cdata + SDCell); Cds = Cinfo + SInfo; Coffset = (ugoc*)(Cds + SDs); Cdpal = (char*)(Coffset + SOffset);
   Cdkey = (uint8_t*)(Cdpal + SPal); Cdsys = (ugoc*)(Cdkey + SKeys); Cdcon = Cdsys + SSys; Cdwin = Cdcon + SConvas;
   Cvsw = Cdwin + SWin; Ccsw = Cvsw + SVsw; Cevent = (char*)(Ccsw + SCsw); Cexec = Cevent + SEvent; Cdbuf = Cexec + SExec;
-  Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; Sys.CellP = CellPow; Sys.MWin = MAX_WIN; Sys.Ginf = GOC_INF;
-  Sys.MT = 6; Sys.Gmax = GOC_MAX; Sys.Gmin = GOC_MIN; IRnd(); Sys.A = RNG_A; Sys.B = RNG_B; VP.Win = Sys.MWin; VP.Mode = b2; VP.Loop = On; Sys.DS = how;
-  Vector(RPU) = RPUEncode; Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); col = (col < b0) ? b0 : (col > aColours) ? aColours : col;
-  Syn = Sys.Hz - Syn; Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500; Syn = Sys.Hz - Syn; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8;
-  Loop = Sys.Fps * Sys.Hz / Sys.DS; if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
+  Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; IRnd(); VP.Win = Base.Win; VP.Mode = b2; VP.Loop = On; Vector(RPU) = RPUEncode;
+  Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); col = (col < b0) ? b0 : (col > aColours) ? aColours : col; Syn = Sys.Hz - Syn;
+  Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500; Syn = Sys.Hz - Syn; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Base.FTime = how;
+  Loop = Sys.Fps * Sys.Hz / Base.FTime; if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
 void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  Cdata = (char*)addr; SysInit(FHz, FFps, CFDeep, Fcolour, FHow); Convas.D = Off; Convas.S = Sys.MWin; Convas.CW = CellLine; Convas.W = Convas.CW - On;
-  Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Sys.MWin; Convas.Win = Sys.MWin; }
+  Cdata = (char*)addr; SysInit(Base.Hz, Base.Fps, Base.Deep, Base.Colours, Base.FTime); Convas.D = Off; Convas.S = Base.Win; Convas.CW = CellLine; Convas.W = Convas.CW - On;
+  Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
-    SWD(VRam.addr); InitVram(VRam.addr,VRam.size); RealFps(Off); cY = Sys.MT; while(cY) { Sys.Timer[--cY] = Off; Sys.Time[cY] = Off; Sys.T[cY] = '0'; }
-    Sys.T[2] = ' '; Sys.T[5] = ' '; Sys.T[6] = '0'; Sys.T[7] = '0'; Sys.T[8] = 0; SwitchRaw(); SyncSize(VRam.addr);
+    SWD(VRam.addr); InitVram(VRam.addr,VRam.size); RealFps(Off); SwitchRaw(); SyncSize(VRam.addr);
     Print(Sys.Fone, cA, "\033[?1049;7;1000h\033[?25l"); Print(Sys.Border, cA, "\033[2J"); VRam.SystemSwitch--; }
   else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
   return On; }
 
 void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; goc x = VP.X + dx, y = VP.Y + dy;
   if (VP.Mode & b1) { return; }
-  else { x = (VP.X < -Sys.Speed || VP.X > Sys.Speed) && ((x ^ VP.X) & Sys.Ginf) ? (x < Off) ? Sys.Gmax : Sys.Gmin : (x == Sys.Ginf) ? Sys.Gmin : x;
-    y = (VP.Y < -Sys.Speed || VP.Y > Sys.Speed) && ((y ^ VP.Y) & Sys.Ginf) ? (y < Off) ? Sys.Gmax : Sys.Gmin : (y == Sys.Ginf) ? Sys.Gmin : y; }
+  else { x = (VP.X < -Sys.Speed || VP.X > Sys.Speed) && ((x ^ VP.X) & Base.Ginf) ? (x < Off) ? Base.Gmax : Base.Gmin : (x == Base.Ginf) ? Base.Gmin : x;
+    y = (VP.Y < -Sys.Speed || VP.Y > Sys.Speed) && ((y ^ VP.Y) & Base.Ginf) ? (y < Off) ? Base.Gmax : Base.Gmin : (y == Base.Ginf) ? Base.Gmin : y; }
   dx = VP.X / TS.c; dy = VP.Y / TS.r; VP.X = x; VP.Y = y; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % TS.c)) : (VP.X % TS.c);
   VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % TS.r)) : (VP.Y % TS.r); if ((x / TS.c) != dx || (y / TS.r) != dy) Buf.Ctrl++; }
 uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   if (VP.Mode & b1) { return Off; }
-  else if (((dx ^ VP.X) & Sys.Ginf) || ((dy ^ VP.Y) & Sys.Ginf)) return Off;
+  else if (((dx ^ VP.X) & Base.Ginf) || ((dy ^ VP.Y) & Base.Ginf)) return Off;
   VP.X = dx; VP.Y = dy; VP.Xs -= mx; VP.Ys -= my; return On; }
 
 void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
@@ -211,7 +209,7 @@ void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
       else if (Buf.Cod == VP.ud) dy = VP.dXY;
       MoveConvas(dx, dy); } }
   if ((Syn += RealFps(Sys.Fps) + Sys.Hz) >= Loop) {
-    if ((Dis += (Syn / Loop)) >= Sys.DS) { ASu(Dis / Sys.DS); Time(); Dis %= Sys.DS;  }
+    if ((Dis += (Syn / Loop)) >= Base.FTime) { ASu(Dis / Base.FTime); Time(); Dis %= Base.FTime;  }
     if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); }
     Syn %= Loop; }
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
@@ -257,7 +255,7 @@ void _SExec(uint8_t count, AFunction *args) { uint8_t k = K_Mouse; Convas.Min = 
         while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Vector(j) = ((Cell)args[i] <= (Cell)Nop) ? Off : args[i]; i++; break; } } } }
     break; } } }
 void _SKeys(uint8_t count, uint8_t *args) { uint8_t *p = &VP.Key, i = Off; p += *p; if (count > VP.Key) { count = VP.Key; } while(count--) *p-- = args[i++]; }
-void _SSet(uint16_t hz, uint16_t fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours, how = Sys.DS; char *a = Cdpal;
+void _SSet(uint16_t hz, uint16_t fps, uint8_t count, uint8_t *args) { uint8_t deep = Sys.Deep, col = Sys.Colours, how = Base.FTime; char *a = Cdpal;
   if (count--) { deep = args[Off]; if (count--) { col = args[b0]; if (count) { if (!(how = args[b1])) how++; } } } SysInit(hz, fps, deep, col, how); Cdpal = a; }
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args) { if ((n >= Convas.D && n < Convas.S) || n >= Convas.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  } (void)*str; (void)count; (void)*args; }

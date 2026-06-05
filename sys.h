@@ -91,7 +91,7 @@ typedef struct { ugoc UGmax, Ginf, Gmin, Gmax, A, B, Rnd; uint16_t Su[6], Time[6
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
-typedef struct { ugoc Ginf, Gmin, Gmax, A, B, Rnd; uint16_t MWin, Su[6], Time[6], Timer[6], Spd0, Spd1, Speed, Fps, Hz; uint8_t CellP, MT, DS, Deep, Colours, Fone, Border, Inc; char T[9]; } Sis;
+typedef struct { uint16_t MWin, Spd0, Spd1, Speed, Fps, Hz; uint8_t Deep, Colours, Fone, Border, Inc; } Sis;
 typedef struct { ugoc W, H, CW, CH; uint16_t Win, Min, Max, D, S; } Canalysis;
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent, child; uint8_t palette, EF; } Windows;
 

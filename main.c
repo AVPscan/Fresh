@@ -13,7 +13,7 @@ void body(void) {  // пока не дописано WinData,Render
   char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 48, w = Sys.Colours, i = On + w; Print(Sys.Inc, Off, "\033[H"); while(i--) Print((w - i + Fdark), cA, " ");
   Sys.Fone = Firis; Print(Sys.Fone, cA, "\n"); ugoc s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 3;
   while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d ", s, K_Mouse, TS.c, TS.r); i = (uint8_t)StrLen(b); Print(moss, aI, b);
-  snprintf(b, 100, " Time %s             ", Sys.T);
+  snprintf(b, 100, " Time %s             ", Base.T);
   if ((uint8_t)StrLen(b) > (j - 1 - i)) { *(b + j - 1 - i) = Off; } if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(aColours, Off, b);
   if (TS.r < 3) { return; } snprintf(b, 100, "\nH%d F%d D%d C%d x%d y%d %d %d b%d x%d y%d                         ", Sys.Hz/10, Sys.Fps, Sys.Deep, Sys.Colours,
   VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print(moss, aC | aB, b);
@@ -34,5 +34,5 @@ void Init(void) {
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Sys.Fone, cA, "\033[?1049l"); Print(berry, cA, "Created by Alexey Pozdnyakov"); flag = Off;
-        Print(coral, cA, " in 07.02.2026 version 9.74 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+        Print(coral, cA, " in 07.02.2026 version 9.75 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
