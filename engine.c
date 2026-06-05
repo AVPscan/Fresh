@@ -91,14 +91,20 @@ void PushKey(void) { uint8_t l, d, i = Off; KeyBuf* k;
   if (!Buf.Cod) Buf.Cod--; }
 uint8_t ShowKey(void) { uint8_t d, i = Off; KeyBuf* k = AKey(Buf.push);
   if (Buf.pop == Buf.push) { Buf.Data = Off; Buf.Count = Off; return Off; }
-  if (k->d[Off] & b6) { i = b1; } Buf.Count = k->d[i + On]; Buf.Data = k->d[i] & ~b76;
-  d = On + (k->d[i] & b10); while(d--) { *(Buf.Key + d) = k->u[i + d]; } return On; }
+  if (k->d[Off] & b6) i = b1;
+  Buf.Count = k->d[i + On]; Buf.Data = k->d[i] & ~b76;
+  d = On + (k->d[i] & b10); while(d--) *(Buf.Key + d) = k->u[i + d];
+  return On; }
 uint8_t PopKey(void) { uint8_t d, i = Off;
   while(!(AKey(Buf.pop)->d[Off] & b76) && (Buf.pop != Buf.push)) Buf.pop++;
-  if (Buf.pop == Buf.push) { Buf.Data = Off; Buf.Count = Off; return Off; } KeyBuf* k = AKey(Buf.pop);
-  if (k->d[Off] & b7) { k->d[Off] &= ~b7; } else { k->d[Off] &= ~b6; i = b1; } Buf.Count = k->d[i + On]; Buf.Data = k->d[i] & ~b76;
-  d = On + (k->d[i] & b10); while(d--) { *(Buf.Key + d) = k->u[i + d]; } return On; }
-ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push; while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; } return s; }
+  if (Buf.pop == Buf.push) { Buf.Data = Off; Buf.Count = Off; return Off; }
+  KeyBuf* k = AKey(Buf.pop); if (k->d[Off] & b7) k->d[Off] &= ~b7;
+  else { k->d[Off] &= ~b6; i = b1; } Buf.Count = k->d[i + On]; Buf.Data = k->d[i] & ~b76;
+  d = On + (k->d[i] & b10); while(d--) *(Buf.Key + d) = k->u[i + d];
+  return On; }
+ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push;
+  while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
+  return s; }
 
 void ASu(uint32_t add) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Time[cY] = (uint16_t)(cRGB += Sys.Time[cY] + add); add = 0; if (!(cRGB >>= 16)) break; } } 
 void CSu(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(cRGB += Sys.Time[cY] + Sys.Timer[cY]); cRGB >>= 16; } } 
@@ -107,7 +113,7 @@ void Time(void) { cRGB = 0; cY = Sys.MT; while(cY--) { Sys.Su[cY] = (uint16_t)(c
   cY = ((cX * 205) >> 11); Sys.T[7] = 0x30 + cX - (cY * 10); Sys.T[6] = 0x30 + cY; cX = DSu(60); cY = ((cX * 205) >> 11); Sys.T[4] = 0x30 + cX - (cY * 10);
   Sys.T[3] = 0x30 + cY; cX = DSu(24); cY = ((cX * 205) >> 11); Sys.T[1] = 0x30 + cX - (cY * 10); Sys.T[0] = 0x30 + cY; }
 
-void IRnd(void) { Sys.Rnd = GetNs() | On; }
+void IRnd(void) { Sys.Rnd = (ugoc)(Flag.ns | On); }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Sys.Rnd = (ugoc)(Sys.A * Sys.Rnd + Sys.B)) * n) >> (sizeof(ugoc) * 8)); }
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
 int8_t Fsin(int16_t u) { static int8_t s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,18,19,20,21,23,24,25,26,27,28,30,31,
@@ -162,13 +168,12 @@ Cell SystemSwitch(void) {
   else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
   return On; }
 
-void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; ugoc r, c = TermCR(&r); goc x = VP.X + dx, y = VP.Y + dy;
+void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; goc x = VP.X + dx, y = VP.Y + dy;
   if (VP.Mode & b1) { return; }
-  else {
-    x = ((VP.X < -Sys.Speed || VP.X > Sys.Speed) && ((x ^ VP.X) & Sys.Ginf)) ? ((x < Off) ? Sys.Gmax : Sys.Gmin) : ((x == Sys.Ginf) ? Sys.Gmin : x);
-    y = ((VP.Y < -Sys.Speed || VP.Y > Sys.Speed) && ((y ^ VP.Y) & Sys.Ginf)) ? ((y < Off) ? Sys.Gmax : Sys.Gmin) : ((y == Sys.Ginf) ? Sys.Gmin : y); }
-  dx = VP.X / c; dy = VP.Y / r; VP.X = x; VP.Y = y; VP.Xs = (VP.X < Off) ? (c + (VP.X % c)) : (VP.X % c);
-  VP.Ys = (VP.Y < Off) ? (r + (VP.Y % r)) : (VP.Y % r); if ((x / c) != dx || (y / r) != dy) Buf.Ctrl++; }
+  else { x = (VP.X < -Sys.Speed || VP.X > Sys.Speed) && ((x ^ VP.X) & Sys.Ginf) ? (x < Off) ? Sys.Gmax : Sys.Gmin : (x == Sys.Ginf) ? Sys.Gmin : x;
+    y = (VP.Y < -Sys.Speed || VP.Y > Sys.Speed) && ((y ^ VP.Y) & Sys.Ginf) ? (y < Off) ? Sys.Gmax : Sys.Gmin : (y == Sys.Ginf) ? Sys.Gmin : y; }
+  dx = VP.X / TS.c; dy = VP.Y / TS.r; VP.X = x; VP.Y = y; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % TS.c)) : (VP.X % TS.c);
+  VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % TS.r)) : (VP.Y % TS.r); if ((x / TS.c) != dx || (y / TS.r) != dy) Buf.Ctrl++; }
 uint8_t MoveScreen(goc mx, goc my) { goc dx = VP.X - mx, dy = VP.Y - my;
   if (VP.Mode & b1) { return Off; }
   else if (((dx ^ VP.X) & Sys.Ginf) || ((dy ^ VP.Y) & Sys.Ginf)) return Off;
@@ -229,7 +234,7 @@ void _WView(uint16_t n, uint8_t count, goc *args) { goc x = Off, y = Off; Window
     if (x && !(w->EF & b0)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
       if ((ugoc)VP.X > Convas.W || (ugoc)VP.Y > Convas.H) return; } }
   if (count == Off) { x = VP.Xs + On; y = VP.Ys + On;
-    if (w->EF & b0) { ugoc r, c = TermCR(&r); if (c < (x + w->W)) { x = -On; } if (r < (y + w->H)) y = -On; } 
+    if (w->EF & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; } 
     else if ((ugoc)VP.X > Convas.W || (ugoc)VP.Y > Convas.H) return; }
   w->Xr = x; w->Yr = y; if (w->Xr) { w->EF |= b1; } else { w->EF &= ~b1; } }
 uint16_t _Window(uint8_t t, int8_t col, uint8_t count, ugoc *args) { uint16_t l, n; Windows* w;

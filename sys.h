@@ -114,7 +114,6 @@ enum {
     SEvent = SKey * sizeof(Events),                                           // Размер данных для событий (привязка вызова функций к событиям)
     SExec = SKey * sizeof(AFunction),                                         // Размер вектора событий
     SBuf = 8192,                                                              // Размер буфера Print/File
-    SizeVram = SDCell + SInfo + SDs + SPal + SKeys + 2 * (SOffset + SVsw + SCsw + SWin + SSys + SConvas) + SEvent + SExec + SBuf,
     D_shift = CellPow + 2,                                                    // Смещение между строк холста в байтах
     O_shift = CellPow + 1,                                                    // Смещение между смещениями строк холста
     Ds_shift = CellPow,                                                       // Смещение между атрибутами строк холста
@@ -122,7 +121,8 @@ enum {
     P_shift = 5,                                                              // Смещение для палитр
     W_shift = 4,                                                              // Смещение для данных окон в словах - 32 байта на окно.
     K_shift = 3,                                                              // Смещение для ячеек буфера клавиатуры
-    V_shift = 2 };                                                            // Смещение для организации событий
+    V_shift = 2,                                                              // Смещение для организации событий
+    SizeVram = SDCell + SInfo + SDs + SPal + SKeys + 2 * (SOffset + SVsw + SCsw + SWin + SSys + SConvas) + SEvent + SExec + SBuf };
 _Static_assert((1 << D_shift) == CellLine * 4, "D_shift mismatch");
 _Static_assert((1 << O_shift) == CellLine * sizeof(ugoc), "O_shift");
 _Static_assert((1 << Ds_shift) == CellLine, "Ds_shift mismatch");
@@ -154,7 +154,7 @@ typedef struct { goc X, Y; ugoc Xs, Ys, dXY; uint16_t Win, Wec; uint8_t Cod, Mod
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } R_;
 typedef struct { Cell s, ns; uint8_t SwitchRaw; } F_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
-typedef struct { ugoc col, row; } T_;
+typedef struct { ugoc c, r; } T_;
 extern char     *Cdata;
 extern uint8_t  *Cinfo;
 extern uint8_t  *Cds;
@@ -169,14 +169,19 @@ extern ugoc     *Ccsw;
 extern char     *Cevent;
 extern char     *Cexec;
 extern char     *Cdbuf;
-extern V_ VP;
-extern B_ Buf;
-extern R_ VRam;
 extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
 extern int16_t  cU, cZ;
 extern int32_t  Syn, Loop, Dis;
 extern uint32_t cRGB, cXYz;
+extern R_ VRam;
+extern V_ VP;
+extern B_ Buf;
+extern T_ TS;
+extern F_ Flag;
 #define ENGINE_VARS_INIT \
+    R_ VRam = {0,0,1}; \
+    V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
+    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     char      *Cdata      = 0; \
     uint8_t   *Cinfo      = 0; \
     uint8_t   *Cds        = 0; \
@@ -194,14 +199,11 @@ extern uint32_t cRGB, cXYz;
     uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
     int16_t   cU = 0, cZ = 0; \
     int32_t   Syn = 0, Loop = 0, Dis = 0; \
-    uint32_t  cRGB = 0, cXYz = 0; \
-    R_ VRam = {0,0,1}; \
-    V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
-    B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65};
+    uint32_t  cRGB = 0, cXYz = 0;
 #define SYS_VARS_INIT \
-    static T_ TS = {0}; \
-    static F_ Flag = {0,0,1}; \
-    static KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
+    T_ TS = {0}; \
+    F_ Flag = {0,0,1}; \
+    KeyIdMap NameId[] = { {"[A", K_UP}, {"[B", K_DOW}, {"[C", K_RIG}, {"[D", K_LEF}, \
         {"[1;5A", K_Ctrl_UP}, {"[1;5B", K_Ctrl_DOW}, {"[1;5C", K_Ctrl_RIG}, {"[1;5D", K_Ctrl_LEF}, \
         {"[M", K_Mouse}, {"[1;2P", K_F13}, {"[1;2Q", K_F14}, {"[1;2R", K_F15}, {"[15~", K_F5}, \
         {"[17~", K_F6}, {"[18~", K_F7}, {"[19~", K_F8}, {"[1~", K_HOM}, {"[2~", K_INS}, {"[20~", K_F9}, \
@@ -237,7 +239,7 @@ void SetPalette(uint8_t set);                                         // Уст�
 void SwitchPalette(void);                                             // Переключить палитру
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how);  // Установка переменных среды
+void SysInit(uint16_t h, uint16_t f, uint8_t d, uint8_t c, uint8_t s);// Установка переменных среды
 void InitVram(Cell addr, Cell size);                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -266,13 +268,11 @@ void SwitchRaw(void);                                                 // Вкл�
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
 Cell GetRam(Cell *size);                                              // Взять память
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
-void SWD(Cell addr);                                                  // Установить рабочую директорию
-ugoc TermCR(ugoc *r);                                                 // Считать рамки терминала
-ugoc GetNs(void);                                                     // Считать колибровачные данные
 uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
+goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
+void SWD(Cell addr);                                                  // Установить рабочую директорию
 Cell GetCycles(void);                                                 // Тики
 Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
-goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinExecs(n, cur, ...) _WExec(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)

@@ -68,25 +68,22 @@ void SWD(Cell addr) { if (!addr) return;
   char *path = (char *)(addr); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
-ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetNs(void) { return (ugoc)Flag.ns; }
-
 uint8_t SyncSize(Cell addr) {
   if (!addr) return 0;
   static HANDLE hOut = NULL; if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi; if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return 0;
   uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left, h = csbi.srWindow.Bottom - csbi.srWindow.Top;
-  if (w == TS.col - 1 && h == TS.row - 1) return 0;
-  TS.col = w + 1; TS.row = h + 1; return 1; }
+  if (w == TS.c - 1 && h == TS.r - 1) return 0;
+  TS.c = w + 1; TS.r = h + 1; return 1; }
 
 Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
 
 Cell GetSC(Cell addr) {
-  if (!addr || !TS.col) return 1;
-  char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
+  if (!addr || !TS.c) return 1;
+  char *p = (char *)(addr); MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r';
   LARGE_INTEGER start, end, freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&start);
-  for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
-  QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.col * 10)); }
+  for(Cell i = 0; i < 100; i++) SysWrite(p, TS.c);
+  QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.c * 10)); }
 
 goc RealFps(ugoc fps) { LARGE_INTEGER n,f;   
     if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;

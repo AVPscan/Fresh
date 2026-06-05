@@ -53,28 +53,23 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
     
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
 
+uint8_t SyncSize(Cell addr) { if (!addr) return 0;
+  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
+  if (ws.ws_col == TS.c && ws.ws_row == TS.r) return 0;
+  TS.c = ws.ws_col; TS.r = ws.ws_row; return 1; }
+
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_RAW, &f);
+  Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
+
 void SWD(Cell addr) { if (!addr) return;
   uint32_t len = 4096; char *path = (char *)(addr);
   if (_NSGetExecutablePath(path, &len) != 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
-ugoc TermCR(ugoc *r) { *r = TS.row; return TS.col; }
-ugoc GetNs(void) { return (ugoc)Flag.ns; }
-
-uint8_t SyncSize(Cell addr) { if (!addr) return 0;
-  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
-  if (ws.ws_col == TS.col && ws.ws_row == TS.row) return 0;
-  TS.col = ws.ws_col; TS.row = ws.ws_row; return 1; }
-
 Cell GetCycles(void) { return (Cell)mach_absolute_time(); }
 
-Cell GetSC(Cell addr) { 
-  if (!addr || !TS.col) return 1;
-  char *p = (char *)(addr); MemSet(p, ' ', TS.col - 1); p[TS.col - 1] = '\r';
-  Cell start = GetCycles(); for(Cell i = 0; i < 100; i++) SysWrite(p, TS.col);
-  Cell end = GetCycles(); return (end - start) / (TS.col * 10); }
-
-goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
-  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_RAW, &f); Cell t, r;
-  r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
-  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
+Cell GetSC(Cell addr) { if (!addr || !TS.c) { return 1; } uint8_t i = 100; char *p = (char *)addr;
+  MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r'; Cell start = GetCycles();
+  while(--i) { SysWrite(p, TS.c); } return (GetCycles() - start) / (TS.c * 10); }
