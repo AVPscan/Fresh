@@ -53,7 +53,7 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
   
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
 
-uint8_t SyncSize(Cell addr) { if (!addr) return Off;
+uint8_t SyncSize(void) { if (!VRam.addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
   if (ws.ws_col == TS.c && ws.ws_row == TS.r) return Off;
   TS.c = ws.ws_col; TS.r = ws.ws_row; return On; }
@@ -64,8 +64,8 @@ goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOT
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
 extern char **environ;
-void SWD(Cell addr) { if (!addr) return;
-  char *path = (char *)(addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
+void SWD(void) { if (!VRam.addr) return;
+  char *path = (char *)(VRam.addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
   path[len] = 0; if (MemCmp(path, "/nix/store", 10) == 0) {
     for (char **env = environ; *env != NULL; env++) { char *e = *env;
       if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }
@@ -80,7 +80,6 @@ Cell GetCycles(void) {
     return lo; }
   #endif
 
-Cell GetSC(Cell addr) { if (!addr || !TS.c) { return 1; } uint8_t i = 100; char *p = (char *)addr;
+Cell GetSC(void) { if (!VRam.addr || !TS.c) { return 1; } uint8_t i = 100; char *p = (char *)VRam.addr;
   MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r'; Cell start = GetCycles();
   while(--i) { SysWrite(p, TS.c); } return (GetCycles() - start) / (TS.c * 10); }
-

@@ -244,7 +244,7 @@ void SwitchPalette(void);                                             // Пер�
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(uint16_t h, uint16_t f, uint8_t d, uint8_t c, uint8_t s);// Установка переменных среды
-void InitVram(Cell addr, Cell size);                                  // Инициализация мира
+void InitVram(void);                                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
@@ -272,11 +272,11 @@ void SwitchRaw(void);                                                 // Вкл�
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
 Cell GetRam(Cell *size);                                              // Взять память
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
-uint8_t SyncSize(Cell addr);                                          // Обновить рамки терминала при необходимости стабилизировать
+uint8_t SyncSize(void);                                               // Обновить рамки терминала при необходимости стабилизировать
 goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
-void SWD(Cell addr);                                                  // Установить рабочую директорию
+void SWD(void);                                                       // Установить рабочую директорию
 Cell GetCycles(void);                                                 // Тики
-Cell GetSC(Cell addr);                                                // Измерение пропускной способности терминала
+Cell GetSC(void);                                                     // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinExecs(n, cur, ...) _WExec(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)

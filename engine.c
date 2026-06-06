@@ -156,14 +156,13 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how) 
   Sys.Hz = hz ? ((hz > 10000) ? 10000 : hz) : 500; Syn = Sys.Hz - Syn; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8; Base.FTime = how;
   Loop = Sys.Fps * Sys.Hz / Base.FTime; if (col != Sys.Colours || deep != Sys.Deep) { Sys.Colours = col; Sys.Deep = deep; cU = Off; GenPalette(On); GenPalette(Off); }
   Sys.Fone = Sys.Colours + aColours + 1; Sys.Border = Fdark; Sys.Inc = dark; cI = Sys.Border; cA = Off; }
-void InitVram(Cell addr, Cell size) { if (!addr || (size < SizeVram)) return;
-  Cdata = (char*)addr; SysInit(Base.Hz, Base.Fps, Base.Deep, Base.Colours, Base.FTime); Convas.D = Off; Convas.S = Base.Win; Convas.CW = CellLine; Convas.W = Convas.CW - On;
+void InitVram(void) { if (!VRam.addr || (VRam.size < SizeVram)) return;
+  Cdata = (char*)VRam.addr; SysInit(Base.Hz, Base.Fps, Base.Deep, Base.Colours, Base.FTime); Convas.D = Off; Convas.S = Base.Win; Convas.CW = CellLine; Convas.W = Convas.CW - On;
   Convas.CH = CellStr; Convas.H = Convas.CH - On; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.size = SizeVram; if (!(VRam.addr = GetRam(&VRam.size))) return Off;
-    SWD(VRam.addr); InitVram(VRam.addr,VRam.size); RealFps(Off); SwitchRaw(); SyncSize(VRam.addr);
-    Print(Sys.Fone, cA, "\033[?1049;7;1000h\033[?25l"); Print(Sys.Border, cA, "\033[2J"); VRam.SystemSwitch--; }
-  else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr, VRam.size); } VRam.SystemSwitch++; }
+    SWD(); InitVram(); RealFps(Off); SwitchRaw(); SyncSize(); Print(Sys.Fone, cA, "\033[?1049;7;1000h\033[?25l"); Print(Sys.Border, cA, "\033[2J"); VRam.SystemSwitch--; }
+  else { if (VRam.size) { SwitchRaw(); Print(Sys.Fone, cA, "\033[?1049;1000l\033[0m\033[?25h"); FreeRam(VRam.addr,VRam.size); } VRam.SystemSwitch++; }
   return On; }
 
 void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; goc x = VP.X + dx, y = VP.Y + dy;
@@ -213,7 +212,7 @@ void Free(void) { goc dx, dy; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
     if (Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); }
     Syn %= Loop; }
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
-  if (SyncSize(VRam.addr) || Buf.Ctrl > On) { SetBorder(); } else {  } }
+  if (SyncSize() || Buf.Ctrl > On) { SetBorder(); } else {  } }
 
 void RPUEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
