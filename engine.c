@@ -106,13 +106,18 @@ ugoc Keys(void) { ugoc s = Off; uint8_t d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void ASu(uint32_t add) { var.RGB = 0; var.Y = Base.Count; while(var.Y--) { Base.Time[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + add); add = 0; if (!(var.RGB >>= 16)) break; } } 
-void CSu(void) { var.RGB = 0; var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; } } 
-uint16_t DSu(uint16_t d) { var.XYz = 0; var.Y = -1; while(++var.Y < Base.Count) { Base.Su[var.Y] = (uint16_t)((var.XYz = (var.XYz << 16) | Base.Su[var.Y]) / d); var.XYz %= d; }
+void ASu(uint32_t add) { var.RGB = 0; var.Y = Base.Count;
+  while(var.Y--) { Base.Time[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + add); add = 0; if (!(var.RGB >>= 16)) break; } } 
+void CSu(void) { var.RGB = 0; var.Y = Base.Count;
+  while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; } } 
+uint16_t DSu(uint16_t d) { var.XYz = 0; var.Y = -1;
+  while(++var.Y < Base.Count) { Base.Su[var.Y] = (uint16_t)((var.XYz = (var.XYz << 16) | Base.Su[var.Y]) / d); var.XYz %= d; }
   return (uint16_t)var.XYz; }
-void Time(void) { var.RGB = 0; var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; } var.X = DSu(60);
-  var.Y = ((var.X * 205) >> 11); Base.T[7] = 0x30 + var.X - (var.Y * 10); Base.T[6] = 0x30 + var.Y; var.X = DSu(60); var.Y = ((var.X * 205) >> 11); Base.T[4] = 0x30 + var.X - (var.Y * 10);
-  Base.T[3] = 0x30 + var.Y; var.X = DSu(24); var.Y = ((var.X * 205) >> 11); Base.T[1] = 0x30 + var.X - (var.Y * 10); Base.T[0] = 0x30 + var.Y; }
+void Time(void) { var.RGB = 0; var.Y = Base.Count;
+  while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; }
+  var.X = DSu(60); var.Y = ((var.X * 205) >> 11); Base.T[7] = 0x30 + var.X - (var.Y * 10); Base.T[6] = 0x30 + var.Y;
+  var.X = DSu(60); var.Y = ((var.X * 205) >> 11); Base.T[4] = 0x30 + var.X - (var.Y * 10); Base.T[3] = 0x30 + var.Y;
+  var.X = DSu(24); var.Y = ((var.X * 205) >> 11); Base.T[1] = 0x30 + var.X - (var.Y * 10); Base.T[0] = 0x30 + var.Y; }
 
 void IRnd(void) { Base.Rnd = (ugoc)(Flag.ns | On); }
 ugoc Rand(ugoc n) { return (ugoc)(((Cell)(Base.Rnd = (ugoc)(Base.A * Base.Rnd + Base.B)) * n) >> (sizeof(ugoc) * 8)); }
@@ -129,7 +134,7 @@ void Print(uint8_t n, uint8_t m, char *str) { char *src, *dst = var.dbuf; PalBuf
       *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } var.X >>= 1; var.Y -= 6; } var.A = 2; }
   if (n & b7) { if (n == var.F) { if (var.A) *(dst - 1) = 'm'; } else { var.F = n; MemCpy(dst, pal->d + var.A, pal->l - var.A); dst += pal->l - var.A; } }
   else { if (n == var.I) { if (var.A) *(dst - 1) = 'm'; } else { var.I = n; MemCpy(dst, pal->d + var.A, pal->l - var.A); dst += pal->l - var.A; } }
-  ugoc len = StrLen(str); MemCpy(dst, str, len); var.A = m; SysWrite(var.dbuf, dst + len - var.dbuf); }
+  ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(var.dbuf, dst + len - var.dbuf); var.A = m; }
 void GenFonCol(uint8_t c, uint8_t deep) {
   uint8_t i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > aColours) ? aColours : c;
   char *d[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)d[k], *pal = APal(c), *src = APal(c + aColours + 1);
@@ -150,7 +155,7 @@ void GenPalette(uint8_t set) { var.X = On + Sys.Colours; SetPalette(set); while(
   Grgb(set, On, On); GenFonCol(aColours, Sys.Deep); }
 void SysInit(uint16_t hz, uint16_t fps, uint8_t deep, uint8_t col, uint8_t how) {
   var.info = (uint8_t*)(var.data + SDCell); var.ds = var.info + SInfo; var.offset = (ugoc*)(var.ds + SDs); var.dpal = (char*)(var.offset + SOffset);
-  var.dkey = (uint8_t*)(var.dpal + SPal); var.dsys = (ugoc*)(var.dkey + SKeys); var.dcon = var.dsys + SSys; var.dwin = var.dcon + SConvas;
+  var.dkey = (uint8_t*)(var.dpal + SPal); var.dsys = var.dkey + SKeys; var.dcon = (ugoc*)(var.dsys + SSys); var.dwin = var.dcon + SConvas;
   var.vsw = var.dwin + SWin; var.csw = var.vsw + SVsw; var.event = (char*)(var.csw + SCsw); var.exec = var.event + SEvent; var.dbuf = var.exec + SExec;
   Sys.Spd1 = MaxSpeed; Sys.Spd0 = b3; Sys.Speed = Sys.Spd1; IRnd(); VP.Win = Base.Win; VP.Mode = b2; VP.Loop = On; Vector(RPU) = RPUEncode;
   Sys.Fps = (fps < 51) ? 50 : ((fps > 1000) ? 1000 : fps); col = (col < b0) ? b0 : (col > aColours) ? aColours : col; var.Syn = Sys.Hz - var.Syn;
