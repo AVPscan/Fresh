@@ -116,8 +116,8 @@ typedef struct { uint8_t *info, *ds, *dkey, *dsys; char *data, *dpal, *event, *e
                  *dwin, *vsw, *csw; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, // разрядность        16  32  64
                  XYz; } Var_;                                                                                           //!32 + (15 * SCell)  62  92 152
 typedef struct { uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;                                     //!20                 20  30  50
-typedef struct { ugoc UGmax, Ginf, Gmin, Gmax, A, B, Rnd; uint16_t Win, Fps, Hz, Su[6], Time[6], Timer[6]; uint8_t Count,
-                 On, FTime, Goc, PCell, CellP, Deep, Colours, D, O, DS, VC, P, W, K, V; char T[9]; } Base_;             //!66                 80  94 112
+typedef struct { ugoc UGmax, Ginf, Gmin, Gmax, A, B, Rnd; uint16_t Win, Fps, Hz, FTime, Su[6], Time[6], Timer[6];
+                 uint8_t Count, On, Goc, PCell, CellP, Deep, Colours, D, O, DS, VC, P, W, K, V; char T[9]; } Base_;     //!66                 80  94 112
 typedef struct { goc Xr, Yr; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; uint16_t Layer, parent,
                  child; uint8_t palette, EF; } Windows;                                                                 //!16 4 W_shift 
 typedef struct { goc LkX, LkY, MkX, MkY, RkX, RkY; uint16_t tic; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count,
@@ -151,8 +151,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,RNG_A,RNG_B,1,MAX_WIN,FFps,FHz,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
-    {0,0,0,0,0,0},6,0,FHow,Sgoc,SCell,CellPow,CFDeep,Fcolour,D_shift,O_shift,Ds_shift,VCsw_shift,5,4,3,2,"00:00:00\0"}; \
+    Base_ Base = {UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,RNG_A,RNG_B,1,MAX_WIN,FFps,FHz,FHow,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+    {0,0,0,0,0,0},6,0,Sgoc,SCell,CellPow,CFDeep,Fcolour,D_shift,O_shift,Ds_shift,VCsw_shift,5,4,3,2,"00:00:00\0"}; \
     ViewPort_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     MAS_ VRam = {0,0,1}; 
@@ -213,7 +213,7 @@ void SetPalette(uint8_t set);                                         // Уст�
 void SwitchPalette(void);                                             // Переключить палитру
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(uint16_t h, uint16_t f, uint8_t d, uint8_t c, uint8_t s);// Установка переменных среды
+void SysInit(uint16_t h, uint16_t f, uint16_t w, uint8_t d, uint8_t c); // Установка переменных среды
 Cell HowSize(Cell addr);                                              // Расчёт общего размера среды
 void InitVram(void);                                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
@@ -236,7 +236,7 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Нас�
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
-void _SSet(uint16_t hz, uint16_t fps, uint8_t count, uint8_t *args);  // Изменить hz,fps{,deep{,colours}}
+void _SSet(uint16_t h, uint16_t f, uint16_t w, uint8_t c, uint8_t *a);// Изменить hz,fps{,deep{,colours}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
@@ -255,6 +255,6 @@ Cell GetSC(void);                                                     // Изм�
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define SKeys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define SysSet(hz, fps, ...) _SSet(hz, fps, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define SysSet(h, f, w, ...) _SSet(h, f, w, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #endif /* SYS_H */
