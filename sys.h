@@ -87,7 +87,10 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 
-typedef struct { ugoc UGmax, Ginf, Gmin, Gmax, A, B, Rnd; uint16_t Su[6], Time[6], Timer[6], Win, Fps, Hz; uint8_t Count, FTime, PCell, CellP, Deep, Colours, D, O, DS, VC, P, W, K, V; char T[8]; } S_;
+typedef struct { char *data, *dpal, *event, *exec, *dbuf; uint8_t *info, *ds, *dkey; ugoc *offset, *dsys, *dcon, *dwin, *vsw, *csw;
+                 uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; } Var_;
+typedef struct { ugoc UGmax, Ginf, Gmin, Gmax, A, B, Rnd; uint16_t Su[6], Time[6], Timer[6], Win, Fps, Hz;
+                 uint8_t Count, FTime, PCell, CellP, Deep, Colours, D, O, DS, VC, P, W, K, V; char T[8]; } S_;
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
@@ -139,70 +142,37 @@ typedef struct { uint8_t SwitchRaw; Cell s, ns; } F_;
 typedef struct { ugoc c, r; } T_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 
-extern char     *Cdata;
-extern uint8_t  *Cinfo;
-extern uint8_t  *Cds;
-extern ugoc     *Coffset;
-extern char     *Cdpal;
-extern uint8_t  *Cdkey;
-extern ugoc     *Cdsys;
-extern ugoc     *Cdcon;
-extern ugoc     *Cdwin;
-extern ugoc     *Cvsw;
-extern ugoc     *Ccsw;
-extern char     *Cevent;
-extern char     *Cexec;
-extern char     *Cdbuf;
-extern uint8_t  cR, cG, cB, cI, cF, cA, cX, cY;
-extern int16_t  cU, cZ;
-extern int32_t  Syn, Loop, Dis;
-extern uint32_t cRGB, cXYz;
 extern R_ VRam;
 extern V_ VP;
 extern B_ Buf;
 extern T_ TS;
 extern F_ Flag;
 extern S_ Base;
+extern Var_ var;
+
 #define ENGINE_VARS_INIT \
-    char      *Cdata      = 0; \
-    uint8_t   *Cinfo      = 0; \
-    uint8_t   *Cds        = 0; \
-    ugoc      *Coffset    = 0; \
-    char      *Cdpal      = 0; \
-    uint8_t   *Cdkey      = 0; \
-    ugoc      *Cdsys      = 0; \
-    ugoc      *Cdcon      = 0; \
-    ugoc      *Cdwin      = 0; \
-    ugoc      *Cvsw       = 0; \
-    ugoc      *Ccsw       = 0; \
-    char      *Cevent     = 0; \
-    char      *Cexec      = 0; \
-    char      *Cdbuf      = 0; \
-    uint8_t   cR = 0, cG = 0, cB = 0, cI = 0, cF = 0, cA = 0, cX = 0, cY = 0; \
-    int16_t   cU = 0, cZ = 0; \
-    int32_t   Syn = 0, Loop = 0, Dis = 0; \
-    uint32_t  cRGB = 0, cXYz = 0; \
+    Var_ var = {0}; \
     S_ Base = {UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,RNG_A,RNG_B,1,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},MAX_WIN,FFps,FHz,6,FHow,SCell,CellPow,CFDeep,Fcolour, \
                D_shift,O_shift,Ds_shift,VCsw_shift,P_shift,W_shift,K_shift,V_shift,"00:00:00"}; \
     V_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
     B_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; R_ VRam = {1,0,0};
     
-#define Data(r)       (Cdata + ((r) << Base.D))                               // адрес начала буфера строки холста
-#define Info(c, r)    (Cinfo + (c) + ((r) << Base.DS))                        // адрес данных ячейки холста
-#define Cpal(c, r)    (Cds + (c) + ((r) << Base.DS))                          // адрес данных палитры ячейки холста
-#define Offset(c, r)  (Coffset + (c) + ((r) << Base.O))                       // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
+#define Data(r)       (var.data + ((r) << Base.D))                            // адрес начала буфера строки холста
+#define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                     // адрес данных ячейки холста
+#define Cpal(c, r)    (var.ds + (c) + ((r) << Base.DS))                       // адрес данных палитры ячейки холста
+#define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                    // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
-#define APal(c)       ((PalBuf*)(Cdpal + ((c) << Base.P)))                    // адрес начала кода цвета
-#define AKey(k)       ((KeyBuf*)(Cdkey + ((k) << Base.K)))                    // адрес начала ячейки в буфере клавиатуры
-#define Sys           (*(Sis*)Cdsys)                                          // адрес полное состояние системы при входе и режимы
-#define Convas        (*(Canalysis*)Cdcon)                                    // адрес где организована разбивка холста
-#define Win(n)        ((Windows*)(Cdwin + ((n) << Base.W)))                   // адрес начала данных окна n
-#define Vsw(n, r)     (Cvsw + (r) + ((n) << Base.VC))                         // адрес визуальной длины строки r окна n
-#define Csw(n, r)     (Ccsw + (r) + ((n) << Base.VC))                         // адрес числа ячеек строки r окна n
-#define Event(m)      ((Events*)(Cevent + ((m) << Base.V)))                   // адрес начала структуры события
-#define Vector(v)     (*(AFunction*)((Cell*)Cexec + (v)))                     // адрес вектора прерывания события
+#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
+#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
+#define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
+#define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
+#define Win(n)        ((Windows*)(var.dwin + ((n) << Base.W)))                // адрес начала данных окна n
+#define Vsw(n, r)     (var.vsw + (r) + ((n) << Base.VC))                      // адрес визуальной длины строки r окна n
+#define Csw(n, r)     (var.csw + (r) + ((n) << Base.VC))                      // адрес числа ячеек строки r окна n
+#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
+#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
     
 #define SYS_VARS_INIT \

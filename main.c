@@ -10,15 +10,15 @@
 #include "sys.h"
 
 void body(void) {  // пока не дописано WinData,Render
-  char *p = Cdbuf + 512, *b = p; uint8_t l, v, j = 48, w = Sys.Colours, i = On + w; Print(Sys.Inc, Off, "\033[H"); while(i--) Print((w - i + Fdark), cA, " ");
-  Sys.Fone = Firis; Print(Sys.Fone, cA, "\n"); ugoc s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 3;
+  char *p = var.dbuf + 512, *b = p; uint8_t l, k, j = 48, w = Sys.Colours, i = On + w; Print(Sys.Inc, Off, "\033[H"); while(i--) Print((w - i + Fdark), var.A, " ");
+  Sys.Fone = Firis; Print(Sys.Fone, var.A, "\n"); ugoc s = (ugoc)((VRam.size + 1048575) / 1048576); *p++ = 'v'; i = 3;
   while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %dMb %d c%d r%d ", s, K_Mouse, TS.c, TS.r); i = (uint8_t)StrLen(b); Print(moss, aI, b);
   snprintf(b, 100, " Time %s             ", Base.T);
   if ((uint8_t)StrLen(b) > (j - 1 - i)) { *(b + j - 1 - i) = Off; } if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(aColours, Off, b);
   if (TS.r < 3) { return; } snprintf(b, 100, "\nH%d F%d D%d C%d x%d y%d %d %d b%d x%d y%d                         ", Sys.Hz/10, Sys.Fps, Sys.Deep, Sys.Colours,
   VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print(moss, aC | aB, b);
   if (TS.r < 4) { return; } if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; if (i || Buf.Count) { l = On + (w & b10);
-    v = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w);
+    k = ((w>>2) & b10); w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, k, w);
     p += StrLen(p); if (!(w)) { *(p + l) = 0; while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
     snprintf(p, 100, "                  "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } if (TS.r > 3) { Print(coral, aF , b); } } }
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d", VP.Mode, VP.X, VP.Y); }
@@ -33,6 +33,6 @@ void Init(void) {
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (flag) { Print(Sys.Fone, cA, "\033[?1049l"); Print(berry, cA, "Created by Alexey Pozdnyakov"); flag = Off;
-        Print(coral, cA, " in 07.02.2026 version 9.77 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
+      if (flag) { Print(Sys.Fone, var.A, "\033[?1049l"); Print(berry, var.A, "Created by Alexey Pozdnyakov"); flag = Off;
+        Print(coral, var.A, " in 07.02.2026 version 9.78 email: avp70ru@mail.ru https://github.com/AVPscan"); } } } return flag; }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag); if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
