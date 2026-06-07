@@ -210,7 +210,7 @@ void Free(void) { goc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector(
     if (Buf.Cod) { ++Buf.tic; Buf.Ctrl = On; } }
   if (Buf.Ctrl) {
     if (Buf.Cod == VP.scs) { VP.dXY = On; Sys.Speed = (VP.Mode ^= b2) ? Sys.Spd1 : Sys.Spd0; }
-    else if (Buf.Cod == VP.Anchor) VP.Mode ^= b1
+    else if (Buf.Cod == VP.Anchor) VP.Mode ^= b1;
     else if (Buf.Cod == VP.bcu) { SwitchPalette(); SetBorder(); }
     else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
     else if (Buf.Cod == VP.Exit) VP.Loop = Off;
