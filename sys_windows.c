@@ -65,7 +65,7 @@ Cell GetRam(Cell *size) { if (!*size) return 0;
 void FreeRam(Cell addr, Cell size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
 
 void SWD(void) { if (!VRam.addr) return;
-  char *path = (char *)(VRam.addr); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
+  char *path = (char *)(var.dbuf); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
 uint8_t SyncSize(void) {

@@ -64,7 +64,7 @@ goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOT
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
 void SWD(void) { if (!VRam.addr) return;
-  uint32_t len = 4096; char *path = (char *)(VRam.addr);
+  uint32_t len = 4096; char *path = (char *)(var.dbuf);
   if (_NSGetExecutablePath(path, &len) != 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 

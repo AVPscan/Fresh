@@ -11,11 +11,9 @@
 #define SYS_H
 
 #include <stdint.h>
-
-#define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
-#define MAX_WIN   512                         // Максимально число окон на холсте
-#define MaxSpeed  1 << (CellPow - 4)          // Максимальное ускорение курсора
-#define MinSpeed  1 << (CellPow - 6)          // Максимальное ускорение курсора
+                                              // Для 11 запрашиваем 16Мегабайт, сюда входит 1000 окон 2-3 из них 2к! событийная система, RealTime, и полную адаптацию
+#define CellPow   11                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
+#define Wind      1000                        // Максимально число окон на холсте
 #define FHow      2                           // Частота вызова Timer функции
 #define FHz       500                         // Десятикратная частота сети 50Гц
 #define FFps      144                         // Частота обновления монитора
@@ -65,49 +63,26 @@ enum {
 enum { dark, sky, iris, berry, coral, clay, moss, snow,
        Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 
-typedef void (*AFunction)(void);
-typedef struct { uint8_t l, d[31]; } PalBuf;                                                                            // 32 5 P_shift
-typedef struct { uint8_t d[4], u[4]; } KeyBuf;                                                                          //  8 3 K_shift
-typedef struct { uint8_t C, N; uint16_t W; } Events;                                                                    //  4 2 V_shift
-typedef struct { uint8_t CellP, Deep, Colours, Fone, Border, Inc; uint16_t Win, Spd0, Spd1, Speed, Fps, Hz; } Sis;     // 18
-typedef struct { uint8_t *info, *ds, *dkey, *dsys; char *data, *dpal, *event, *exec, *dbuf, *end; ugoc *offset, *dcon,  //         goc         0   1   2
-                 *dwin, *vsw, *csw; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, // разрядность        16  32  64
-                 XYz; goc Xr, Yr; } Var_;                                                                                           //!32 + (15 * SCell)  62  92 152
-typedef struct { uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;                                     //!20                 20  30  50
-typedef struct { uint16_t Win, Fps, Hz, FTime, Su[6], Time[6], Timer[6]; goc UGmax, Ginf, Gmin, Gmax, Mcol, Mstr;
-                 ugoc A, B, Rnd; uint8_t Count, On, Goc, PCell, CellP, Deep, Colours, D, O, DS, VC, P, W, K, V;
-                 char T[9]; } Base_;                                                                                    //!66                 80  94 112
-typedef struct { uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
-                 goc Xr, Yr; uint8_t palette, EF; } Windows;                                                            //!16 4 W_shift 
-typedef struct { uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count,
-                 Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } KeyMouse_;                                               //!
-typedef struct { uint16_t Win, Wec; goc X, Y; ugoc Xs, Ys, dXY; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc,
-                 scs, bcu, Anchor, Exit; } ViewPort_;                                                                   //!
-typedef struct { ugoc c, r; } CR_;                                                                                      //!
-typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;                                                         //!
-typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;                                                                //!
-typedef struct { char *name; uint8_t id; } KeyIdMap;                                                                    //
+typedef struct { uint8_t *info, *ds, *dkey, *dsys; char *data, *dpal, *event, *exec, *dbuf, *end; ugoc *offset, *dcon, *dwin, *vsw, *csw;
+                  uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
+typedef struct { uint16_t Win, Fps, Hz, FTime, Su[6], Time[6], Timer[6]; goc UGmax, Ginf, Gmin, Gmax, Mcol, Mstr; ugoc A, B, Rnd, Off;
+                  uint8_t Count, On, Goc, PCell, CellP, Deep, Colours, D, O, DS, VC, P, K, V; char T[9]; } Base_;
 
-enum {
-    SBuf = 5120,                                                              // Размер буфера Print/File
-    CellLine = 1 << CellPow,                                                  // Определение ширины холста
-    CellStr = 1 << (CellPow - 1),                                             // Определение высоты холста
-    D_shift = CellPow + 2,                                                    // Смещение между строк холста в байтах
-    O_shift = CellPow + 1,                                                    // Смещение между смещениями строк холста
-    Ds_shift = CellPow,                                                       // Смещение между атрибутами строк холста
-    VCsw_shift = CellPow - 1,                                                 // Смещение между окон по каждой строке холста
-    ConvasArea = (CellLine * CellStr),                                        // Площадь холста
-    SDCell = ConvasArea << 2,                                                 // Размер данных для ячеек холста
-    SInfo = ConvasArea,                                                       // Размер атрибутов для ячеек холста (Info)
-    SDs = ConvasArea,                                                         // Размер информации о ячейках холста (Data/Structure)
-    STwo = CellStr * (Sgoc >> 1),
-    SOffset = CellLine * STwo,                                                // Размер смещений для ячеек холста
-    SExec = 256 * sizeof(AFunction),                                          // Размер вектора событий
-    SSys = sizeof(Sis),                                                       // Размер данных под разбивку холста для организации окон
-    SConvas = sizeof(Canalysis),                                              // Размер данных под разбивку холста для организации окон
-    SWin = MAX_WIN * sizeof(Windows),                                         // Размер данных для окон
-    SVsw = MAX_WIN * STwo,                                                    // Размер для визуальных длин строк окон на холсте
-    SCsw = MAX_WIN * STwo };                                                  // Размер для числа ячеек в строках окон на холсте
+typedef void (*AFunction)(void);
+typedef struct { uint8_t l, d[31]; } PalBuf;
+typedef struct { uint8_t d[4], u[4]; } KeyBuf;
+typedef struct { uint8_t C, N; uint16_t W; } Events;
+typedef struct { uint8_t CellP, Deep, Colours, Fone, Border, Inc; uint16_t Win, Spd0, Spd1, Speed, Fps, Hz; } Sis;
+typedef struct { uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;
+typedef struct { uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; uint8_t palette, EF; } Windows;
+
+typedef struct { uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } KeyMouse_;
+typedef struct { uint16_t Win, Wec; goc X, Y; ugoc Xs, Ys, dXY; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } ViewPort_;
+
+typedef struct { ugoc c, r; } CR_;
+typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
+typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
+typedef struct { char *name; uint8_t id; } KeyIdMap;
 
 typedef struct {                              //UTFinfo  
     uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -136,14 +111,6 @@ typedef struct {
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } EF;
 
-_Static_assert((1 << 5) == sizeof(PalBuf), "PalBuf mismatch");
-_Static_assert((1 << 3) == sizeof(KeyBuf), "KeyBuf mismatch");
-_Static_assert((1 << 2) == sizeof(Events), "Events mismatch");
-_Static_assert((1 << D_shift) == CellLine * 4, "Data mismatch");
-_Static_assert((1 << Ds_shift) == CellLine, "Ds mismatch");
-_Static_assert((1 << O_shift) == CellLine * 2, "Offset mismatch");
-_Static_assert((1 << VCsw_shift) == CellStr, "VCs windows mismatch");
-
 extern MAS_ VRam;
 extern ViewPort_ VP;
 extern KeyMouse_ Buf;
@@ -154,8 +121,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {MAX_WIN,FFps,FHz,FHow,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,0, \
-      0,RNG_A,RNG_B,1,6,0,Sgoc,SCell,CellPow,CFDeep,Fcolour,D_shift,O_shift,Ds_shift,VCsw_shift,5,4,3,2,"00:00:00\0"}; \
+    Base_ Base = {Wind,FFps,FHz,FHow,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,0, \
+      0,RNG_A,RNG_B,1,0,0,0,Sgoc,SCell,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,0,"00:00:00\0"}; \
     ViewPort_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
     MAS_ VRam = {0,0,1}; 
@@ -220,6 +187,7 @@ void SysInit(uint16_t h, uint16_t f, uint16_t w, uint8_t d, uint8_t c); // Ус�
 Cell HowSize(Cell addr);                                              // Расчёт общего размера среды
 void InitVram(void);                                                  // Инициализация мира
 Cell SystemSwitch(void);                                              // Вход/выход в мир
+void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
 void Free(void);                                                      // Одна итерация Fresh
