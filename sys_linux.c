@@ -65,7 +65,7 @@ goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOT
 
 extern char **environ;
 void SWD(void) { if (!VRam.addr) return;
-  char *path = (char *)(VRam.addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
+  char *path = (char*)(VRam.addr); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
   path[len] = 0; if (MemCmp(path, "/nix/store", 10) == 0) {
     for (char **env = environ; *env != NULL; env++) { char *e = *env;
       if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }
@@ -83,3 +83,4 @@ Cell GetCycles(void) {
 Cell GetSC(void) { if (!VRam.addr || !TS.c) { return 1; } uint8_t i = 100; char *p = (char *)VRam.addr;
   MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r'; Cell start = GetCycles();
   while(--i) { SysWrite(p, TS.c); } return (GetCycles() - start) / (TS.c * 10); }
+
