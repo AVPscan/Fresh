@@ -12,8 +12,8 @@
 
 #include <stdint.h>
                                               // Для 11 запрашиваем 16Мегабайт, сюда входит 1000 окон 2-3 из них 2к! событийная система, RealTime, и полную адаптацию
-#define CellPow   11                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
-#define Wind      1000                        // Максимально число окон на холсте
+#define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
+#define Wind      512                         // Максимально число окон на холсте
 #define FHow      2                           // Частота вызова Timer функции
 #define FHz       500                         // Десятикратная частота сети 50Гц
 #define FFps      144                         // Частота обновления монитора
@@ -23,27 +23,16 @@
 #if CellPow < 14                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
     typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {Base.Rnd текущее значение генератора} 
     typedef int16_t  goc;
-    #define RNG_A 0x4F2D
-    #define RNG_B 0x3A7B
 #elif CellPow < 30
     typedef uint32_t ugoc;
     typedef int32_t  goc;
-    #define RNG_A 0x41C64E6D
-    #define RNG_B 0x3039
 #elif CellPow < 62
     typedef uint64_t ugoc;
     typedef int64_t  goc;
-    #define RNG_A 0x9E3779B97F4A7C15ULL
-    #define RNG_B 0xBF58476D1CE4E5B9ULL
 #endif
 
 typedef uintptr_t Cell;                       // Разрядность процессора, создали абстракцию
-#define UGOC_MAX (ugoc)(-1)                   // Максимум беззнаковый
-#define GOC_MAX  (UGOC_MAX >> 1)              // Максимум в положительной части
-#define GOC_INF  ~GOC_MAX                     // Бесконечность!
-#define GOC_MIN  GOC_INF + 1                  // Минимум в отрицательной части
-#define SCell sizeof(Cell)                    // Размер разрядности
-#define Sgoc sizeof(ugoc)                     // Размер адаптации к разрешению
+#define SCell sizeof(Cell)
 
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
@@ -63,21 +52,19 @@ enum {
 enum { dark, sky, iris, berry, coral, clay, moss, snow,
        Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 
-typedef struct { uint8_t *info, *ds, *dkey, *dsys; char *data, *dpal, *event, *exec, *dbuf, *end; ugoc *offset, *dcon, *dwin, *vsw, *csw;
+typedef struct { uint8_t *data, *info, *ds, *dkey, *dsys, *dpal, *dwin, *event, *exec, *dcon; Cell off; char *dbuf, *end; ugoc *offset;
                   uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
-typedef struct { uint16_t Win, Fps, Hz, FTime, Su[6], Time[6], Timer[6]; goc UGmax, Ginf, Gmin, Gmax, Mcol, Mstr; ugoc A, B, Rnd, Off;
-                  uint8_t Count, On, Goc, PCell, CellP, Deep, Colours, D, O, DS, VC, P, K, V; char T[9]; } Base_;
-
+typedef struct { uint8_t Count, On, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Fps, Hz, FTime, Rnd, Su[6], Time[6], Timer[6];
+                  char T[9]; goc UGmax, Ginf, Gmin, Gmax, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct { uint8_t CellP, Deep, Colours, Fone, Border, Inc; uint16_t Win, Spd0, Spd1, Speed, Fps, Hz; } Sis;
-typedef struct { uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;
-typedef struct { uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; uint8_t palette, EF; } Windows;
-
-typedef struct { uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; } KeyMouse_;
-typedef struct { uint16_t Win, Wec; goc X, Y; ugoc Xs, Ys, dXY; uint8_t Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; } ViewPort_;
+typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;
+typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; } Windows;
+typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
+typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; goc X, Y; ugoc Xs, Ys, dXY; } ViewPort_;
 
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
@@ -121,10 +108,10 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {Wind,FFps,FHz,FHow,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},UGOC_MAX,GOC_INF,GOC_MIN,GOC_MAX,0, \
-      0,RNG_A,RNG_B,1,0,0,0,Sgoc,SCell,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,0,"00:00:00\0"}; \
-    ViewPort_ VP = {0,0,0,0,0,0,0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1}; \
-    KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65}; \
+    Base_ Base = {0,0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FFps,FHz,FHow,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+                  {0,0,0,0,0,0},"00:00:00\0",0,0,0,0,0,0}; \
+    ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
+    KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 
     
 #define Data(r)       (var.data + ((r) << Base.D))                            // адрес начала буфера строки холста
@@ -134,13 +121,11 @@ extern Var_ var;
 #define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
+#define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))        // адрес начала данных окна n
 #define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
-#define Vsw(n, r)     (var.vsw + (r) + ((n) << Base.VC))                      // адрес визуальной длины строки r окна n
-#define Csw(n, r)     (var.csw + (r) + ((n) << Base.VC))                      // адрес числа ячеек строки r окна n
-#define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))        // адрес начала данных окна n
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
@@ -171,7 +156,7 @@ void CSu(void);                                                       // Соз�
 uint16_t DSu(uint16_t d);                                             // Остаток от деления сумматора на делитель
 void Time(void);                                                      // Сформировать строку времени согласно длинне
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
-ugoc Rand(ugoc n);                                                    // Случайное число [0...(n-1)]
+int16_t Rand(int16_t n);                                              // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
 int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127] 256 значений)
