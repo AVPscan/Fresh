@@ -12,8 +12,8 @@
 
 #include <stdint.h>
                                               // Для 11 запрашиваем 16Мегабайт, сюда входит 1000 окон 2-3 из них 2к! событийная система, RealTime, и полную адаптацию
-#define CellPow   12                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
-#define Wind      1000                        // Максимально число окон на холсте
+#define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
+#define Wind      500                         // Максимально число окон на холсте
 #define FHow      2                           // Частота вызова Timer функции
 #define FHz       500                         // Десятикратная частота сети 50Гц
 #define FFps      144                         // Частота обновления монитора
@@ -55,13 +55,13 @@ enum { dark, sky, iris, berry, coral, clay, moss, snow,
 typedef struct { uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dkey, *event, *exec, *dpal, *dwin, *dsys, *dcon; char *dbuf, *end; Cell off;
                   uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Fps, Hz, Rnd, Su[6], Time[6], Timer[6];
-                  char T[9]; goc Gmin, Gmax; ugoc Ginf, UGmax, Mcol, Mstr; } Base_;
+                  char T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
-typedef struct { uint8_t CellP, Deep, Colours, Fone, Border, Inc; uint16_t Win, Fps, Hz; ugoc Spd0, Spd1; goc Speed; } Sis;
-typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH, Res; } Canalysis;
+typedef struct { uint8_t Res1, Fone, Border, Inc; uint16_t Win; } Sis;
+typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
 typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; } Windows;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
 typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; goc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
@@ -108,8 +108,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {0,0,FHow,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FFps,FHz,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
-                  {0,0,0,0,0,0},"00:00:00\0",0,0,0,0,0,0}; \
+    Base_ Base = {0,0,FHow,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FFps,FHz,0,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+                  {0,0,0,0,0,0},"00:00:00\0",0,0,0,0,0,0,0,0,0}; \
     ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 
@@ -168,9 +168,9 @@ void SetPalette(uint8_t set);                                         // Уст�
 void SwitchPalette(void);                                             // Переключить палитру
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(uint8_t w, uint8_t c, uint8_t d);                        // Установка переменных среды How Colours Deep
+void SysInit(uint8_t c, uint8_t d, uint8_t h);                        // Установка переменных среды Colours Deep How
 Cell HowSize(Cell addr);                                              // Расчёт общего размера среды
-Cell InitVram(uint8_t c, uint16_t w, uint16_t hz, uint16_t fps);      // Инициализация мира CellPower Win Hz Fps
+Cell InitVram(uint8_t c,uint8_t o,uint16_t w,uint16_t h,uint16_t f);  // Инициализация мира CellPower How Win Hz Fps
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -192,7 +192,7 @@ void _WSet(uint16_t n, uint8_t count, uint8_t *args);                 // Нас�
 void _SEvent(uint8_t count, uint8_t *args);                           // Запомнить вектор системный событий
 void _SExec(uint8_t count, AFunction *args);                          // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
-void _GSet(uint8_t cp, uint8_t count, uint16_t *args);                // Изменить CellPower{,Win{,Hz{,Fps}}}
+void _GSet(uint8_t cp, uint8_t how, uint8_t count, uint16_t *args);   // Изменить CellPower How {,Win{,Hz{,Fps}}}
 void _SSet(uint8_t c, uint8_t *a);                                    // Изменить {how{,deep{,colours}}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
@@ -202,7 +202,7 @@ void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Заг�
 #define Events(...) _SEvent((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Execs(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define SKeys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define GlobalSet(cp, ...) _GSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
+#define GlobalSet(cp, how, ...) _GSet(cp, how, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define SysSet(...) _SSet((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
