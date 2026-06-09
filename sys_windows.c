@@ -58,6 +58,11 @@ void GetKey(uint8_t *b) {
   if (j == (uint8_t)~Off) *p = Off;
   if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
+goc RealFps(ugoc fps) { LARGE_INTEGER n,f;   
+    if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
+      Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
+    QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }
+
 Cell GetRam(Cell *size) { if (!*size) return 0;
   Cell l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
   if (!r) { l = 0; } *size = l; return (Cell)r; }
@@ -85,7 +90,3 @@ Cell GetSC(void) {
   for(Cell i = 0; i < 100; i++) SysWrite(p, TS.c);
   QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.c * 10)); }
 
-goc RealFps(ugoc fps) { LARGE_INTEGER n,f;   
-    if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
-      Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
-    QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }

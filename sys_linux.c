@@ -46,7 +46,12 @@ void GetKey(uint8_t *b) {
       if (!*s2) { *p = NameId[j].id; break; } }
     if (j == (uint8_t)~Off) *p = Off;
     if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
-    
+
+goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f);
+  Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
+
 Cell GetRam(Cell *size) { if (!*size) return 0;
   Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (r == MAP_FAILED) { r = 0; l = 0; } *size = l; return (Cell)r; }
@@ -57,11 +62,6 @@ uint8_t SyncSize(void) { if (!VRam.addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
   if (ws.ws_col == TS.c && ws.ws_row == TS.r) return Off;
   TS.c = ws.ws_col; TS.r = ws.ws_row; return On; }
-
-goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
-  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f);
-  Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
-  return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
 extern char **environ;
 void SWD(void) { if (!VRam.addr) return;

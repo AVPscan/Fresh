@@ -168,9 +168,9 @@ void SetPalette(uint8_t set);                                         // Уст�
 void SwitchPalette(void);                                             // Переключить палитру
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void SysInit(uint16_t h, uint16_t f, uint8_t w, uint8_t d, uint8_t c);// Установка переменных среды
+void SysInit(uint16_t h, uint16_t f, uint8_t w, uint8_t d, uint8_t c);// Установка переменных среды Hz Fps How Deep Colours
 Cell HowSize(Cell addr);                                              // Расчёт общего размера среды
-void InitVram(void);                                                  // Инициализация мира
+Cell InitVram(uint8_t c, uint16_t w);                                 // Инициализация мира CellPower Win
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -194,16 +194,6 @@ void _SExec(uint8_t count, AFunction *args);                          // При�
 void _SKeys(uint8_t count, uint8_t *args);                            // Задать клавиши управления вьюпортом в обратном порядке
 void _SSet(uint16_t h, uint16_t f, uint8_t c, uint8_t *a);            // Изменить hz,fps{,how{,deep{,colours}}}
 void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
-void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
-void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
-Cell GetRam(Cell *size);                                              // Взять память
-void FreeRam(Cell addr, Cell size);                                   // Вернуть память
-uint8_t SyncSize(void);                                               // Обновить рамки терминала при необходимости стабилизировать
-goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
-void SWD(void);                                                       // Установить рабочую директорию
-Cell GetCycles(void);                                                 // Тики
-Cell GetSC(void);                                                     // Измерение пропускной способности терминала
 #define WinView(n, ...) _WView(n, (uint8_t)((sizeof((goc[]){0, ##__VA_ARGS__}) / sizeof(goc)) - 1), (goc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
 #define WinExecs(n, cur, ...) _WExec(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
@@ -213,5 +203,15 @@ Cell GetSC(void);                                                     // Изм�
 #define SKeys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define SysSet(h, f, ...) _SSet(h, f, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WinData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((ugoc[]){0, ##__VA_ARGS__}) / sizeof(ugoc)) - 1), (ugoc[]){0, ##__VA_ARGS__} + 1)
+Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
+void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
+void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
+goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
+Cell GetRam(Cell *size);                                              // Взять память
+void FreeRam(Cell addr, Cell size);                                   // Вернуть память
+uint8_t SyncSize(void);                                               // Обновить рамки терминала
+void SWD(void);                                                       // Установить рабочую директорию
+Cell GetCycles(void);                                                 // Тики
+Cell GetSC(void);                                                     // Измерение пропускной способности терминала
 #endif /* SYS_H */
 

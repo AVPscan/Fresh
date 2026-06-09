@@ -35,8 +35,8 @@ void Init(void) { ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,Rand(
 
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (flag) { Print(Sys.Fone, var.A, "\033[?1049l"); Print(berry, var.A, "Created by Alexey Pozdnyakov"); flag = Off;
-        Print(coral, var.A, " in 07.02.2026 version 9.86 email: avp70ru@mail.ru https://github.com/AVPscan\033[0m\n"); } } } return flag; }
+      if (flag) { Print(Sys.Fone, Off, "\033[?1049l"); Print(berry, aB | aC, " Created by Alexey Pozdnyakov"); flag = Off;
+        Print(coral, aC, " in 07.02.2026 version 9.87 email: avp70ru@mail.ru https://github.com/AVPscan \033[0m\n"); } } } return flag; }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag);
   if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
 
