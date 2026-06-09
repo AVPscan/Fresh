@@ -120,7 +120,7 @@ void Time(void) { var.RGB = 0; var.Y = Base.Count;
   var.X = DSu(24); var.Y = ((var.X * 205) >> 11); Base.T[1] = 0x30 + var.X - (var.Y * 10); Base.T[0] = 0x30 + var.Y; }
 
 void IRnd(void) { Base.Rnd = (ugoc)(Flag.ns | On); }
-int16_t Rand(int16_t n) { Base.Rnd = 0x3A7B + (0x4F2D * Base.Rnd); return ((n * Base.Rnd) >> 16); }
+int16_t Rand(int16_t n) { Base.Rnd = (uint16_t)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
 int8_t Fcos(int16_t u) { return Fsin(u + 128); }
 int8_t Fsin(int16_t u) { static int8_t s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,18,19,20,21,23,24,25,26,27,28,30,31,
   32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,51,52,53,54,55,55,56,57,58,58,59,60,60,61,62,62,63 };
@@ -146,8 +146,8 @@ void GenFonCol(uint8_t c, uint8_t deep) {
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4'; if (pal->d[2] == '9') {
     src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetBorder(void) { var.Y = var.F; Print(Sys.Border, var.A, "\033[2J"); var.F = var.Y; }
-void SetPalette(uint8_t set) { var.dpal = (uint8_t*)var.offset + var.off; if (set) { var.dpal += 8192; } }
-void SwitchPalette(void) { uint8_t* a = (uint8_t*)var.offset + var.off; if (a == var.dpal) { a += 8192; } var.dpal = a; }
+void SetPalette(uint8_t set) { var.dpal = var.exec + (256 * Base.PCell); if (set) { var.dpal += 8192; } }
+void SwitchPalette(void) { uint8_t* a = var.exec + (256 * Base.PCell); if (a == var.dpal) { a += 8192; } var.dpal = a; }
 void Grgb(uint8_t mode, uint16_t c, uint16_t n) { if (c == n) { var.R  = 255; var.G = var.R ; var.B = var.R ; } else if (!c) { var.R  = 0; var.G = 0; var.B = 0; } 
   else { if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB; var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
          else { var.Z = var.U + (c * 512) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
@@ -161,13 +161,13 @@ void SysInit(uint16_t hz, uint16_t fps, uint8_t how, uint8_t deep, uint8_t col) 
   Sys.Fone = Sys.Colours + 128; Sys.Border = Fdark; Sys.Inc = dark; var.I = Sys.Border; var.A = Off; }
   
 Cell HowSize(Cell addr) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); var.R = Base.Goc << 3; Base.Win = (Base.Win) ? Base.Win : 1;
-  Base.CellP = (Base.CellP < 5) ? 5 : (Base.CellP > var.R - 1) ? var.R - 1 : Base.CellP;
+  Base.CellP = (Base.CellP < 7) ? 7 : (Base.CellP > var.R - 1) ? var.R - 1 : Base.CellP;
   Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; if ((var.R = Base.Goc >> 1) > 2) var.R--;
   Base.Mcol = (ugoc)(1 << Base.CellP); Base.Mstr = Base.Mcol >> 1; Base.D = Base.CellP + 2; Base.DS = Base.CellP; Base.O = Base.CellP + var.R; Base.P = 5;
   Base.K = 3; Base.V = 2; Base.Count = 6; Base.On = 0; var.off = Base.Mcol * Base.Mstr; var.data = (uint8_t*)addr; var.info = (var.data + (var.off << 2));
-  var.ds = var.info + var.off; var.offset = (ugoc*)var.ds + var.off; var.dpal = (uint8_t*)var.offset + (var.off *= Base.Goc); var.dkey = var.dpal + 16384;
-  var.dsys = var.dkey + 2048; var.dcon = var.dsys + sizeof(Sis); var.dwin = var.dcon + sizeof(Canalysis); var.event = var.dwin + (Cell)(Base.Win * sizeof(Windows));
-  var.exec = var.event + (256 * sizeof(Events)); var.dbuf = (char*)(var.exec + (256 * Base.PCell)); return (Cell)((var.end = var.dbuf + 5120) - addr); }
+  var.ds = var.info + var.off; var.offset = (ugoc*)var.ds + var.off; var.dkey = (uint8_t*)var.offset + (var.off * Base.Goc); var.event = var.dkey + 2048;
+  var.exec = var.event + (256 * sizeof(Events)); var.dpal = var.exec + (256 * Base.PCell); var.dwin = var.dpal + 16384; var.dsys = var.dwin + (Cell)(Base.Win * sizeof(Windows));
+  var.dcon = var.dsys + sizeof(Sis); var.dbuf = (char*)(var.dcon + sizeof(Canalysis)); return (Cell)((var.end = var.dbuf + 5120) - addr); }
 
 void InitVram(void) { SysInit(Base.Hz, Base.Fps, Base.FTime, Base.Deep, Base.Colours); Sys.Win = Base.Win; Sys.Spd1 = Base.Mcol >> 4;
   Sys.Spd0 = Sys.Spd1 >> 2; Sys.Speed = Sys.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Convas.CW - On;

@@ -52,7 +52,7 @@ enum {
 enum { dark, sky, iris, berry, coral, clay, moss, snow,
        Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 
-typedef struct { uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dpal, *dkey, *dsys, *dcon, *dwin, *event, *exec; char *dbuf, *end; Cell off;
+typedef struct { uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dkey, *event, *exec, *dpal, *dwin, *dsys, *dcon; char *dbuf, *end; Cell off;
                   uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Fps, Hz, Rnd, Su[6], Time[6], Timer[6];
                   char T[9]; goc Gmin, Gmax; ugoc Ginf, UGmax, Mcol, Mstr; } Base_;
@@ -118,13 +118,13 @@ extern Var_ var;
 #define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                     // адрес данных ячейки холста
 #define Cpal(c, r)    (var.ds + (c) + ((r) << Base.DS))                       // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                    // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
-#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
+#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
+#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))        // адрес начала данных окна n
 #define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
-#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
