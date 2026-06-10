@@ -52,8 +52,8 @@ enum {
 enum { dark, sky, iris, berry, coral, clay, moss, snow,
        Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
 
-typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin;
-                  char *end; Cell off; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
+typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
+                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Fps, Hz, Rnd, Su[6], Time[6], Timer[6];
                   char T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
@@ -169,7 +169,7 @@ void SwitchPalette(void);                                             // Пер�
 void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(uint8_t c, uint8_t d, uint8_t h);                        // Установка переменных среды Colours Deep How
-Cell HowSize(Cell addr);                                              // Расчёт общего размера среды
+Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
 Cell InitVram(uint8_t c,uint8_t o,uint16_t w,uint16_t h,uint16_t f);  // Инициализация мира CellPower How Win Hz Fps
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
