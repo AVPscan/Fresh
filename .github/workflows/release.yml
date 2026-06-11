@@ -63,56 +63,23 @@ jobs:
           path: fresh*
 
   build-freebsd:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@main
-      - name: Build on FreeBSD
-        uses: vmactions/freebsd-vm@v1
+      - uses: cross-platform-actions/action@v0.25.0
         with:
-          release: "14.2"
-          usesh: true
+          operating_system: freebsd
+          version: "14.2"
           run: make bsd
       - name: Upload
         uses: actions/upload-artifact@main
         with:
           name: freebsd-executable
           path: fresh
-
-  build-openbsd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-      - name: Build on OpenBSD
-        uses: vmactions/openbsd-vm@v1
-        with:
-          release: "7.6"
-          usesh: true
-          run: make bsd
-      - name: Upload
-        uses: actions/upload-artifact@main
-        with:
-          name: openbsd-executable
-          path: fresh
-
-  build-netbsd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-      - name: Build on NetBSD
-        uses: vmactions/netbsd-vm@v1
-        with:
-          release: "10.1"
-          usesh: true
-          run: make bsd
-      - name: Upload
-        uses: actions/upload-artifact@main
-        with:
-          name: netbsd-executable
-          path: fresh
           
   # 3. Релиз, который собирает всё воедино
   create-release:
-    needs: [build-musl, build-others, build-freebsd, build-openbsd, build-netbsd]
+    needs: [build-musl, build-others, build-freebsd]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
