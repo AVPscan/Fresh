@@ -62,27 +62,29 @@ jobs:
           name: ${{ matrix.artifact }}
           path: fresh*
 
-  build-bsd:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: freebsd
-          - name: openbsd
-          - name: netbsd
-    steps:
-      - uses: actions/checkout@main
-      - name: Build on ${{ matrix.name }}
-        uses: vmactions/${{ matrix.name }}-vm@v1
-        with:
-  #        release: "latest"  # ← автоопределение
-          usesh: true
-          run: make bsd
-      - name: Upload
-        uses: actions/upload-artifact@main
-        with:
-          name: ${{ matrix.name }}-executable
-          path: fresh
+build-bsd:
+  runs-on: ubuntu-latest
+  strategy:
+    matrix:
+      include:
+        - name: freebsd
+          vm: vmactions/freebsd-vm@v1
+        - name: openbsd
+          vm: vmactions/openbsd-vm@v1
+        - name: netbsd
+          vm: vmactions/netbsd-vm@v1
+  steps:
+    - uses: actions/checkout@main
+    - name: Build on ${{ matrix.name }}
+      uses: ${{ matrix.vm }}
+      with:
+        usesh: true
+        run: make bsd
+    - name: Upload
+      uses: actions/upload-artifact@main
+      with:
+        name: ${{ matrix.name }}-executable
+        path: fresh
   
   # 3. Релиз, который собирает всё воедино
   create-release:
