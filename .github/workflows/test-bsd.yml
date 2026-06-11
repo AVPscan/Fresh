@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-freebsd:
-    runs-on: ubuntu-latest
+  build-freebsd:
+    runs-on: macos-13  # ← ключ! старый macos с поддержкой xhyve
     steps:
       - uses: actions/checkout@main
       - name: Build on FreeBSD
@@ -14,46 +14,10 @@ jobs:
           operating_system: freebsd
           version: "14.2"
           run: |
-            pkg install -y gcc make
+            sudo pkg install -y gcc make
             make bsd
-      - name: Upload binary
+      - name: Upload
         uses: actions/upload-artifact@main
         with:
-          name: freebsd-test
-          path: fresh
-
-  test-openbsd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-      - name: Build on OpenBSD
-        uses: cross-platform-actions/action@v0.25.0
-        with:
-          operating_system: openbsd
-          version: "7.6"
-          run: |
-            pkg_add gcc make
-            make bsd
-      - name: Upload binary
-        uses: actions/upload-artifact@main
-        with:
-          name: openbsd-test
-          path: fresh
-
-  test-netbsd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@main
-      - name: Build on NetBSD
-        uses: cross-platform-actions/action@v0.25.0
-        with:
-          operating_system: netbsd
-          version: "10.1"
-          run: |
-            pkgin install gcc make
-            make bsd
-      - name: Upload binary
-        uses: actions/upload-artifact@main
-        with:
-          name: netbsd-test
+          name: freebsd-executable
           path: fresh
