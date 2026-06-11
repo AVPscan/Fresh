@@ -63,14 +63,14 @@ jobs:
           path: fresh*
 
   build-freebsd:
-    runs-on: macos-14
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
       - name: Build on FreeBSD
-        uses: cross-platform-actions/action@v0.25.0
+        uses: vmactions/freebsd-vm@v1
         with:
-          operating_system: freebsd
-          version: "14.2"
+          release: "14.2"
+          usesh: true
           run: make bsd
       - name: Upload
         uses: actions/upload-artifact@main
@@ -85,6 +85,7 @@ jobs:
       - name: Build on OpenBSD
         uses: vmactions/openbsd-vm@v1
         with:
+          release: "7.6"
           usesh: true
           run: make bsd
       - name: Upload
@@ -100,6 +101,7 @@ jobs:
       - name: Build on NetBSD
         uses: vmactions/netbsd-vm@v1
         with:
+          release: "10.1"
           usesh: true
           run: make bsd
       - name: Upload
