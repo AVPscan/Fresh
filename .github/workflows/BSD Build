@@ -1,0 +1,24 @@
+name: Test BSD Build
+
+on:
+  workflow_dispatch:  # только руками
+
+jobs:
+  test-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Test FreeBSD build
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.2"
+          usesh: true
+          run: |
+            pkg install -y git gcc make
+            make bsd
+            ls -la fresh
+      - name: Upload binary
+        uses: actions/upload-artifact@main
+        with:
+          name: test-freebsd
+          path: fresh
