@@ -61,25 +61,10 @@ jobs:
         with:
           name: ${{ matrix.artifact }}
           path: fresh*
-
-  build-freebsd:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@main
-      - uses: cross-platform-actions/action@v0.25.0
-        with:
-          operating_system: freebsd
-          version: "14.2"
-          run: make bsd
-      - name: Upload
-        uses: actions/upload-artifact@main
-        with:
-          name: freebsd-executable
-          path: fresh
           
   # 3. Релиз, который собирает всё воедино
   create-release:
-    needs: [build-musl, build-others, build-freebsd]
+    needs: [build-musl, build-others]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
