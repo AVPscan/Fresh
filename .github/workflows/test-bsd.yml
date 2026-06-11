@@ -13,7 +13,6 @@ jobs:
         with:
           operating_system: freebsd
           version: "14.2"
-          shell: /bin/sh
           run: |
             pkg install -y gcc make
             make bsd
@@ -34,7 +33,6 @@ jobs:
         with:
           operating_system: openbsd
           version: "7.6"
-          shell: /bin/sh
           run: |
             pkg_add gcc make
             make bsd
@@ -55,7 +53,6 @@ jobs:
         with:
           operating_system: netbsd
           version: "10.1"
-          shell: /bin/sh
           run: |
             pkgin install gcc make
             make bsd
