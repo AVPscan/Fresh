@@ -22,6 +22,21 @@ else ifeq ($(UNAME_S),Darwin)
 	EXT =
 	LIBS =
 	GET_SIZE = stat -f %z $(TARGET)$(EXT)
+else ifeq ($(UNAME_S),FreeBSD)
+	SYS_SRC = sys_bsd.c
+	EXT =
+	LIBS =
+	GET_SIZE = stat -f %z $(TARGET)$(EXT)
+else ifeq ($(UNAME_S),OpenBSD)
+	SYS_SRC = sys_bsd.c
+	EXT =
+	LIBS =
+	GET_SIZE = stat -f %z $(TARGET)$(EXT)
+else ifeq ($(UNAME_S),NetBSD)
+	SYS_SRC = sys_bsd.c
+	EXT =
+	LIBS =
+	GET_SIZE = stat -f %z $(TARGET)$(EXT)
 else
 	SYS_SRC = sys_linux.c
 	EXT =
@@ -69,7 +84,8 @@ musl:
 	else $(MAKE)  --no-print-directory tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
 mac:
 	@$(MAKE) tiny UNAME_S=Darwin SYS_SRC=sys_macos.c
-
+bsd:
+	@$(MAKE) tiny UNAME_S=FreeBSD SYS_SRC=sys_bsd.c
 static: $(SOURCES)
 	@echo "🔧 Статическая сборка с glibc"
 	@$(MAKE) --no-print-directory tiny CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"

@@ -182,5 +182,7 @@ Fresh не просто быстр — он **обходит ограничен�
 ```bash
 make
 make run
+## Сборка для BSD
+make bsd
 
 
