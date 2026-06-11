@@ -16,8 +16,6 @@ jobs:
           run: |
             pkg install -y gcc make
             make bsd
-            ls -la fresh
-            file fresh
       - name: Upload binary
         uses: actions/upload-artifact@main
         with:
@@ -36,8 +34,6 @@ jobs:
           run: |
             pkg_add gcc make
             make bsd
-            ls -la fresh
-            file fresh
       - name: Upload binary
         uses: actions/upload-artifact@main
         with:
@@ -56,8 +52,6 @@ jobs:
           run: |
             pkgin install gcc make
             make bsd
-            ls -la fresh
-            file fresh
       - name: Upload binary
         uses: actions/upload-artifact@main
         with:
