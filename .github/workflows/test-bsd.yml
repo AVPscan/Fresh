@@ -1,0 +1,68 @@
+name: Test BSD Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Build on FreeBSD
+        uses: cross-platform-actions/action@v0.25.0
+        with:
+          operating_system: freebsd
+          version: "14.2"
+          shell: /bin/sh
+          run: |
+            pkg install -y gcc make
+            make bsd
+            ls -la fresh
+            file fresh
+      - name: Upload binary
+        uses: actions/upload-artifact@main
+        with:
+          name: freebsd-test
+          path: fresh
+
+  test-openbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Build on OpenBSD
+        uses: cross-platform-actions/action@v0.25.0
+        with:
+          operating_system: openbsd
+          version: "7.6"
+          shell: /bin/sh
+          run: |
+            pkg_add gcc make
+            make bsd
+            ls -la fresh
+            file fresh
+      - name: Upload binary
+        uses: actions/upload-artifact@main
+        with:
+          name: openbsd-test
+          path: fresh
+
+  test-netbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Build on NetBSD
+        uses: cross-platform-actions/action@v0.25.0
+        with:
+          operating_system: netbsd
+          version: "10.1"
+          shell: /bin/sh
+          run: |
+            pkgin install gcc make
+            make bsd
+            ls -la fresh
+            file fresh
+      - name: Upload binary
+        uses: actions/upload-artifact@main
+        with:
+          name: netbsd-test
+          path: fresh
