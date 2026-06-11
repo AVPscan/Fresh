@@ -50,6 +50,7 @@ jobs:
             os: macos-latest
             cmd: make mac
             artifact: macos-executable
+
     steps:
       - uses: actions/checkout@main
       - name: Build
@@ -61,9 +62,31 @@ jobs:
           name: ${{ matrix.artifact }}
           path: fresh*
 
+  build-bsd:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: freebsd
+          - name: openbsd
+          - name: netbsd
+    steps:
+      - uses: actions/checkout@main
+      - name: Build on ${{ matrix.name }}
+        uses: vmactions/${{ matrix.name }}-vm@v1
+        with:
+  #        release: "latest"  # ← автоопределение
+          usesh: true
+          run: make bsd
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.name }}-executable
+          path: fresh
+  
   # 3. Релиз, который собирает всё воедино
   create-release:
-    needs: [build-musl, build-others]
+    needs: [build-musl, build-others, build-bsd]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main

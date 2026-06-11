@@ -10,6 +10,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <io.h>
+
 #include "sys.h"
 
 SYS_VARS_INIT;
@@ -58,7 +59,7 @@ void GetKey(uint8_t *b) {
   if (j == (uint8_t)~Off) *p = Off;
   if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
-goc RealFps(ugoc fps) { LARGE_INTEGER n,f;   
+goc Real(ugoc fps) { LARGE_INTEGER n,f;   
     if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
       Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
     QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }
@@ -81,12 +82,4 @@ uint8_t SyncSize(void) {
   if (w == TS.c - 1 && h == TS.r - 1) return 0;
   TS.c = w + 1; TS.r = h + 1; return 1; }
 
-Cell GetCycles(void) { LARGE_INTEGER li; QueryPerformanceCounter(&li); return (Cell)li.QuadPart; }
-
-Cell GetSC(void) {
-  if (!VRam.addr || !TS.c) return 1;
-  char *p = (char *)(VRam.addr); MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r';
-  LARGE_INTEGER start, end, freq; QueryPerformanceFrequency(&freq); QueryPerformanceCounter(&start);
-  for(Cell i = 0; i < 100; i++) SysWrite(p, TS.c);
-  QueryPerformanceCounter(&end); return (Cell)((end.QuadPart - start.QuadPart) * 1000 / (TS.c * 10)); }
 

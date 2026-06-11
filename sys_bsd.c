@@ -7,13 +7,14 @@
  * лицензии GNU (GPLv3).
  */
  
-#include <time.h>           // nanosleep, clock_gettime
-#include <termios.h>        // tcgetattr, tcsetattr
-#include <fcntl.h>          // open, O_RDONLY, O_NONBLOCK
-#include <unistd.h>         // read, write, chdir, close
-#include <sys/ioctl.h>      // ioctl, TIOCGWINSZ
-#include <sys/mman.h>       // mmap, munmap
-#include <mach-o/dyld.h>    // _NSGetExecutablePath
+#define _POSIX_C_SOURCE 200809L
+#include <time.h>      // nanosleep, clock_gettime
+#include <termios.h>   // tcgetattr, tcsetattr
+#include <fcntl.h>     // fcntl, O_NONBLOCK
+#include <unistd.h>    // read, write, chdir
+#include <sys/mman.h>  // mmap, munmap
+#include <sys/ioctl.h> // ioctl, TIOCGWINSZ
+#include <sys/sysctl.h> // sysctl для SWD
 
 #include "sys.h"
 
@@ -24,10 +25,10 @@ Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
 void SwitchRaw(void) {
   static struct termios oldt;
   if (Flag.SwitchRaw) {
-      tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG); newt.c_iflag &= ~(ICRNL | IXON | ISTRIP);
-      tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
+    tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG ); newt.c_iflag &= ~(ICRNL | IXON | ISTRIP);
+    tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
   else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
-
+  
 void GetKey(uint8_t *b) {
   uint8_t *p = b, c, len = 6; while (len--) b[len] = 0;
   if (read(0, p, 1) <= 0) { *p = K_ESC; return; }
@@ -47,24 +48,25 @@ void GetKey(uint8_t *b) {
     if (j == (uint8_t)~Off) *p = Off;
     if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
 
-goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
-  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_RAW, &f);
+goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+  struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC, &f);
   Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
 Cell GetRam(Cell *size) { if (!*size) return 0;
   Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (r == MAP_FAILED) { r = 0; l = 0; } *size = l; return (Cell)r; }
-    
+  
 void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
 
-uint8_t SyncSize(void) { if (!VRam.addr) return 0;
-  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;
-  if (ws.ws_col == TS.c && ws.ws_row == TS.r) return 0;
-  TS.c = ws.ws_col; TS.r = ws.ws_row; return 1; }
+uint8_t SyncSize(void) { if (!VRam.addr) return Off;
+  struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
+  if (ws.ws_col == TS.c && ws.ws_row == TS.r) return Off;
+  TS.c = ws.ws_col; TS.r = ws.ws_row; return On; }
 
 void SWD(void) { if (!VRam.addr) return;
-  uint32_t len = 4096; char *path = (char *)(var.dbuf);
-  if (_NSGetExecutablePath(path, &len) != 0) return;
+  int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
+  size_t len = 1024; char *path = (char*)(var.dbuf); if (sysctl(mib, 4, path, &len, NULL, 0) != 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
+
 

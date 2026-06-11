@@ -15,6 +15,7 @@
 #include <unistd.h>    // read, write, chdir, readlink
 #include <sys/mman.h>  // mmap, munmap
 #include <sys/ioctl.h> // ioctl, TIOCGWINSZ
+
 #include "sys.h"
 
 SYS_VARS_INIT;
@@ -47,7 +48,7 @@ void GetKey(uint8_t *b) {
     if (j == (uint8_t)~Off) *p = Off;
     if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
 
-goc RealFps(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
+goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
   struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f);
   Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
@@ -72,15 +73,4 @@ void SWD(void) { if (!VRam.addr) return;
     return; }
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
-Cell GetCycles(void) {
-  Cell lo, hi; __asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));
-  #if __SIZEOF_POINTER__ > 4
-    return ((Cell)lo + ((Cell)hi << 32)); }
-  #else
-    return lo; }
-  #endif
-
-Cell GetSC(void) { if (!VRam.addr || !TS.c) { return 1; } uint8_t i = 100; char *p = (char *)VRam.addr;
-  MemSet(p, ' ', TS.c - 1); p[TS.c - 1] = '\r'; Cell start = GetCycles();
-  while(--i) { SysWrite(p, TS.c); } return (GetCycles() - start) / (TS.c * 10); }
 

@@ -13,10 +13,10 @@
 #include <stdint.h>
                                               // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62] из-за перехода на иной тип
 #define CellPow   13                          // Масштаб холста [7..62] {по сути создание буфера для данных}
-#define Wind      500                         // Максимально число окон на холсте [1..65535] {окна безрамочные по сути спрайты}
+#define Wind      500                         // Максимально окон на холсте [1..65535] {окна безрамочные по сути спрайты}
 #define FHow      2                           // Частота вызова обработчика таймера [Off{0}..FHz] Гц
 #define FHz       500                         // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
-#define FFps      144                         // Частота обновления кадра [50..1000] Гц {установите больше fps монитора и всё поймёте}
+#define FApm      144                         // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    8                           // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
 #define Fcolour   127                         // Количество оттенков света на старте [1..127] {0 - чёрный всегда есть, 2 палитры,метода автоматического создания}
 
@@ -49,18 +49,18 @@ enum {                                                                          
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, sky, iris, berry, coral, clay, moss, snow,                                                 // Константы для 7 цветов символов {Чёрный + 7}
-       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };                                 // Константы для 7 цветов фона {Чёрный + 7}
+enum { dark, sky, iris, berry, coral, clay, moss, snow, last = 127,                                     // Константы для 7 цветов символов {Чёрный + 7}
+       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow, Flast = 255 };                    // Константы для 7 цветов фона {Чёрный + 7}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Fps, Hz, Rnd, Su[6], Time[6], Timer[6];
-                  char T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
+typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Apm, Hz, Rnd, Su[6], Time[6], Timer[6];
+                  char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
-typedef struct { uint8_t Res1, Fone, Border, Inc; uint16_t Win; } Sis;
+typedef struct { uint8_t Attr, Fone, Border, Inc; uint16_t Win; } Sis;                                  // cA потоковый атрибут но Attr хранит его пока формируется кадр. Фон общий
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
 typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; } Windows;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
@@ -107,8 +107,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {0,0,FHow,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FFps,FHz,0,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
-                  {0,0,0,0,0,0},"00:00:00\0",0,0,0,0,0,0,0,0,0}; \
+    Base_ Base = {0,0,FHow,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FApm,FHz,0,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+                  {0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
     ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 
@@ -162,6 +162,7 @@ int8_t Ftg(int16_t u);                                                // Тан�
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 void Print(uint8_t n, uint8_t m, char *str);                          // Вывод строки в палитре напрямую игнорируя Fresh
 void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void SetSeparator(char s);                                            // Установить разделитель в формате времени
 void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
@@ -169,7 +170,7 @@ void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сге�
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(uint8_t c, uint8_t d, uint8_t h);                        // Установка переменных среды Colours Deep How
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
-Cell InitVram(uint8_t c,uint8_t o,uint16_t w,uint16_t h,uint16_t f);  // Инициализация мира CellPower How Win Hz Fps
+Cell InitVram(uint8_t c,uint8_t o,uint16_t w,uint16_t h,uint16_t a);  // Инициализация мира CellPower How Win Hz Apm
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
 void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
@@ -207,12 +208,10 @@ void _WData(uint16_t n, char *str, uint8_t count, ugoc *args);        // Заг�
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
-goc RealFps(ugoc fps);                                                // Сколько реально прошло в ожидании
+goc Real(ugoc fps);                                                   // Сколько реально прошло в ожидании
 Cell GetRam(Cell *size);                                              // Взять память
 void FreeRam(Cell addr, Cell size);                                   // Вернуть память
 uint8_t SyncSize(void);                                               // Обновить рамки терминала
 void SWD(void);                                                       // Установить рабочую директорию
-Cell GetCycles(void);                                                 // Тики
-Cell GetSC(void);                                                     // Измерение пропускной способности терминала
 #endif /* SYS_H */
 

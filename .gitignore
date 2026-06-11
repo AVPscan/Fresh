@@ -3,6 +3,7 @@
 
 # Но разрешить эти типы файлов
 !DONATIONS.md
+!sys_bsd.c
 !sys_windows.c
 !sys_macos.c
 !sys_linux.c
