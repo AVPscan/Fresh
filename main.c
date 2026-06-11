@@ -27,7 +27,7 @@ void body(void) {  // пока не дописано WinData,Render
 void sb(void) { if (!++Sys.Border || Sys.Border > (Base.Colours + Fdark)) { Sys.Border = Fdark; } SetBorder(); }
 void tim(void) { static int16_t c = 511; if (--c < 0) { c = 511; } Grgb(Off, c, 511); GenFonCol(127, Base.Deep); }
 
-void Init(void) { GlobalSet(11, Off, 2, 500, 200); SysSet(7, 3, 5); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+void Init(void) { GlobalSet(11, Off, 2, 500, 200); SysSet(7, 24, 5); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
   ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,Rand(Base.Colours), Off, Off, 80, 24); WinExecs(control, K_NO, body);
   WinData(control, " %+5dMb %+3 %06c:%06c ", ((VRam.size + 1048575)/1048576), moss, moss); WinExecs(control, K_Ctrl_K, WSwitch);
   WinSet(W1, On, On); WinView(W1, 10, 3); Events(' ', Timer, K_ALT_TAB, K_ALT_ENT); Execs(sb, tim, WinDown, WinUp); Sys.Win = W1; }
@@ -35,7 +35,7 @@ void Init(void) { GlobalSet(11, Off, 2, 500, 200); SysSet(7, 3, 5); SKeys(K_F1,K
 Cell Help(Cell argc, char *argv[], Cell flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (flag) { Print(Sys.Fone, Off, "\033[?1049l"); Print(coral, aB | aC, " Created by Alexey Pozdnyakov"); flag = Off;
-        Print(berry, aC, " in 07.02.2026 version 9.91 email: avp70ru@mail.ru https://github.com/AVPscan \033[0m\n"); } } } return flag; }
+        Print(berry, aC, " in 07.02.2026 version 9.92 email: avp70ru@mail.ru https://github.com/AVPscan \033[0m\n"); } } } return flag; }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); flag = Help((Cell)argc, argv, flag);
   if (flag) { Init(); while(VP.Loop) Free(); } SystemSwitch(); return (int)var.off; }
 

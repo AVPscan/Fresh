@@ -11,17 +11,17 @@
 #define SYS_H
 
 #include <stdint.h>
-                                              // Для 11 запрашиваем 16Мегабайт, сюда входит 1000 окон 2-3 из них 2к! событийная система, RealTime, и полную адаптацию
-#define CellPow   13                          // Масштаб холста 13 16к, 14 32к, 15 64к.... 
-#define Wind      500                         // Максимально число окон на холсте
-#define FHow      2                           // Частота вызова Timer функции
-#define FHz       500                         // Десятикратная частота сети 50Гц
-#define FFps      144                         // Частота обновления монитора
-#define CFDeep    8                           // Глубина {3 8 24} бита
-#define Fcolour   127                         // Количество оттенков света на старте [1..127] 0 всегда есть, 2 палитры
+                                              // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [14,30,62] из-за перехода на иной тип
+#define CellPow   13                          // Масштаб холста [7..62] {большие значения, нужна память, да побольше}
+#define Wind      500                         // Максимально число окон на холсте [1..65535]
+#define FHow      2                           // Частота вызова Timer функции [Off{0}...Hz] Гц
+#define FHz       500                         // Десятикратная частота сети [0,1..1000] Гц
+#define FFps      144                         // Частота обновления кадра [50..1000] Гц
+#define CFDeep    8                           // Глубина цвета {3 8 24} бита
+#define Fcolour   127                         // Количество оттенков света на старте [1..127] 0 - чёрный всегда есть, 2 палитры
 
 #if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением, 
-    typedef uint16_t ugoc;                    // а так же константы для генератора случайных чисел {Base.Rnd текущее значение генератора} 
+    typedef uint16_t ugoc;                    
     typedef int16_t  goc;
 #elif CellPow < 31
     typedef uint32_t ugoc;
@@ -31,26 +31,26 @@
     typedef int64_t  goc;
 #endif
 
-typedef uintptr_t Cell;                       // Разрядность процессора, создали абстракцию
+typedef uintptr_t Cell;                       // Разрядность процессора
 #define SCell sizeof(Cell)
 
 enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0,             //  маски
     aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,                        // Режимы вывода текста
-    On = 0x01, Off = 0x00 };
-enum {
-    K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,
-    K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,
-    K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,
+    On = 0x01, Off = 0x00 };                                                                            // Удобные константы
+enum {                                                                                                  // Расширенный набор ascii + все значимые клавиши клавиатуры
+    K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // K_Mouse вектор обработчика мыши
+    K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  // Timer вектор обработчика таймера
+    K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,                     // RPU  вектор обработчика чтение клавиатуры,мыши и обработка входного UTF8
     K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,
     K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,
     K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
-    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, 
+    K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, sky, iris, berry, coral, clay, moss, snow,
-       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };
+enum { dark, sky, iris, berry, coral, clay, moss, snow,                                                 // Константы для 7 цветов символов {Чёрный + 7}
+       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };                                 // Константы для 7 цветов фона {Чёрный + 7}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
@@ -65,7 +65,6 @@ typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW
 typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; } Windows;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
 typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; goc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
-
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
 typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
@@ -77,18 +76,18 @@ typedef struct {                              //UTFinfo
     uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
     uint8_t ds      : 1;                      // бит 6      {0} Data {1} Structure
-    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
+    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
 } Data;
 typedef struct {
     uint8_t len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
     uint8_t right   : 1;                      // бит 4      {1} к правому
     uint8_t left    : 1;                      // бит 5      {1} к левому {00}/{11} по центру (как заполнять поле структуры)
     uint8_t ds      : 1;                      // бит 6      {1} Structure {0} Data
-    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения /нет изменений
+    uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
 } Structure;
 typedef struct {
     uint8_t col        ;                      // бит x      код цвета {максимум 128 цветовых оттенка} 
-    uint8_t colFon  : 1;                      // бит 7  
+    uint8_t colFon  : 1;                      // бит 7      {1/0} есть данные / нет данных
 } palette;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
@@ -114,17 +113,17 @@ extern Var_ var;
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 
     
+#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
+#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
+#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
+#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
+#define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
+#define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
 #define Data(r)       (var.data + ((r) << Base.D))                            // адрес начала буфера строки холста
 #define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                     // адрес данных ячейки холста
 #define Cpal(c, r)    (var.ds + (c) + ((r) << Base.DS))                       // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                    // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
-#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
-#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
-#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
-#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))        // адрес начала данных окна n
-#define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
-#define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
 #define Exec(v, func) Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func)) // сброс вектора если адрес функции раньше Nop
 #define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))             // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })// длина ячейки холста в байтах
