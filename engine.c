@@ -178,9 +178,9 @@ Cell HowSize(uint8_t c, uint16_t w, Cell addr) { var.off = 1 << ((c << 1) - 1); 
                         if (var.dwin < (uint8_t*)(var.end = (char*)(var.dwin + w * sizeof(Windows)))) return (Cell)(var.end - addr); } } } } } } } } } } } return Off; }
 Cell InitVram(uint8_t c, uint8_t how, uint16_t w, uint16_t hz, uint16_t apm) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc);
   var.R = Base.Goc << 3; w = (w) ? w : 1; c = (c < 7) ? 7 : (c > var.R - 2) ? var.R - 2 : c; if ((var.R = Base.Goc >> 1) > 2) var.R--;
-  if (!VRam.size || c != Base.CellP || w != Base.Win) { var.addr = VRam.addr; var.size = VRam.size; MemCpy(var.Save, &var.dpal, 13 * sizeof(var.Save));
+  if (!VRam.size || c != Base.CellP || w != Base.Win) { var.addr = VRam.addr; var.size = VRam.size; MemCpy(var.Save, &var.dpal, sizeof(var.Save));
     var.G = 3; if (!(VRam.size = HowSize(c,w,Off))) { var.G--; } if (var.G == 3 && !(VRam.addr = GetRam(&VRam.size))) { var.G = 1; } 
-    if (var.G == 3 && !(VRam.size = HowSize(c,w,VRam.addr))) { var.G = 0; } if (var.G < 3) { MemCpy(&var.dpal, var.Save, 13 * sizeof(var.Save)); VRam.addr = var.addr;
+    if (var.G == 3 && !(VRam.size = HowSize(c,w,VRam.addr))) { var.G = 0; } if (var.G < 3) { MemCpy(&var.dpal, var.Save, sizeof(var.Save)); VRam.addr = var.addr;
     VRam.size = var.size; return var.G; } if (var.size) { FreeRam(var.addr,var.size); } SetSeparator(Base.Sep);
     Base.CellP = c; Base.Win = w; Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; Base.Mcol = (ugoc)(1 << c);
     Base.Mstr = Base.Mcol >> 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.P = 5; Base.K = 3; Base.V = 2; Base.Count = 6; var.Syn = Base.Hz - var.Syn;
