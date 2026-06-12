@@ -1,40 +1,5 @@
 
 [![Linux musl static +(Cross-Platform)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml/badge.svg)](https://github.com/AVPscan/Code_editor/actions/workflows/release.yml)
----
-
-**Sat, May 30, 2026, 08:49 — Intermediate milestones since Fresh was published on github.com.**
-
-The initial goal was to solve the pain of UTF-8 visualization once and for all in a cross-platform way. Therefore, the core design revolves around a canvas based on the following considerations: `[1;4] bytes per character, visual length of [0;2] character cells, and a [-;+] text direction`. This led to an 8192*4 bytes line buffer to natively support 8K resolutions. However, a single line is just the beginning; multiple lines are required. Why not anchor their quantity and line size to the proportions of the Golden Ratio? This concept is baked into the project's DNA—it will never need a rewrite.
-
-Given the architecture detailed below, software powered by Fresh features: no obsolescence, absolute portability, zero GPU dependency, minimal binary footprint, zero lag, and guaranteed RealTime execution...
-
-**Key upgrades fully implemented during development:**
-
-* **Braille-based rendering:** Braille as a UTF-8 segment provides a resolution of `2 dots horizontally and 4 dots vertically per character cell`. This essentially scales the resolution to 16K without changing anything. Thus, a simple `str=col/2` ratio is enough to keep multiple full-fledged screens in memory simultaneously. `For an 8K character cell screen (16K via Braille), it requires just an additional 256 MB`. Implemented directly via the terminal for demonstration purposes, it already provides any color depth for each character cell, 7 streaming attributes, and support for up to 512 windows and layers.
-
-* **Architecture Bitness Abstraction:** Introducing `typedef uintptr_t Cell;` grants complete freedom and automated adaptation regardless of the CPU architecture's bitness.
-
-* **Resolution Scalability (`goc`/`ugoc` types):** Realizing that `uint16_t` becomes a bottleneck when moving to 32K resolutions, I introduced `goc/ugoc` as a new scalable integer type. It provides room for `resolutions up to 2^50. For reference, 2^13 represents 8K (or 16K via Braille), 2^14 represents 16K, and so on`. This ensures total freedom and automatic adaptation to any monitor resolution.
-
-* **Enhanced Input Processing:** Implemented a dedicated keyboard buffer. The mouse, which initially used standard X10 encoding, now supports horizontal scrolling for any mouse model. This addition fully enables real-time interaction.
-
-* **Canvas Partitioning & Window System:** Separating the canvas into buffers/windows (`file.port.buffer...`), each maintaining its own cursor. The canvas distribution is completely automated. Visual presentation is uncoupled from data through the introduction of two rendering variables that pinpoint the window's corner anchor during each inner-loop iteration. This delivers a full-featured windowing system with zero data movement across the canvas.
-
-* **Event-Driven Model:** A robust event model allowing direct function execution simply by binding an action to a specific keystroke or mouse event.
-
-* **Lighting & Automated Palette Generation:** Automatic palette generation for any color depth (`3, 8, 24 bits`). The first is constructed using integer trigonometry, while the second divides the spectrum `(yielding miracles at 8 colors, and smooth grayscale gradients at 16)`. This approach uncovers deep insights into the physics of light itself. Consider this perspective: Darkness is 0, Light is 1 = a quantum. There is no "speed" as such. Mathematically stretching the range to a depth of `2^24` yields the entire color spectrum, yet we must always remember the fundamental binary foundation: it is either `Darkness` or `Light`.
-
-* **The Concept of Infinity:** `Infinity is simply defined as being outside the current range`. Consequently, it is unsigned, just like `0`, and has always been right next to us. Shifting to another range merely reveals a new infinity...
-
-* **Power Grid & Monitor Sync Auto-Adaptation:** Full synchronization with both power grid AC frequencies `[0.1; 1000] Hz` and monitor refresh rates `[50; 1000] Hz`. These parameters can be modified on the fly in runtime (`HotSwap and absolute-precision timer`). This ensures seamless auto-adaptation to any localized power grid standard `(which, paired with UTF-8 support, covers every country on Earth, whether you are underwater, on a ship, on land, on a train, or in an aircraft)` and any monitor refresh rate `(since we decoupled the system from resolution limitations long ago)`.
-
----
-
-**Thu, Jun 4, 2026 20:33**
-
-Now you actually have a real opportunity to see the discrepancy in the electrical grid frequency, if the timer lags behind the system time! `SysSet(500, 1000, 24, 15, 10)` - adjust the first parameter, in the example it's 500 for Russia `(mains frequency * 10)`, so that the time doesn't lag behind...
-
-Note that in the alternative palette mode with 16 colors, a black-and-white spectrum is generated, but the timer data still changes color — it turned out even stylish somehow. I've never seen anything like it, but apparently precise mathematics can always surprise you...
 
 ---
 
@@ -74,7 +39,7 @@ Note that in the alternative palette mode with 16 colors, a black-and-white spec
 
 **Чт, 12 июня 2026 16:58**
 
-Окончательно разобрался с площадью холста, 16:9 идеально для любых соотношений геометрии разрешений мониторов - сюда впишется любое, но у нас utf8 в каждой ячейке и пока использую для демонстрации возможностей терминал то грех не воспользоваться Браэлем с его 2:4 пропорциями и отсюда получаем 32:9! Это даёт оставаясь в uint16_t работать с холстом 65536:18432 в каждой ячейке которого 2:4 точки и эта ячейка имеет свой цвет, атрибуты.... -> 128k под это 9,4 гига оперативки требуется - навигация работает, события то же, окон 2000... И да - терминал но это всего одна функция SysWrite из слоя осей - переписывать код не нужно и сможем выводить куда угодно.
+Окончательно разобрался с площадью холста, `16:9` идеально для любых соотношений геометрии разрешений мониторов - сюда впишется любое, но у нас utf8 в каждой ячейке и пока использую для демонстрации возможностей терминал то грех не воспользоваться `Браэлем с его 2:4 пропорциями` и отсюда получаем `32:9`! Это даёт оставаясь в `uint16_t` работать с холстом `65536:18432` в каждой ячейке которого `2:4 точки` и эта ячейка имеет свой цвет, атрибуты.... -> `128k под это 9,4 гига` оперативки требуется - навигация работает, события то же, окон 2000... И да - терминал но это всего одна функция `SysWrite` из слоя осей - переписывать код не нужно и сможем выводить куда угодно.
 
 ---
 
