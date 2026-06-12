@@ -161,12 +161,13 @@ int8_t Fcos(int16_t u);                                               // Кос�
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127] 256 значений)
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 void Print(uint8_t n, uint8_t m, char *str);                          // Вывод строки в палитре напрямую игнорируя Fresh
-void GenFonCol(uint8_t c, uint8_t deep);                              // Установить по индексу c[0...31], cR cG cB - фон и цвет с режимами в палитру
+void GenFC(uint8_t c, uint8_t deep);                                  // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру
 void SetSeparator(char s);                                            // Установить разделитель в формате времени
-void SetBorder(void);                                                 // Установить цвет бордюра и осчистить экран
+void SetBorder(uint8_t on, uint8_t b);                                // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
-void Grgb(uint8_t mode, uint16_t c, uint16_t n);                      // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
+void GenRGB(uint8_t mode, uint16_t c, uint16_t n);                    // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (mode)
+void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом Off {sin}
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void SysInit(uint8_t c, uint8_t d, uint8_t h);                        // Установка переменных среды Colours Deep How
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
