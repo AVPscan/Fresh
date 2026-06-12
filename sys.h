@@ -44,7 +44,7 @@ enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0,             //  маски
     aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,                        // Режимы вывода текста
-    On = 0x01, Off = 0x00, Maxcol = 126, last = 127, Flast = 255 };                                     // Удобные константы
+    On = 0x01, Off = 0x00, Maxcol = 126, last = 127, Last = 255 };                                      // Удобные константы
 enum {                                                                                                  // Расширенный набор ascii + все значимые клавиши клавиатуры
     K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // K_Mouse вектор обработчика мыши {не используется, но можно повесить функцию}
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  // Timer вектор обработчика таймера
@@ -55,8 +55,8 @@ enum {                                                                          
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, snow, moss, clay, coral, berry, iris, sky,                                                 // Константы для 7 цветов символов {Чёрный + 7}
-       Dark = 128, Snow, Moss, Clay, Coral, Berry, Iris, Sky, };                                        // Константы для 7 цветов фона {Чёрный + 7}
+enum { dark, snow, moss, clay, coral, berry, iris, sky,                                                 // Константы для 6 цветов символов {0-чёрный, 1-белый + 6}
+       Dark = 128, Snow, Moss, Clay, Coral, Berry, Iris, Sky, };                                        // Константы для 6 цветов фона {0-чёрный, 1-белый + 6}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;

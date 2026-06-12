@@ -146,17 +146,17 @@ void GenFC(uint8_t c, uint8_t deep) {
   src->d[src->l++] = 'm'; pal->l = src->l; MemCpy(pal->d, src->d, src->l); src->d[2] = '4'; if (pal->d[2] == '9') {
     src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
-void SetBorder(uint8_t on, uint8_t b) { if (on) { b = 255; } else if (b < Dark || b > (Base.Colours + Dark)) b = Dark; 
+void SetBorder(uint8_t on, uint8_t b) { if (on) { b = Last; } else if (b < Dark || b > (Base.Colours + Dark)) b = Dark; 
   var.Y = var.F; Print((Sys.Border = b), var.A, "\033[2J"); var.F = var.Y; }
 void SetPalette(uint8_t set) { var.dpal = (uint8_t*)VRam.addr; if (set) { var.dpal += 8192; } }
 void SwitchPalette(void) { uint8_t* a = (uint8_t*)VRam.addr; if (a == var.dpal) { a += 8192; } var.dpal = a; }
 void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { if (!c) { var.R  = 0; var.G = 0; var.B = 0; } else if (c == n) { var.R  = 255; var.G = var.R ; var.B = var.R ; }
-  else { if (n == Maxcol) n++; 
+  else { //n++;
         if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB; var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
-        else { var.Z = var.U + (c * 512) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
-void GenLast(int16_t c) { if (( c % 512)) { GenRGB(Off, c, 512); GenFC(last, Base.Deep); } c = 8192; uint8_t* off = (uint8_t*)VRam.addr + 4064;
+        else { var.Z = var.U + (c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
+void GenLast(int16_t c) { if (( c % 512)) { GenRGB(Off, c, 511); GenFC(last, Base.Deep); } c = 8192; uint8_t* off = (uint8_t*)VRam.addr + 4064;
   if (var.dpal != (uint8_t*)VRam.addr) { off += c; c = -c; } MemCpy(off + c, off, 32); off += 4096; MemCpy(off + c, off, 32); }
-void GenPalette(uint8_t set) { var.X = (Base.Colours < Maxcol) ? On + Base.Colours : Dark; SetPalette(set);
+void GenPalette(uint8_t set) { if (Base.Colours > Maxcol) { Base.Colours = Maxcol; } var.X =  On + Base.Colours; SetPalette(set);
   while(var.X--) { GenRGB(set, var.X, Base.Colours); GenFC(((var.X) ? (Base.Colours - var.X + On) : Off), Base.Deep); } GenLast(On); }
 void SysInit(uint8_t col, uint8_t deep, uint8_t how) {
   Base.FTime = ((Base.On = (how > Base.Hz) ? Base.Hz : how)) ? Base.On : 1; var.Loop = (Base.Apm * Base.Hz) / Base.FTime;
