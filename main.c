@@ -27,7 +27,7 @@ void body(void) {  // пока не дописано WinData,Render
 void sb(void) { if (!Base.On) SetBorder(Base.On, ++Sys.Border); }
 void tim(void) { static int16_t c = Off; GenLast(c++); SetBorder(Base.On, Sys.Border); }
 
-void Init(void) { GlobalSet(13, Off, 2000, 500, 250); SysSet(15, 24, 10); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+void Init(void) { GlobalSet(16, Off, 2000, 500, 250); SysSet(15, 24, 10); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
   ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WinExecs(control, K_NO, body);
   WinData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), moss, moss, last); WinExecs(control, K_Ctrl_K, WSwitch);
   WinSet(W1, On, On); WinView(W1, On, On); Events(' ', Timer, K_ALT_TAB, K_ALT_ENT); Execs(sb, tim, WinDown, WinUp); Sys.Win = W1; }
