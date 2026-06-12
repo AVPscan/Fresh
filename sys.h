@@ -20,14 +20,20 @@
 #define CFDeep    8                           // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
 #define Fcolour   126                         // Количество оттенков света на старте [1..126] {0 - чёрный всегда есть, 2 палитры,метода автоматического создания}
 
-#if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным масштабом
-    typedef uint16_t ugoc;                    
+#if CellPow < 17                              // Создаём новый тип данных, достаточный для работы с нужным масштабом
+    typedef uint32_t udgoc;
+    typedef uint16_t ugoc;
+    typedef int32_t  dgoc;
     typedef int16_t  goc;
-#elif CellPow < 31
+#elif CellPow < 33
+    typedef uint64_t udgoc;
     typedef uint32_t ugoc;
+    typedef int64_t  dgoc;
     typedef int32_t  goc;
-#elif CellPow < 63
+#elif CellPow < 61
+    typedef uint64_t udgoc;
     typedef uint64_t ugoc;
+    typedef int64_t  dgoc;
     typedef int64_t  goc;
 #endif
 
@@ -53,7 +59,7 @@ enum { dark, sky, iris, berry, coral, clay, moss, snow,                         
        Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };                                 // Константы для 7 цветов фона {Чёрный + 7}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
-                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;
+                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, On, FTime, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, Apm, Hz, Rnd, Su[6], Time[6], Timer[6];
                   char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
@@ -62,9 +68,9 @@ typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct { uint8_t Attr, Fone, Border, Inc; uint16_t Win; } Sis;                                  // cA потоковый атрибут но Attr хранит его пока формируется кадр. Фон общий
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; goc Xr, Yr; } Windows;
-typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; goc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; goc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
+typedef struct { uint8_t palette, EF; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
+typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Data, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
+typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
 typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
@@ -173,9 +179,9 @@ void SysInit(uint8_t c, uint8_t d, uint8_t h);                        // Уст�
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
 Cell InitVram(uint8_t c,uint8_t o,uint16_t w,uint16_t h,uint16_t a);  // Инициализация мира CellPower How Win Hz Apm
 Cell SystemSwitch(void);                                              // Вход/выход в мир
-void MoveNorm(goc x, goc y);                                          // Нормализация перемещения
-void MoveConvas(goc dx, goc dy);                                      // Взаимосвязь перемещения по холсту и экранных координат
-uint8_t MoveScreen(goc mx, goc my);                                   // Взаимосвязь изменения экранных координат(мышью) и холста
+void MoveNorm(dgoc x, dgoc y);                                        // Нормализация перемещения
+void MoveConvas(dgoc dx, dgoc dy);                                    // Взаимосвязь перемещения по холсту и экранных координат
+uint8_t MoveScreen(dgoc mx, dgoc my);                                 // Взаимосвязь изменения экранных координат(мышью) и холста
 void Free(void);                                                      // Одна итерация Fresh
 void RPUEncode(void);                                                 // Проситать событие из порта 0 и декодировать UTF8 Buf.Data
 void Nop(void);                                                       // Заглушка, пустая функция

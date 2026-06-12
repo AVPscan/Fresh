@@ -163,7 +163,7 @@ void SysInit(uint8_t col, uint8_t deep, uint8_t how) {
   col = (col < 1) ? 1 : (col > Maxcol) ? Maxcol : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8;
   if (col != Base.Colours || deep != Base.Deep) { Base.Colours = col; Base.Deep = deep; var.U = Off; GenPalette(On); GenPalette(Off); }
   Sys.Fone = Base.Colours + Fdark; Sys.Border = Fdark; Sys.Inc = dark; var.I = Sys.Border; var.A = Off; }
-Cell HowSize(uint8_t c, uint16_t w, Cell addr) { var.off = 1 << ((c << 1) - 1); var.dpal = (uint8_t*)addr;
+Cell HowSize(uint8_t c, uint16_t w, Cell addr) { var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 2) - 5)); var.dpal = (uint8_t*)addr;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
       if (var.event < (var.exec = var.event + (256 * sizeof(Events)))) {                                                   
@@ -177,41 +177,41 @@ Cell HowSize(uint8_t c, uint16_t w, Cell addr) { var.off = 1 << ((c << 1) - 1); 
                       if ((uint8_t*)var.offset < (var.dwin = (uint8_t*)(var.offset + var.off))) {
                         if (var.dwin < (uint8_t*)(var.end = (char*)(var.dwin + w * sizeof(Windows)))) return (Cell)(var.end - addr); } } } } } } } } } } } return Off; }
 Cell InitVram(uint8_t c, uint8_t how, uint16_t w, uint16_t hz, uint16_t apm) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc);
-  var.R = Base.Goc << 3; w = (w) ? w : 1; c = (c < 7) ? 7 : (c > var.R - 2) ? var.R - 2 : c; if ((var.R = Base.Goc >> 1) > 2) var.R--;
+  var.R = Base.Goc << 3; w = (w) ? w : 1; c = (c < 7) ? 7 : (c > var.R) ? var.R : c; if ((var.R = Base.Goc >> 1) > 2) var.R--;
   if (!VRam.size || c != Base.CellP || w != Base.Win) { var.addr = VRam.addr; var.size = VRam.size; MemCpy(var.Save, &var.dpal, sizeof(var.Save));
     var.G = 3; if (!(VRam.size = HowSize(c,w,Off))) { var.G--; } if (var.G == 3 && !(VRam.addr = GetRam(&VRam.size))) { var.G = 1; } 
     if (var.G == 3 && !(VRam.size = HowSize(c,w,VRam.addr))) { var.G = 0; } if (var.G < 3) { MemCpy(&var.dpal, var.Save, sizeof(var.Save)); VRam.addr = var.addr;
-    VRam.size = var.size; return var.G; } if (var.size) { FreeRam(var.addr,var.size); } SetSeparator(Base.Sep);
-    Base.CellP = c; Base.Win = w; Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; Base.Mcol = (ugoc)(1 << c);
-    Base.Mstr = Base.Mcol >> 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.P = 5; Base.K = 3; Base.V = 2; Base.Count = 6; var.Syn = Base.Hz - var.Syn;
-    Base.Hz = (hz < 1) ? 1 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 51) ? 50 : ((apm > 1000) ? 1000 : apm); Base.Spd1 = Base.Mcol >> 4;
-    Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Base.FTime = ((Base.On = (how > Base.Hz) ? Base.Hz : how)) ? Base.On : 1; var.Loop = (Base.Apm * Base.Hz) / Base.FTime;
-    Sys.Win = Base.Win; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Convas.CW - On; Convas.CH = Base.Mstr; Convas.H = Convas.CH - On;
-    Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Win = Base.Win; VP.Mode = b2; VP.Loop = On; Vector(RPU) = RPUEncode; }
+    VRam.size = var.size; return var.G; } if (var.size) { FreeRam(var.addr,var.size); } SetSeparator(Base.Sep); var.off = 1 << c;
+    Base.CellP = c; Base.Win = w; Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; Base.Mcol = (ugoc)(var.off - 1);
+    Base.Mstr = (((var.off << 3) + var.off) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.P = 5; Base.K = 3; Base.V = 2; Base.Count = 6;
+    var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 1) ? 1 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 51) ? 50 : ((apm > 1000) ? 1000 : apm);
+    Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Base.FTime = ((Base.On = (how > Base.Hz) ? Base.Hz : how)) ? Base.On : 1;
+    var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Sys.Win = Base.Win; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Convas.CW; Convas.CH = Base.Mstr;
+    Convas.H = Convas.CH; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Win = Base.Win; VP.Mode = b2; VP.Loop = On; Vector(RPU) = RPUEncode; }
   SysInit(Base.Colours, Base.Deep, Base.On); return Off; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); if ((var.off = InitVram(Base.CellP, Base.FTime, Base.Win, Base.Hz, Base.Apm))) return Off;
     var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize(); Print(Sys.Fone, var.A, "\033[?1049;7;1000h\033[?25l"); SetBorder(Base.On, Sys.Border); }
   else { VRam.SystemSwitch++; SwitchRaw(); Print(Sys.Fone, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); } return On; }
 
-void MoveNorm(goc x, goc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
+void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Sys.Win < Base.Win) {
     if (Sys.Win < Convas.D || Sys.Win >= Convas.S) { Windows* w = Win(Sys.Win);
-      goc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
+      dgoc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
       if (w->Xr && w->Yr && c && s) {
         var.Xr = (x < w->Xr) ? ((--Wait) ? w->Xr : (w->Xr + c - 1)) : (x >= (w->Xr + c)) ? ((--Wait) ? (w->Xr + c - 1) : w->Xr) : x;
         var.Yr = (y < w->Yr) ? ((--Wait) ? w->Yr : (w->Yr + s - 1)) : (y >= (w->Yr + s)) ? ((--Wait) ? (w->Yr + s - 1) : w->Yr) : y; return; } } }
   var.Xr = Base.Mcol; var.Yr = Base.Mstr;
-  var.Xr = (x <= -var.Xr) ? ((--Wait) ? (-var.Xr + 1) : ((var.Xr << 1) - 1)) : (x >= (var.Xr << 1)) ? ((--Wait) ? ((var.Xr << 1) - 1) : (-var.Xr + 1)) : x;
-  var.Yr = (y <= -var.Yr) ? ((--Wait) ? (-var.Yr + 1) : ((var.Yr << 1) - 1)) : (y >= (var.Yr << 1)) ? ((--Wait) ? ((var.Yr << 1) - 1) : (-var.Yr + 1)) : y; }
-void MoveConvas(goc dx, goc dy) { Buf.Ctrl = On; MoveNorm(VP.X + dx, VP.Y + dy);
+  var.Xr = (x < -var.Xr) ? ((--Wait) ? -var.Xr : ((var.Xr << 1) + 1)) : (x > (var.Xr << 1)) ? ((--Wait) ? ((var.Xr << 1) + 1) : -var.Xr) : x;
+  var.Yr = (y < -var.Yr) ? ((--Wait) ? -var.Yr : ((var.Yr << 1) + 1)) : (y > (var.Yr << 1)) ? ((--Wait) ? ((var.Yr << 1) + 1) : -var.Yr) : y; }
+void MoveConvas(dgoc dx, dgoc dy) { Buf.Ctrl = On; MoveNorm(VP.X + dx, VP.Y + dy);
   dx = VP.X / (goc)TS.c; dy = VP.Y / (goc)TS.r; VP.X = var.Xr; VP.Y = var.Yr; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % (goc)TS.c)) : (VP.X % TS.c);
   VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % (goc)TS.r)) : (VP.Y % TS.r); if ((VP.X / (goc)TS.c) != dx || (VP.Y / (goc)TS.r) != dy) Buf.Ctrl++; }
-uint8_t MoveScreen(goc mx, goc my) {
+uint8_t MoveScreen(dgoc mx, dgoc my) {
   if ((((VP.X - mx) ^ VP.X) & Base.Ginf) || (((VP.Y - my) ^ VP.Y) & Base.Ginf)) return Off;
   MoveNorm(VP.X - mx, VP.Y - my); VP.X = var.Xr; VP.Y = var.Yr; VP.Xs -= mx; VP.Ys -= my; return On; }
 
-void Free(void) { goc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
+void Free(void) { dgoc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector(RPU)();
   if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
   else { Buf.Cod = (*Buf.Key & b7) ? Off : (*Buf.Key == K_ESC) ? *(Buf.Key + On) : *Buf.Key;
     if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; i = Off;
