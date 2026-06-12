@@ -55,8 +55,8 @@ enum {                                                                          
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, sky, iris, berry, coral, clay, moss, snow,                                                 // Константы для 7 цветов символов {Чёрный + 7}
-       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };                                 // Константы для 7 цветов фона {Чёрный + 7}
+enum { dark, snow, moss, clay, coral, berry, iris, sky,                                                 // Константы для 7 цветов символов {Чёрный + 7}
+       Dark = 128, Snow, Moss, Clay, Coral, Berry, Iris, Sky, };                                        // Константы для 7 цветов фона {Чёрный + 7}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
