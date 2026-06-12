@@ -154,7 +154,7 @@ void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { if (!c) { var.R  = 0; var.G 
   else { if (n == Maxcol) n++; 
         if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB; var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
         else { var.Z = var.U + (c * 512) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
-void GenLast(int16_t c) { GenRGB(Off, c, 512); GenFC(last, Base.Deep); c = 8192; uint8_t* off = (uint8_t*)VRam.addr + 4064;
+void GenLast(int16_t c) { if (( c % 512)) { GenRGB(Off, c, 512); GenFC(last, Base.Deep); } c = 8192; uint8_t* off = (uint8_t*)VRam.addr + 4064;
   if (var.dpal != (uint8_t*)VRam.addr) { off += c; c = -c; } MemCpy(off + c, off, 32); off += 4096; MemCpy(off + c, off, 32); }
 void GenPalette(uint8_t set) { var.X = (Base.Colours < Maxcol) ? On + Base.Colours : Fdark; SetPalette(set);
   while(var.X--) { GenRGB(set, var.X, Base.Colours); GenFC(var.X, Base.Deep); } GenLast(513); }

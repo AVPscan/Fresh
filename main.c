@@ -12,17 +12,17 @@
 
 void body(void) {  // пока не дописано WinData,Render
   char *p = var.dbuf + 512, *b = p; uint8_t l, v, j = 50, w = Base.Colours, i = On + w; Print(Sys.Inc, Off, "\033[H");
-  while(i--) { Print((w - i + Fdark), var.A, " "); } Sys.Fone = Firis; Print(Sys.Fone, var.A, "\n"); Cell s = ((VRam.size + 1023) / 1024); *p++ = 'v'; i = 3;
+  while(i--) { Print((w - i + Fdark), var.A, " "); } Print(Sys.Fone, var.A, "\n"); Cell s = ((VRam.size + 1023) / 1024); *p++ = 'v'; i = 3;
   while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } snprintf(p, 91, " %ld Kbyte %d %d c%d r%d ", s, Base.CellP, Base.Win, TS.c, TS.r); i = (uint8_t)StrLen(b);
-  Print(moss, aI, b); snprintf(b, 100, " Time %s             ", Base.T); if ((uint8_t)StrLen(b) > (j - 1 - i)) { *(b + j - 1 - i) = Off; }
+  Print((8 * Base.Colours) / 15, aI, b); snprintf(b, 100, " Time %s             ", Base.T); if ((uint8_t)StrLen(b) > (j - 1 - i)) { *(b + j - 1 - i) = Off; }
   if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(127, Off, b); if (TS.r < 3) return;
   snprintf(b, 100, "\nH%d A%d D%d C%d x%d y%d %d %d b%d x%d y%d                         ", Base.Hz/10, Base.Apm, Base.Deep, Base.Colours, VP.X, VP.Y, VP.Xs, VP.Ys,
-  Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print(moss, aC | aB, b); if (TS.r < 4) return;
-  if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10);
+  Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print((12 * Base.Colours) / 15, aC | aB, b);
+  if (TS.r < 4) { return; } if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Data; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10);
     w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Keys(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
     if (!(w)) { *(p + l) = 0; while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
     snprintf(p, 100, "                  "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; }
-    if (TS.r > 3) Print(coral, aF , b); } }
+    if (TS.r > 3) Print(dark, aF , b); } }
 //void body(void) { WinData(VP.Wec, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
 void sb(void) { if (!Base.On) SetBorder(Base.On, ++Sys.Border); }
 void tim(void) { static int16_t c = Off; GenLast(c++); SetBorder(Base.On, Sys.Border); }
