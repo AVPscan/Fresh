@@ -73,4 +73,3 @@ void SWD(void) { if (!VRam.addr) return;
     return; }
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
 
-

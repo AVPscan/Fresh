@@ -24,10 +24,10 @@ void body(void) {  // пока не дописано WinData,Render
     snprintf(p, 100, "                  "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; }
     if (TS.r > 3) Print(coral, aF , b); } }
 //void body(void) { WinData(VP.Wec, "%1b%2d%3d%4s", VP.Mode, VP.X, VP.Y, Base.T); }
-void sb(void) { if (!++Sys.Border || Sys.Border > (Base.Colours + Fdark)) { Sys.Border = Fdark; } SetBorder(); }
-void tim(void) { static int16_t c = 511; if (--c < 0) { c = 511; } Grgb(Off, c, 511); GenFonCol(last, Base.Deep); }
+void sb(void) { if (++Sys.Border < Fdark || Sys.Border > (Base.Colours + Fdark)) { Sys.Border = Fdark; } SetBorder(); }
+void tim(void) { static int16_t c = 513; Grgb(Off, c, 512); GenFonCol(last, Base.Deep); c++; }
 
-void Init(void) { GlobalSet(11, Off, 2, 500, 200); SysSet(7, 24, 5); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+void Init(void) { GlobalSet(11, Off, 2, 500, 200); SysSet(7, 24, 25); SKeys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
   ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,Rand(Base.Colours), Off, Off, 80, 24); WinExecs(control, K_NO, body);
   WinData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), moss, moss, last); WinExecs(control, K_Ctrl_K, WSwitch);
   WinSet(W1, On, On); WinView(W1, 10, 3); Events(' ', Timer, K_ALT_TAB, K_ALT_ENT); Execs(sb, tim, WinDown, WinUp); Sys.Win = W1; }

@@ -11,16 +11,16 @@
 #define SYS_H
 
 #include <stdint.h>
-                                              // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62] из-за перехода на иной тип
+                                              // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62]
 #define CellPow   13                          // Масштаб холста [7..62] {по сути создание буфера для данных}
 #define Wind      500                         // Максимально окон на холсте [1..65535] {окна безрамочные по сути спрайты}
 #define FHow      2                           // Частота вызова обработчика таймера [Off{0}..FHz] Гц
 #define FHz       500                         // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
-#define FApm      144                         // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
+#define FApm      200                         // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    8                           // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
-#define Fcolour   127                         // Количество оттенков света на старте [1..127] {0 - чёрный всегда есть, 2 палитры,метода автоматического создания}
+#define Fcolour   126                         // Количество оттенков света на старте [1..126] {0 - чёрный всегда есть, 2 палитры,метода автоматического создания}
 
-#if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным разрешением
+#if CellPow < 15                              // Создаём новый тип данных, достаточный для работы с нужным масштабом
     typedef uint16_t ugoc;                    
     typedef int16_t  goc;
 #elif CellPow < 31
@@ -38,9 +38,9 @@ enum {
     b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
     b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0,             //  маски
     aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,                        // Режимы вывода текста
-    On = 0x01, Off = 0x00 };                                                                            // Удобные константы
+    On = 0x01, Off = 0x00, Maxcol = 126, last = 127, Flast = 255 };                                     // Удобные константы
 enum {                                                                                                  // Расширенный набор ascii + все значимые клавиши клавиатуры
-    K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // K_Mouse вектор обработчика мыши
+    K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // K_Mouse вектор обработчика мыши {не используется, но можно повесить функцию}
     K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  // Timer вектор обработчика таймера
     K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,                     // RPU  вектор обработчика чтение клавиатуры,мыши и обработка входного UTF8
     K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,
@@ -49,8 +49,8 @@ enum {                                                                          
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, sky, iris, berry, coral, clay, moss, snow, last = 127,                                     // Константы для 7 цветов символов {Чёрный + 7}
-       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow, Flast = 255 };                    // Константы для 7 цветов фона {Чёрный + 7}
+enum { dark, sky, iris, berry, coral, clay, moss, snow,                                                 // Константы для 7 цветов символов {Чёрный + 7}
+       Fdark = 128, Fsky, Firis, Fberry, Fcoral, Fclay, Fmoss, Fsnow };                                 // Константы для 7 цветов фона {Чёрный + 7}
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; goc Xr, Yr; } Var_;

@@ -82,4 +82,3 @@ uint8_t SyncSize(void) {
   if (w == TS.c - 1 && h == TS.r - 1) return 0;
   TS.c = w + 1; TS.r = h + 1; return 1; }
 
-

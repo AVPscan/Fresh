@@ -136,7 +136,7 @@ void Print(uint8_t n, uint8_t m, char *str) { char *src, *dst = var.dbuf; PalBuf
   else { if (n == var.I) { if (var.A) *(dst - 1) = 'm'; } else { var.I = n; MemCpy(dst, pal->d + var.A, pal->l - var.A); dst += pal->l - var.A; } }
   ugoc len = StrLen(str); MemCpy(dst, str, len); SysWrite(var.dbuf, dst + len - var.dbuf); var.A = m; }
 void GenFonCol(uint8_t c, uint8_t deep) {
-  uint8_t i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > 127) ? 127 : c;
+  uint8_t i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c > last) ? last : c;
   char *d[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)d[k], *pal = APal(c), *src = APal(c + 128);
   if (k == 1 ) { var.R  = (16 + 36 * ((var.R  * 5 + 128) / 255) + 6 * ((var.G * 5 + 128)/ 255) + ((var.B * 5 + 128)/ 255)); }
   else  { if (!k) { var.R  = (((var.R  * 299 + var.G * 587 + var.B * 114) > 127999) ? 90 : 30) + (((var.R  > 127) << 2) | ((var.G > 127) << 1) | (var.B > 127)); }
@@ -149,16 +149,17 @@ void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
 void SetBorder(void) { var.Y = var.F; Print(Sys.Border, var.A, "\033[2J"); var.F = var.Y; }
 void SetPalette(uint8_t set) { var.dpal = (uint8_t*)VRam.addr; if (set) { var.dpal += 8192; } }
 void SwitchPalette(void) { uint8_t* a = (uint8_t*)VRam.addr; if (a == var.dpal) { a += 8192; } var.dpal = a; }
-void Grgb(uint8_t mode, uint16_t c, uint16_t n) { if (c == n) { var.R  = 255; var.G = var.R ; var.B = var.R ; } else if (!c) { var.R  = 0; var.G = 0; var.B = 0; } 
-  else { if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB; var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
-         else { var.Z = var.U + (c * 512) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
-void GenPalette(uint8_t set) { var.X = On + Base.Colours; SetPalette(set); while(var.X--) { Grgb(set, var.X, Base.Colours); GenFonCol(var.X, Base.Deep); } 
-  Grgb(set, On, On); GenFonCol(127, Base.Deep); }
+void Grgb(uint8_t mode, uint16_t c, uint16_t n) { if (!c) { var.R  = 0; var.G = 0; var.B = 0; } else if (c == n) { var.R  = 255; var.G = var.R ; var.B = var.R ; }
+  else { if (n == Maxcol) n++; 
+        if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB; var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
+        else { var.Z = var.U + (c * 512) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } } }
+void GenPalette(uint8_t set) { var.X = (Base.Colours < Maxcol) ? On + Base.Colours : Fdark; SetPalette(set);
+  while(var.X--) { Grgb(set, var.X, Base.Colours); GenFonCol(var.X, Base.Deep); } Grgb(set, On, On); GenFonCol(last, Base.Deep); }
 void SysInit(uint8_t col, uint8_t deep, uint8_t how) {
   Base.FTime = ((Base.On = (how > Base.Hz) ? Base.Hz : how)) ? Base.On : 1; var.Loop = (Base.Apm * Base.Hz) / Base.FTime;
-  col = (col < 1) ? 1 : (col > 127) ? 127 : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8;
+  col = (col < 1) ? 1 : (col > Maxcol) ? Maxcol : col; deep = (deep < b3) ? 3 : (deep > b3) ? 24 : 8;
   if (col != Base.Colours || deep != Base.Deep) { Base.Colours = col; Base.Deep = deep; var.U = Off; GenPalette(On); GenPalette(Off); }
-  Sys.Fone = Base.Colours + 128; Sys.Border = Fdark; Sys.Inc = dark; var.I = Sys.Border; var.A = Off; }
+  Sys.Fone = Base.Colours + Fdark; Sys.Border = Fdark; Sys.Inc = dark; var.I = Sys.Border; var.A = Off; }
 Cell HowSize(uint8_t c, uint16_t w, Cell addr) { var.off = 1 << ((c << 1) - 1); var.dpal = (uint8_t*)addr;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
