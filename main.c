@@ -27,7 +27,7 @@ void body(void) {  // пока не дописано WinData,Render
 void sb(void) { if (!Base.On) SetBorder(Base.On, ++Sys.Border); }
 void tim(void) { static int16_t c = Off; GenLast(++c); SetBorder(Base.On, Sys.Border); }
 
-void Init(void) { System(10, 500, 10, 500, 250); Colour(15, 24); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+void Init(void) { Fresh(10, 500, 10, 500, 250); Colour(15, 24); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
   ugoc control = Window(On,coral, -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, body);
   WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), moss, moss, last); WExec(control, K_Ctrl_K, WSwitch);
   WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(sb, tim, WDown, WUp); Sys.Win = W1; }

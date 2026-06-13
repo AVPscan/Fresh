@@ -199,7 +199,7 @@ void _WSet(uint16_t n, uint8_t c, uint8_t *a);                        // Нас�
 void _SEvents(uint8_t c, uint8_t *a);                                 // Запомнить вектор системный событий
 void _SExec(uint8_t c, AFunction *a);                                 // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t c, uint8_t *a);                                   // Задать клавиши управления вьюпортом в обратном порядке
-void _SSet(uint8_t cp, uint8_t c, uint16_t *a);                       // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
+void _FSet(uint8_t cp, uint8_t c, uint16_t *a);                       // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
 void _CSet(uint8_t c, uint8_t *a);                                    // Изменить {colours{,deep}}
 void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define WView(n, ...) _WView(n, (uint8_t)((sizeof((dgoc[]){0, ##__VA_ARGS__}) / sizeof(dgoc)) - 1), (dgoc[]){0, ##__VA_ARGS__} + 1)
@@ -209,7 +209,7 @@ void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Заг�
 #define Even(...) _SEvents((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Exec(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define Keys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define System(cp, ...) _SSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
+#define Fresh(cp, ...) _FSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define Colour(...) _CSet((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал

@@ -286,7 +286,7 @@ void _SExec(uint8_t c, AFunction *a) { uint8_t k = K_Mouse; while(k--) { if (Eve
     if (Event(k)->C && c) { uint8_t j, x = Event(k)->C, i = Off; while(x-- && c--) { j = RPU;
         while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(uint8_t c, uint8_t *a) { uint8_t *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
-void _SSet(uint8_t cp, uint8_t c, uint16_t *a) { uint16_t w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
+void _FSet(uint8_t cp, uint8_t c, uint16_t *a) { uint16_t w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
   uint8_t b = (var.dpal == (uint8_t*)VRam.addr) ? 0 : 1; if (c--) { w = a[Off]; if (c--) { o = a[On]; if (c--) { h = a[2]; if (c) { f = a[3]; } } } }
   if ((var.off = InitVram(cp, w, o, h, f))) { VP.Loop = Off; return; } SetPalette(b); }
 void _CSet(uint8_t c, uint8_t *a) { uint8_t l = Base.Colours, d = Base.Deep, b = (var.dpal == (uint8_t*)VRam.addr) ? 0 : 1;
