@@ -68,7 +68,7 @@ void UTFinfo(uint8_t *s) { var.Y = *s++; Buf.Dat = Off; if (var.Y < 0x80) var.RG
       (var.RGB >= 0xFE30 && var.RGB <= 0xFE6F) || (var.RGB >= 0xFF00 && var.RGB <= 0xFF60) || (var.RGB >= 0xFFE0 && var.RGB <= 0xFFE6) || 
       (var.RGB >= 0x20000 && var.RGB <= 0x2FFFD) || (var.RGB >= 0x30000 && var.RGB <= 0x3FFFD) || (var.RGB >= 0x1F300)) { Buf.Dat |= 0x08; return; }
   Buf.Dat |= b2; }
-  
+
 void PushKey(void) { uint8_t l, d, i = Off; KeyBuf* k;
   if (Buf.Dat & b7) { Buf.Cod = Off; return; }
   if (Buf.pop == Buf.push) {
@@ -165,13 +165,13 @@ void ColourInit(uint8_t c, uint8_t d) {
 Cell HowSize(uint8_t c, uint16_t w, Cell a) { var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5)); var.dpal = (uint8_t*)a;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
-      if (var.event < (var.exec = var.event + (256 * sizeof(Events)))) {                                                   
-        if (var.exec < (var.dsys = var.exec + (256 * sizeof(AFunction)))) {
+      if (var.event < (var.exec = var.event + (sizeof(Events) << 8))) {
+        if (var.exec < (var.dsys = var.exec + (sizeof(AFunction) << 8))) {
           if (var.dsys < (var.dcon = var.dsys + sizeof(Sis))) {
             if (var.dcon < (uint8_t*)(var.dbuf = (char*)var.dcon + sizeof(Canalysis))) {
-              if (var.dbuf < (char*)(var.data = (uint8_t*)(var.dbuf + 14336 - (256 * (sizeof(Events) + sizeof(AFunction)) + sizeof(Canalysis) + sizeof(Sis))))) {
+              if (var.dbuf < (char*)(var.data = (uint8_t*)(var.dbuf + 14336 - (((sizeof(Events) + sizeof(AFunction)) << 8) + sizeof(Sis) + sizeof(Canalysis))))) {
                 if (var.data < (var.info = var.data + (var.off << 2))) {
-                  if (var.info < (var.ds = var.info + var.off)) { 
+                  if (var.info < (var.ds = var.info + var.off)) {
                     if (var.ds < (uint8_t*)(var.offset = (ugoc*)(var.ds + var.off))) {
                       if ((uint8_t*)var.offset < (var.dwin = (uint8_t*)(var.offset + var.off))) {
                         if (var.dwin < (uint8_t*)(var.end = (char*)(var.dwin + w * sizeof(Windows)))) return (Cell)(var.end - a); } } } } } } } } } } } return Off; }
@@ -204,8 +204,8 @@ void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 
   var.Xr = (x < -var.Xr) ? ((--Wait) ? -var.Xr : ((var.Xr << 1) + 1)) : (x > (var.Xr << 1)) ? ((--Wait) ? ((var.Xr << 1) + 1) : -var.Xr) : x;
   var.Yr = (y < -var.Yr) ? ((--Wait) ? -var.Yr : ((var.Yr << 1) + 1)) : (y > (var.Yr << 1)) ? ((--Wait) ? ((var.Yr << 1) + 1) : -var.Yr) : y; }
 void MoveConvas(dgoc dx, dgoc dy) { Buf.Ctrl = On; MoveNorm(VP.X + dx, VP.Y + dy);
-  dx = VP.X / (goc)TS.c; dy = VP.Y / (goc)TS.r; VP.X = var.Xr; VP.Y = var.Yr; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % (goc)TS.c)) : (VP.X % TS.c);
-  VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % (goc)TS.r)) : (VP.Y % TS.r); if ((VP.X / (goc)TS.c) != dx || (VP.Y / (goc)TS.r) != dy) Buf.Ctrl++; }
+  dx = VP.X / (goc)TS.c; dy = VP.Y / (goc)TS.r; VP.X = var.Xr; VP.Y = var.Yr; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % (goc)TS.c)) : (VP.X % (goc)TS.c);
+  VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % (goc)TS.r)) : (VP.Y % (goc)TS.r); if ((VP.X / (goc)TS.c) != dx || (VP.Y / (goc)TS.r) != dy) Buf.Ctrl++; }
 uint8_t MoveScreen(dgoc mx, dgoc my) {
   if ((((VP.X - mx) ^ VP.X) & Base.Ginf) || (((VP.Y - my) ^ VP.Y) & Base.Ginf)) return Off;
   MoveNorm(VP.X - mx, VP.Y - my); VP.X = var.Xr; VP.Y = var.Yr; VP.Xs -= mx; VP.Ys -= my; return On; }

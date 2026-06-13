@@ -81,4 +81,3 @@ uint8_t SyncSize(void) {
   uint16_t w = csbi.srWindow.Right - csbi.srWindow.Left, h = csbi.srWindow.Bottom - csbi.srWindow.Top;
   if (w == TS.c - 1 && h == TS.r - 1) return 0;
   TS.c = w + 1; TS.r = h + 1; return 1; }
-

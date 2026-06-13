@@ -53,11 +53,11 @@ goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONI
   Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
-Cell GetRam(Cell *size) { if (!*size) return 0;
-  Cell l = (*size + 0xFFF) & ~0xFFF; void *r = mmap(0, l, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (r == MAP_FAILED) { r = 0; l = 0; } *size = l; return (Cell)r; }
-  
-void FreeRam(Cell addr, Cell size) { if (addr) munmap((void*)addr, size); }
+Cell GetRam(Cell *s) { if (!*s) return 0;
+  *s = (*s + 0xFFF) & ~0xFFF; void *r = mmap(0, *s, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (r == MAP_FAILED) { r = 0; *s = 0; } return (Cell)r; }
+
+void FreeRam(Cell a, Cell s) { if (a) munmap((void*)a, s); }
 
 uint8_t SyncSize(void) { if (!VRam.addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
@@ -72,4 +72,3 @@ void SWD(void) { if (!VRam.addr) return;
       if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }
     return; }
   for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
-

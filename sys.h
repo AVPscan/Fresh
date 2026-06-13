@@ -60,8 +60,8 @@ enum { dark, snow, moss, clay, coral, berry, iris, sky, last = 127,             
        Maxcol = 126 };
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
                   Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, FTime, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, On, Apm, Hz, Rnd, Su[6], Time[6], Timer[6];
-                  char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Goc, Mcol, Mstr; } Base_;
+typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, On, Apm, Hz, FTime, Rnd, Su[6], Time[6], Timer[6];
+                  char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
@@ -83,7 +83,7 @@ typedef struct {                              //UTFinfo
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
     uint8_t ds      : 1;                      // бит 6      {0} Data {1} Structure
     uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
-} Data;
+} Dat;
 typedef struct {
     uint8_t len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
     uint8_t right   : 1;                      // бит 4      {1} к правому
@@ -94,14 +94,14 @@ typedef struct {
 typedef struct {
     uint8_t col        ;                      // бит x      код цвета {максимум 128 цветовых оттенка} 
     uint8_t colFon  : 1;                      // бит 7      {1/0} есть данные / нет данных
-} palette;
+} pal;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
     uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
     uint8_t cursor  : 1;                      // бит 2      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
-} EF;
+} F;
 
 extern MAS_ VRam;
 extern ViewPort_ VP;
@@ -113,8 +113,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {0,FHow,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,0,FApm,FHz,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
-                  {0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0,0}; \
+    Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,0,FApm,FHz,FHow,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+                  {0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
     ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 
@@ -125,7 +125,7 @@ extern Var_ var;
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
-#define Dat(r)       (var.data + ((r) << Base.D))                             // адрес начала буфера строки холста
+#define Con(r)        (var.data + ((r) << Base.D))                            // адрес начала буфера строки холста
 #define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                     // адрес данных ячейки холста
 #define Cpal(c, r)    (var.ds + (c) + ((r) << Base.DS))                       // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                    // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
