@@ -72,7 +72,7 @@ all: clean
 
 # Статическая сборка с musl (без -flto!)
 musl: clean
-	@musl-gcc $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 
 # Только показать размер
