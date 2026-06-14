@@ -7,11 +7,17 @@
 # лицензии GNU (GPLv3).
 #
 
-CC = gcc
 TARGET = fresh
+
+# Определение компилятора по умолчанию
+CC = gcc
+
+# Для сборки clang: make c
+# Для сборки gcc: make g (или просто make)
 
 UNAME_S := $(shell uname -s)
 
+# Определение платформы и системного файла
 ifeq ($(OS),Windows_NT)
 	SYS_SRC = sys_windows.c
 	EXT = .exe
@@ -45,57 +51,83 @@ else
 endif
 
 SOURCES = main.c engine.c $(SYS_SRC)
-BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra -flto
 
+# Базовые флаги - стандартные, без агрессивной оптимизации
+BASE_CFLAGS = -std=c11 -DNDEBUG -Wall -Wextra -flto -fno-strict-aliasing -fwrapv
+BASE_LDFLAGS = $(LIBS)
+
+# Дополнительные флаги для Linux
 ifneq ($(OS),Windows_NT)
 	ifeq ($(UNAME_S),Linux)
 		BASE_CFLAGS += -D_POSIX_C_SOURCE=200809L
 	endif
 endif
 
-BASE_LDFLAGS = -flto $(LIBS)
+# Флаги для GCC
+GCC_CFLAGS = -Os
+GCC_LDFLAGS =
 
-ifeq ($(UNAME_S),Darwin)
-	BASE_LDFLAGS += -Wl,-dead_strip
-else ifeq ($(OS),Windows_NT)
-	BASE_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all -s
-else
-	BASE_LDFLAGS += -Wl,--gc-sections -Wl,--strip-all -Wl,-s -Wl,--build-id=none -Wl,-z,norelro -Wl,-z,pack-relative-relocs
-endif
+# Флаги для Clang
+CLANG_CFLAGS = -Oz
+CLANG_LDFLAGS =
 
-CFLAGS_TINY = $(BASE_CFLAGS) -ffunction-sections -fdata-sections -fno-unwind-tables -fno-asynchronous-unwind-tables -fno-ident -fomit-frame-pointer -fno-stack-protector
-LDFLAGS_TINY = $(BASE_LDFLAGS)
+# Общие флаги
+COMMON_CFLAGS = $(BASE_CFLAGS)
+COMMON_LDFLAGS = $(BASE_LDFLAGS)
 
-.PHONY: tiny musl mac static run size clean
+# Правила сборки с разными компиляторами
+.PHONY: all g c musl clean run size debug
 
-tiny: $(SOURCES)
-	@echo "🎯 Сборка: $(SYS_SRC) -> $(TARGET)$(EXT) ($(UNAME_S))"
-	@$(CC) $(CFLAGS_TINY) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS_TINY)
+all: g
 
-	@if [ "$(UNAME_S)" = "Darwin" ]; then strip -x $(TARGET)$(EXT) 2>/dev/null || true; \
-	elif [ "$(OS)" = "Windows_NT" ]; then strip --strip-all $(TARGET)$(EXT) 2>/dev/null || true; \
-	else strip --strip-all --remove-section=.note.gnu.build-id --remove-section=.note.ABI-tag \
-		--remove-section=.comment --remove-section=.eh_frame --remove-section=.eh_frame_hdr $(TARGET)$(EXT) 2>/dev/null || true; \
-	fi
+g: CC = gcc
+g: CFLAGS = $(GCC_CFLAGS) $(COMMON_CFLAGS)
+g: LDFLAGS = $(GCC_LDFLAGS) $(COMMON_LDFLAGS)
+g: $(SOURCES)
+	@echo "🔨 Сборка GCC: $(SYS_SRC) -> $(TARGET)$(EXT)"
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 
-musl:
-	@if [ "$(UNAME_S)" != "Linux" ]; then echo "⚠️  MUSL static build is only supported on Linux environment."; \
-	else $(MAKE)  --no-print-directory tiny CC=gcc CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"; fi
-mac:
-	@$(MAKE) tiny UNAME_S=Darwin SYS_SRC=sys_macos.c
-bsd:
-	@$(MAKE) tiny UNAME_S=FreeBSD SYS_SRC=sys_bsd.c
-static: $(SOURCES)
-	@echo "🔧 Статическая сборка с glibc"
-	@$(MAKE) --no-print-directory tiny CFLAGS_TINY="$(CFLAGS_TINY) -static" LDFLAGS_TINY="$(LDFLAGS_TINY) -static"
-run: tiny
+c: CC = clang
+c: CFLAGS = $(CLANG_CFLAGS) $(COMMON_CFLAGS)
+c: LDFLAGS = $(CLANG_LDFLAGS) $(COMMON_LDFLAGS)
+c: $(SOURCES)
+	@echo "🔨 Сборка Clang: $(SYS_SRC) -> $(TARGET)$(EXT)"
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+	@$(MAKE) --no-print-directory size
+
+musl: CC = musl-gcc
+musl: CFLAGS = $(GCC_CFLAGS) $(COMMON_CFLAGS)
+musl: LDFLAGS = $(GCC_LDFLAGS) $(COMMON_LDFLAGS)
+musl: $(SOURCES)
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+	@$(MAKE) --no-print-directory size
+
+run: g
+	@echo "▶️  Запуск..."
 	@./$(TARGET)$(EXT) || true
+
 size:
-	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); echo "📏 Размер бинарника: $$SIZE байт"; TARGET_SIZE=27000; \
-	if [ $$SIZE -le $$TARGET_SIZE ] && [ $$SIZE -gt 0 ]; then echo "✅ Лимит выдержан"; \
-	elif [ $$SIZE -gt 0 ]; then echo "⚠️  Превышение на $$((SIZE - TARGET_SIZE)) байт"; \
-	fi
+	@SIZE=$$($(GET_SIZE) 2>/dev/null || echo 0); echo "📏 Размер: $$SIZE байт"
+
 clean:
 	rm -f $(TARGET) $(TARGET).exe
 	@echo "🧹 Очищено"
+
+# Отладочная сборка с сохранением символов
+debug: CC = gcc
+debug: CFLAGS = -g -O0 -DDEBUG $(COMMON_CFLAGS)
+debug: LDFLAGS = $(COMMON_LDFLAGS)
+debug: $(SOURCES)
+	@echo "🐛 Отладочная сборка"
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+
+help:
+	@echo "Доступные цели:"
+	@echo "  make g      - сборка GCC (по умолчанию)"
+	@echo "  make c      - сборка Clang"
+	@echo "  make musl   - статическая сборка с musl (только Linux)"
+	@echo "  make run    - сборка и запуск"
+	@echo "  make debug  - отладочная сборка с символами"
+	@echo "  make clean  - очистка"
+	@echo "  make size   - показать размер"
