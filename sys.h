@@ -68,7 +68,7 @@ typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef struct { uint8_t Attr, Fone, Border, Inc; uint16_t Win; } Sis;                                  // cA потоковый атрибут но Attr хранит его пока формируется кадр. Фон общий
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t pal, F; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
+typedef struct { uint8_t col, F; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
 typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 typedef struct { ugoc c, r; } CR_;
@@ -83,7 +83,7 @@ typedef struct {                              //UTFinfo
     uint8_t Ctrl    : 1;                      // бит 5      управляющий код
     uint8_t ds      : 1;                      // бит 6      {0} Data {1} Structure
     uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
-} Dat;
+} Data;
 typedef struct {
     uint8_t len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
     uint8_t right   : 1;                      // бит 4      {1} к правому
@@ -94,14 +94,14 @@ typedef struct {
 typedef struct {
     uint8_t col        ;                      // бит x      код цвета {максимум 128 цветовых оттенка} 
     uint8_t colFon  : 1;                      // бит 7      {1/0} есть данные / нет данных
-} pal;
+} palet;
 typedef struct {
     uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
     uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
     uint8_t cursor  : 1;                      // бит 2      {1} показывать {0} не показывать - курсор окна
     uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
     uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
-} F;
+} Flags;
 
 extern MAS_ VRam;
 extern ViewPort_ VP;
@@ -113,7 +113,7 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,0,FApm,FHz,FHow,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
+    Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FHow,FApm,FHz,0,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
                   {0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
     ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
@@ -121,7 +121,7 @@ extern Var_ var;
     
 #define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
-#define Event(m)       ((Events*)(var.event + ((m) << Base.V)))               // адрес начала структуры события
+#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
