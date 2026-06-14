@@ -96,6 +96,14 @@ c: $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 
+mac: CC = clang
+mac: CFLAGS = $(CLANG_CFLAGS) $(COMMON_CFLAGS)
+mac: LDFLAGS = $(CLANG_LDFLAGS) $(COMMON_LDFLAGS)
+mac: $(SOURCES)
+	@echo "🔨 Сборка для macOS: $(SYS_SRC) -> $(TARGET)$(EXT)"
+	$(CC) $(CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+	@$(MAKE) --no-print-directory size
+
 musl: CC = musl-gcc
 musl: CFLAGS = $(GCC_CFLAGS) $(COMMON_CFLAGS)
 musl: LDFLAGS = $(GCC_LDFLAGS) $(COMMON_LDFLAGS)
