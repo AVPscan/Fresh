@@ -48,7 +48,7 @@ jobs:
             artifact: windows-executable
           - desc: "macOS"
             os: macos-latest
-            cmd: make c
+            cmd: make mac
             artifact: macos-executable
 
     steps:
