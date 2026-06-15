@@ -165,15 +165,14 @@ Cell HowSize(uint8_t c, uint16_t w, Cell a) { var.off = (1 << ((c << 1) - 2)) | 
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
       if (var.event < (var.exec = var.event + (sizeof(Events) << 8))) {
-        if (var.exec < (var.dsys = var.exec + (sizeof(AFunction) << 8))) {
-          if (var.dsys < (var.dcon = var.dsys + sizeof(Sis))) {
-            if (var.dcon < (uint8_t*)(var.dbuf = (char*)var.dcon + sizeof(Canalysis))) {
-              if (var.dbuf < (char*)(var.data = (uint8_t*)(var.dbuf + 14336 - (((sizeof(Events) + sizeof(AFunction)) << 8) + sizeof(Sis) + sizeof(Canalysis))))) {
-                if (var.data < (var.info = var.data + (var.off << 2))) {
-                  if (var.info < (var.ds = var.info + var.off)) {
-                    if (var.ds < (uint8_t*)(var.offset = (ugoc*)(var.ds + var.off))) {
-                      if ((uint8_t*)var.offset < (var.dwin = (uint8_t*)(var.offset + var.off))) {
-                        if (var.dwin < (uint8_t*)(var.end = (char*)(var.dwin + w * sizeof(Windows)))) return (Cell)(var.end - a); } } } } } } } } } } } return Off; }
+        if (var.exec < (var.dcon = var.exec + (sizeof(AFunction) << 8))) {
+          if (var.dcon < (uint8_t*)(var.dbuf = (char*)var.dcon + sizeof(Canalysis))) {
+            if (var.dbuf < (char*)(var.data = (uint8_t*)(var.dbuf + 14336 - (((sizeof(Events) + sizeof(AFunction)) << 8) + sizeof(Canalysis))))) {
+              if (var.data < (var.info = var.data + (var.off << 2))) {
+                if (var.info < (var.ds = var.info + var.off)) {
+                  if (var.ds < (uint8_t*)(var.offset = (ugoc*)(var.ds + var.off))) {
+                    if ((uint8_t*)var.offset < (var.dwin = (uint8_t*)(var.offset + var.off))) {
+                      if (var.dwin < (uint8_t*)(var.end = (char*)(var.dwin + w * sizeof(Windows)))) return (Cell)(var.end - a); } } } } } } } } } } return Off; }
 Cell InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc);
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; w = (w > On) ? w : 2; if ((var.R = Base.Goc >> 1) > 2) var.R--;
   if (!VRam.size || c != Base.CellP || w != Base.Win) { var.addr = VRam.addr; var.size = VRam.size; MemCpy(var.Save, &var.dpal, sizeof(var.Save));
@@ -184,8 +183,8 @@ Cell InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { 
     Base.Mstr = ((var.off + (var.off << 3)) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.P = 5; Base.K = 3; Base.V = 2; Base.Count = 6;
     var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 1) ? 1 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 51) ? 50 : ((apm > 1000) ? 1000 : apm);
     Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Base.On = (how > Base.Hz) ? Base.Hz : how; Base.FTime = (Base.On) ? Base.On : 1;
-    var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Sys.Win = Base.Win; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off;
-    Convas.CH = Base.Mstr; Convas.H = Off; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Win = Base.Win - 1; VP.Mode = b2;
+    var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off;
+    Convas.CH = Base.Mstr; Convas.H = Off; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win + 1; VP.Win = Base.Win - 1; VP.Mode = b2;
     VP.Loop = On; Vector(RPU) = RPUEncode; } ColourInit(Base.Colours, Base.Deep); return Off; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); if (InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm)) { return Off; }
@@ -194,8 +193,8 @@ Cell SystemSwitch(void) {
   else { VRam.SystemSwitch++; SwitchRaw(); Print(var.I, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); } return On; }
 
 void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
-  if (VP.Mode & b1 && Sys.Win < Base.Win) {
-    if (Sys.Win < Convas.D || Sys.Win >= Convas.S) { Windows* w = Win(Sys.Win);
+  if (VP.Mode & b1 && Convas.Win < Base.Win) {
+    if (Convas.Win < Convas.D || Convas.Win >= Convas.S) { Windows* w = Win(Convas.Win);
       dgoc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
       if (w->Xr && w->Yr && c && s) {
         var.Xr = (x < w->Xr) ? ((--Wait) ? w->Xr : (w->Xr + c - 1)) : (x >= (w->Xr + c)) ? ((--Wait) ? (w->Xr + c - 1) : w->Xr) : x;
@@ -257,10 +256,10 @@ void WASwitch(void) { if (Win(VP.Wec)->F ^= b1) WView(VP.Wec); }
 void WDown(void) { if (Convas.D) { uint16_t l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
 void WUp(void) { if (Convas.D) { uint16_t l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
 
-void WTop(uint16_t n) { uint16_t l = Convas.D; if ((n > Convas.D && n < Convas.S) || n >= Convas.Win) return;
+void WTop(uint16_t n) { uint16_t l = Convas.D; if ((n > Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (n > l) { l = Convas.Max; } Win(n)->Layer = l; l -= n; while(l--) --Win(n + l)->Layer; }
 void _WView(uint16_t n, uint8_t c, dgoc *a) { dgoc x = Off, y = Off;
-  if ((n > Convas.D && n < Convas.S) || n >= Convas.Win) { return; } Windows* w = Win(n);
+  if ((n > Convas.D && n < Convas.S) || n >= Base.Win) { return; } Windows* w = Win(n);
   if (c > On) { x = a[Off]; if (!(y = a[On])) x = Off;
     if (x && !(w->F & b0)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
       if ((udgoc)VP.X > (udgoc)Base.Mcol || (udgoc)VP.Y > (udgoc)Base.Mstr) return; } }
@@ -275,23 +274,23 @@ uint16_t _Window(uint8_t t, int8_t col, uint8_t c, udgoc *a) { uint16_t l, n; Wi
   w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Base.Mstr; w->Xr = Off; w->Yr = Off; w->W = Off; w->H = Off;
   if (c > On) { if ((w->Xr = a[0])) { if (!(w->Yr = a[1])) w->Xr = Off; } } if (c > 2) { w->W = a[2]; if (c > 3) w->H = a[3]; }
   w->col = col; if (w->F == 9) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->F |= b1; } return n; }
-void _WExecs(uint16_t n, uint8_t cur, uint8_t c, AFunction *a) { if ((n > Convas.D && n < Convas.S) || n >= Convas.Win) return;
+void _WExecs(uint16_t n, uint8_t cur, uint8_t c, AFunction *a) { if ((n > Convas.D && n < Convas.S) || n >= Base.Win) return;
   if ((Win(n)->F & b0) && c--) { Event(cur)->W = n; Exe(cur, a[Off]);
     if (Event(cur)->C && c) { uint8_t j, k = Event(cur)->C, i = On; while(k-- && c--) { j = K_Mouse;
       while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } } }
-void _WSet(uint16_t n, uint8_t c, uint8_t *a) { if ((n > Convas.D && n < Convas.S) || n >= Convas.Win) return;
+void _WSet(uint16_t n, uint8_t c, uint8_t *a) { if ((n > Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (c--) { Windows* w = Win(n); w->F &= ~b2; if (a[Off]) { w->F |= b2; } if (c) { w->F &= ~b3; if (a[On]) { w->F |= b3; } } } }
-void _SEvents(uint8_t c, uint8_t *a) { uint8_t m, k = c; while(k--) { m = a[k]; Event(m)->W = Convas.Win; Event(m)->C = c; Event(m)->N = k; } }
-void _SExec(uint8_t c, AFunction *a) { uint8_t k = K_Mouse; while(k--) { if (Event(k)->W == Convas.Win) {
+void _SEvents(uint8_t c, uint8_t *a) { uint8_t m, k = c; while(k--) { m = a[k]; Event(m)->W = Base.Win; Event(m)->C = c; Event(m)->N = k; } }
+void _SExec(uint8_t c, AFunction *a) { uint8_t k = K_Mouse; while(k--) { if (Event(k)->W == Base.Win) {
   if (Event(k)->C && c) { uint8_t j, x = Event(k)->C, i = Off;
-    while(x-- && c--) { j = RPU; while(--j) { if (Event(j)->W == Convas.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
+    while(x-- && c--) { j = RPU; while(--j) { if (Event(j)->W == Base.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(uint8_t c, uint8_t *a) { uint8_t *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
 void _FSet(uint8_t cp, uint8_t c, uint16_t *a) { uint16_t w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
   uint8_t b = (var.dpal == (uint8_t*)VRam.addr) ? 0 : 1; if (c--) { w = a[Off]; if (c--) { o = a[On]; if (c--) { h = a[2]; if (c) { f = a[3]; } } } }
   if ((var.off = InitVram(cp, w, o, h, f))) { VP.Loop = Off; } SetPalette(b); }
 void _CSet(uint8_t c, uint8_t *a) { uint8_t l = Base.Colours, d = Base.Deep, b = (var.dpal == (uint8_t*)VRam.addr) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
-void _WData(uint16_t n, char *str, uint8_t count, udgoc *args) { if ((n > Convas.D && n < Convas.S) || n >= Convas.Win) return;
+void _WData(uint16_t n, char *str, uint8_t count, udgoc *args) { if ((n > Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {  
      } 
   (void)*str; (void)count; (void)*args; }

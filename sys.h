@@ -56,15 +56,14 @@ enum {                                                                          
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
 enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255 };                                        // Константы цвета {0-чёрный, 1-белый} фона {128-чёрный, 129-белый}
-typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
-                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, Br, A, X, Y, Rz; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
+typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
+                  Cell off, addr, size, Save[12]; uint8_t R, G, B, I, F, Br, A, X, Y, Rz; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V, Inc, Fone, Border, Attr; uint16_t Win, On, Apm, Hz, FTime, Rnd,
                   Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
-typedef struct { uint8_t Attr, Fone, Border, Inc; uint16_t Win; } Sis;                                  // cA потоковый атрибут но Attr хранит его пока формируется кадр. Фон общий
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
 typedef struct { uint8_t col, F; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
@@ -121,7 +120,6 @@ extern Var_ var;
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
-#define Sys           (*(Sis*)var.dsys)                                       // адрес полное состояние системы при входе и режимы
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
 #define Con(r)        (var.data + ((r) << Base.D))                            // адрес начала буфера строки холста
 #define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                     // адрес данных ячейки холста
