@@ -55,13 +55,11 @@ enum {                                                                          
     K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,
     K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse,
     Timer, RPU = 255 };
-enum { dark, snow, moss, clay, coral, berry, iris, sky, last = 127,                                     // Константы для 6 цветов символов {0-чёрный, 1-белый + 6}
-       Dark, Snow, Moss, Clay, Coral, Berry, Iris, Sky, Last = 255,                                     // Константы для 6 цветов фона {0-чёрный, 1-белый + 6}
-       Maxcol = 126 };
+enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255 };                                        // Константы цвета {0-чёрный, 1-белый} фона {128-чёрный, 129-белый}
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dsys, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
-                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V; uint16_t Win, On, Apm, Hz, FTime, Rnd, Su[6], Time[6], Timer[6];
-                  char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
+                  Cell off, addr, size, Save[13]; uint8_t R, G, B, I, F, Br, A, X, Y, Rz; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
+typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V, Inc, Fone, Border, Attr; uint16_t Win, On, Apm, Hz, FTime, Rnd,
+                  Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
@@ -113,8 +111,8 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
     Var_ var = {0}; \
-    Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,Wind,FHow,FApm,FHz,0,1,{0,0,0,0,0,0},{0,0,0,0,0,0}, \
-                  {0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
+    Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,dark,Snow,Dark,0,Wind,FHow,FApm,FHz,0,1,{0,0,0,0,0,0}, \
+                  {0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
     ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
     KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
     MAS_ VRam = {0,0,1}; 

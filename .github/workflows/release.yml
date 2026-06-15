@@ -24,8 +24,8 @@ jobs:
       - uses: actions/checkout@main
       - name: Build Static
         run: |
-          apk add --no-cache build-base make musl binutils
-          make musl
+          apk add --no-cache build-base make
+          make musl CC=gcc
       - name: Upload
         uses: actions/upload-artifact@main
         with:
@@ -44,11 +44,11 @@ jobs:
             artifact: linux-dynamic
           - desc: "Windows"
             os: windows-latest
-            cmd: make OS=Windows_NT
+            cmd: make
             artifact: windows-executable
           - desc: "macOS"
             os: macos-latest
-            cmd: make mac
+            cmd: make
             artifact: macos-executable
 
     steps:

@@ -148,7 +148,7 @@ void GenFC(uint8_t c, uint8_t deep) { uint8_t i, j = 1, k = (deep > b3) ? 2 : (d
     src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
 void SetBorder(uint8_t on, uint8_t b) { if (on) { b = Last; } else if (b < Dark || b > (Base.Colours + Dark)) b = Dark; 
-  var.Z = var.F; Print((Sys.Border = b), var.A, "\033[2J"); var.F = var.Z; }
+  var.Rz = var.F; Print((var.Br = b), var.A, "\033[2J"); var.F = var.Rz; }
 void SetPalette(uint8_t set) { var.dpal = (uint8_t*)VRam.addr; if (set) { var.dpal += 8192; } }
 void SwitchPalette(void) { uint8_t* a = (uint8_t*)VRam.addr; if (a == var.dpal) { a += 8192; } var.dpal = a; }
 void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB;
@@ -160,8 +160,7 @@ void GenPalette(uint8_t s) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colou
   var.R = 0; var.G = 0; var.B = 0; GenFC(Off, Base.Deep); var.R = 255; var.G = var.R ; var.B = var.R ; var.X = Base.Colours;
   while(var.X) { GenFC((Base.Colours - var.X + On), Base.Deep); GenRGB(s, --var.X, Base.Colours); } }
 void ColourInit(uint8_t c, uint8_t d) { c = (c < 1) ? 1 : (c > Maxcol) ? Maxcol : c; d = (d < b3) ? 3 : (d > b3) ? 24 : 8;
-  if (c != Base.Colours || d != Base.Deep) { Base.Colours = c; Base.Deep = d; var.U = Off; GenPalette(On); GenPalette(Off); }
-  Sys.Border = Dark; Sys.Fone = Snow; Sys.Inc = dark; var.F = dark; var.I = Snow; var.A = Off; }
+  if (c != Base.Colours || d != Base.Deep) { Base.Colours = c; Base.Deep = d; var.U = Off; GenPalette(On); GenPalette(Off); } }
 Cell HowSize(uint8_t c, uint16_t w, Cell a) { var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5)); var.dpal = (uint8_t*)a;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
@@ -190,8 +189,9 @@ Cell InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { 
     VP.Loop = On; Vector(RPU) = RPUEncode; } ColourInit(Base.Colours, Base.Deep); return Off; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); if (InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm)) { return Off; }
-    var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize(); Print(Sys.Fone, var.A, "\033[?1049;7;1000h\033[?25l"); SetBorder(Base.On, Sys.Border); }
-  else { VRam.SystemSwitch++; SwitchRaw(); Print(Sys.Fone, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); } return On; }
+    var.I = Base.Inc + 1; var.F = Base.Fone + 1; var.Br = Base.Border + 1; var.A = Base.Attr; var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize();
+    Print(Base.Inc , var.A, "\033[?1049;7;1000h"); Print(Base.Fone , var.A, "\033[?25l"); SetBorder(Off, Base.Border); }
+  else { VRam.SystemSwitch++; SwitchRaw(); Print(var.I, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); } return On; }
 
 void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Sys.Win < Base.Win) {
@@ -230,7 +230,7 @@ void Free(void) { dgoc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector
   if (Buf.Ctrl) {
     if (Buf.Cod == VP.scs) { VP.dXY = On; Base.Speed = (VP.Mode ^= b2) ? Base.Spd1 : Base.Spd0; }
     else if (Buf.Cod == VP.Anchor) VP.Mode ^= b1;
-    else if (Buf.Cod == VP.bcu) { SwitchPalette(); SetBorder(Base.On, Sys.Border); }
+    else if (Buf.Cod == VP.bcu) { SwitchPalette(); SetBorder(Base.On, var.Br); }
     else if (Buf.Cod == VP.ssc) VP.Mode ^= b0;
     else if (Buf.Cod == VP.Exit) VP.Loop = Off;
     else {
@@ -246,7 +246,7 @@ void Free(void) { dgoc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector
     if (Base.On && Vector(Timer)) { VP.Wec = Event(Timer)->W; Vector(Timer)(); }
     var.Syn %= var.Loop; }
   if (Vector(Off)) { VP.Wec = Event(Off)->W; Vector(Off)(); }
-  if (SyncSize() || Buf.Ctrl > On) { SetBorder(Base.On, Sys.Border); } else {  } }
+  if (SyncSize() || Buf.Ctrl > On) { SetBorder(Base.On, var.Br); } else {  } }
 
 void RPUEncode(void) { GetKey(Buf.Key); UTFinfo(Buf.Key); }
 void Nop(void) { }
