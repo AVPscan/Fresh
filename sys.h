@@ -57,7 +57,7 @@ enum {                                                                          
     Timer, RPU = 255 };
 enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255 };                                        // Константы цвета {0-чёрный, 1-белый} фона {128-чёрный, 129-белый}
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset; uint8_t *dwin; char *end;
-                  Cell off, addr, size, Save[12]; uint8_t R, G, B, I, F, Br, A, X, Y, Rz; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
+                  Cell off, addr, size, Save[12]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z; int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V, Inc, Fone, Border, Attr; uint16_t Win, On, Apm, Hz, FTime, Rnd,
                   Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 typedef void (*AFunction)(void);
