@@ -8,14 +8,9 @@
 #
 
 TARGET = fresh
-
-# Определяем ОС
 UNAME_S := $(shell uname -s 2>/dev/null || echo Windows)
-
-# Базовые флаги (без -flto! он раздувает musl)
 BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra -flto
 LDFLAGS =
-
 ifeq ($(OS),Windows_NT)
 	SYS_SRC = sys_windows.c
 	EXT = .exe
@@ -65,26 +60,21 @@ SOURCES = main.c engine.c $(SYS_SRC)
 
 .PHONY: musl all run clean size
 
-# Обычная сборка
 all: clean
 	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 
-# Статическая сборка с musl (без -flto!)
 musl: clean
 	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 
-# Только показать размер
 size:
 	@SIZE=$$($(GET_SIZE)); echo "$(TARGET)$(EXT) $$SIZE byte"
 
-# Запуск
 run: clean
 	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 	@$(RUN_CMD) || echo "(exit $$?)"
 
-# Очистка
 clean:
 	@$(RM) $(TARGET)$(EXT) 2>/dev/null || true

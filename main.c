@@ -22,7 +22,7 @@ void body(void) {  // пока не дописано WinData,Render
     w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Key(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
     if (!(w)) { *(p + l) = 0; while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
     snprintf(p, 100, "                                 "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) *(b + TS.c) = Off;
-    if (TS.r > 3) Print((Base.On) ? Last : Base.Border, aF | aI, b); } }
+    if (TS.r > 3) Print((Base.On) ? last : dark, aF | aI, b); } }
 //void body(void) { WinData(VP.Wec, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
 void sb(void) { if (!Base.On) SetBorder(Base.On, ++Base.Border); }
 void tim(void) { static int16_t c = Off; GenLast(++c); SetBorder(Base.On, Base.Border); }
@@ -34,7 +34,7 @@ void Init(void) { Fresh(10, 500, 10, 500, 250); Colour(7, 24); Keys(K_F1,K_Ctrl_
 
 void Help(Cell argc, char *argv[], Cell *flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (*flag) { Print(Dark, Off, "\033[?1049l"); Print(Snow, Off, ""); Print(dark, aB | aC, " Created by Alexey Pozdnyakov "); *flag = Off;
-        Print(dark, aC, "in 07.02.2026 version 10.05 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
+      if (*flag) { Print(Dark, Off, "\033[?1049l"); Print(dark, aB | aC, " Created by Alexey Pozdnyakov "); *flag = Off;
+        Print(dark, aC, "in 07.02.2026 version 10.06 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); Help((Cell)argc, argv, &flag);
   if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
