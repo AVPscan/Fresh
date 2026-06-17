@@ -35,6 +35,6 @@ void Init(void) { Fresh(10, 500, 10, 500, 250); Colour(7, 24); Keys(K_F1,K_Ctrl_
 void Help(Cell argc, char *argv[], Cell *flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (*flag) { Print(Dark, Off, "\033[?1049l"); Print(dark, aB | aC, " Created by Alexey Pozdnyakov "); *flag = Off;
-        Print(dark, aC, "in 07.02.2026 version 10.06 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
+        Print(dark, aC, "in 05.02.2026 version 10.07 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); Help((Cell)argc, argv, &flag);
   if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
