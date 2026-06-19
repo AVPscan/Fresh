@@ -157,8 +157,8 @@ void GenLast(int16_t c) { GenRGB(Off, c, 511); GenFC(last, Base.Deep); c = 8192;
 void GenPalette(uint8_t s) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours > Maxcol) ? Maxcol : Base.Colours; SetPalette(s); GenLast(Off);
   var.R = 0; var.G = 0; var.B = 0; GenFC(Off, Base.Deep); var.R = 255; var.G = var.R ; var.B = var.R ; var.X = Base.Colours;
   while(var.X) { GenFC((Base.Colours - var.X + On), Base.Deep); GenRGB(s, --var.X, Base.Colours); } }
-void ColourInit(uint8_t c, uint8_t d) { Base.Colours = (c < 1) ? 1 : (c > Maxcol) ? Maxcol : c; Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8;
-  var.U = Off; GenPalette(On); GenPalette(Off); }
+void ColourInit(uint8_t c, uint8_t d) { c = (c < 1) ? 1 : (c > Maxcol) ? Maxcol : c; d = (d < b3) ? 3 : (d > b3) ? 24 : 8;
+  if (c != Base.Colours || d != Base.Deep) { Base.Colours = c; Base.Deep = d; var.U = Off; GenPalette(On); GenPalette(Off); } }
 Cell HowSize(uint8_t c, uint16_t w, Cell a) { var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5)); var.dpal = (uint8_t*)a;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
     if (var.dkey < (var.event = var.dkey + 2048)) {
@@ -183,10 +183,11 @@ Cell InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { 
     Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Base.On = (how > Base.Hz) ? Base.Hz : how; Base.FTime = (Base.On) ? Base.On : 1;
     var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off;
     Convas.CH = Base.Mstr; Convas.H = Off; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win + 1; VP.Win = Base.Win - 1; VP.Mode = b2;
-    VP.Loop = On; Vector(ECD) = Encode; Vector(RPE) = RPEncode; } ColourInit(Base.Colours, Base.Deep); return Off; }
+    VP.Loop = On; Vector(ECD) = Encode; Vector(RPE) = RPEncode; } return Off; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); if ((InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm))) return Off;
-    var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize(); Print(Base.Inc, Base.Attr, "\033[?1049;7;1000h\033[?25l"); }
+    var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize(); Base.Colours++; ColourInit(Base.Colours - 1, Base.Deep);
+    Print(Base.Inc, Base.Attr, "\033[?1049;7;1000h\033[?25l"); }
   else { VRam.SystemSwitch++; SwitchRaw(); Print(Base.Inc, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); }
   return On; }
 

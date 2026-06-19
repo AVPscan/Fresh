@@ -34,7 +34,7 @@ void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LE
 
 void Help(Cell argc, char *argv[], Cell *flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (*flag) { Print(Snow, Off, "\033[?1049l"); Print(dark, aB | aC, "Created by Alexey Pozdnyakov "); *flag = Off;
-        Print(dark, aC, "in 05.02.2026 version 10.08 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
+      if (*flag) { Print(Dark, Off, "\033[?1049l"); Print(Snow, Off, ""); Print(dark, aB | aC, "Created by Alexey Pozdnyakov "); *flag = Off;
+        Print(dark, aC, "in 05.02.2026 version 10.09 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); Help((Cell)argc, argv, &flag);
-  if (flag) { Init(); while(VP.Loop) Free(); } flag = SystemSwitch(); return (int)var.G; }
+  if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
