@@ -9,16 +9,21 @@
  
 #ifndef SYS_H
 #define SYS_H
-
 #include <stdint.h>
+
 // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62]
+enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255, On = 0x01, Off = 0x00 };
 #define CellPow   13    // Масштаб холста [7..62] {по сути создание буфера для данных}
 #define Wind      1024  // Максимально окон на холсте [2..65535] {окна безрамочные по сути спрайты}
-#define FHow      2     // Частота вызова обработчика таймера [Off{0}..FHz] Гц
+#define FHow      10    // Частота вызова обработчика таймера [Off{0}..FHz] Гц
 #define FHz       500   // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
 #define FApm      200   // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    24    // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
 #define Fcolour   126   // Количество оттенков света на старте [1..126] {0 - чёрный 1 - белый, 2 палитры и метода автосоздания}
+#define FInc      dark  // Цвет
+#define FFone     Snow  // Фон
+#define FBorder   Dark  // Фон за пределами холста
+#define FAttr     Off   // Атрибуты текста
 #if CellPow < 17        // Масштабирование разрешения в зависимости от размера холста(буфер)
   typedef uint32_t udgoc;
   typedef int32_t  dgoc;
@@ -41,20 +46,19 @@ typedef uintptr_t Cell; // Разрядность процессора
 enum {
   b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
   b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0,             //  маски
-  aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40, On = 0x01, Off = 0x00};// Режимы вывода текста
-enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255 };                                      // Константы цвета {0-чёрный, 1-белый} фона {128, 129}
-enum {                                                                                                // Расширенный набор ascii + все значимые клавиши
-  K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         //       клавиатуры, K_Mouse [....] Timer диапазон
-  K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  //       векторов пользователя
-  K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,                     // Timer вектор обработчика таймера
-  K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,                                        // ECD   вектор обработчика декодирование из
-  K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,                     //       Buf.Key в Buf.Dat
-  K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,                                               // RPE   вектор обработчика чтение в Buf.Key и
-  K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,                                                    //       декодирование из Buf.Key в Buf.Dat
-  K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE };          
+  aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40};                       // Режимы вывода текста
+enum {
+  K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // Расширенный набор ascii + все значимые клавиши
+  K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  //       клавиатуры, K_Mouse [....] Timer диапазон
+  K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,                     //       векторов пользователя
+  K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,                                        // Timer вектор обработчика таймера
+  K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,                     // ECD   вектор обработчика декодирование из
+  K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,                                               //       Buf.Key в Buf.Dat
+  K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,                                                    // RPE   вектор обработчика чтение в Buf.Key и
+  K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE };          //       декодирование из Buf.Key в Buf.Dat
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset;
-  uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, I, F, A, X, Y; int16_t U, Z;
+  uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, C, A, X, Y, D; int16_t U, Z;
   int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V, Inc, Fone, Border, Attr;
   uint16_t Win, On, Apm, Hz, FTime, Rnd, Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed;
@@ -113,7 +117,7 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
   Var_ var = {0}; \
-  Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,dark,Snow,Dark,0,Wind,FHow,FApm,FHz,0,1, \
+  Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,FInc,FFone,FBorder,FAttr,Wind,FHow,FApm,FHz,0,1, \
     {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
   ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
   KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
@@ -163,7 +167,7 @@ int8_t Fsin(int16_t u);                                               // Син�
 int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127])
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
-uint8_t CreateCA(uint8_t n, uint8_t m, char *dst);                    // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
+uint16_t CreateCA(uint8_t c, uint8_t a, char *Buf);                   // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
 void Print(uint8_t n, uint8_t m, char *str);                          // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
 void GenFC(uint8_t c, uint8_t deep);                                  // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру согласно Base.Deep
 void SetSeparator(char s);                                            // Установить разделитель в формат времени
