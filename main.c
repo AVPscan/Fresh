@@ -27,7 +27,7 @@ void body(void) {  // пока не дописано WinData,Render
 void sb(void) { if (!Base.On) SetBorder(Base.On, ++Base.Border); }
 void tim(void) { static int16_t c = Off; GenLast(++c); SetBorder(Base.On, Base.Border); }
 
-void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(10, 500, 10, 500, 250); Colour(7, 24);
+void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 500, Off, 500, 250); Colour(7, 24);
   ugoc control = Window(On,dark, -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, body);
   WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), dark, dark, last); WExec(control, K_Ctrl_K, WSwitch);
   WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(sb, tim, WDown, WUp); Convas.Win = W1; }
@@ -35,6 +35,6 @@ void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LE
 void Help(Cell argc, char *argv[], Cell *flag) {
   if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
       if (*flag) { Print(Dark, Off, "\033[?1049l"); Print(Snow, var.A, ""); Print(I4, aB | aC, "Created by Alexey Pozdnyakov "); *flag = Off;
-        Print(I3, aC, "in 05.02.2026 version 10.10 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
+        Print(I5, aC, "in 05.02.2026 version 10.11 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
 int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); Help((Cell)argc, argv, &flag);
   if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }

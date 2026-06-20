@@ -158,9 +158,9 @@ void GenPalette(uint8_t s) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colou
   var.R = 0; var.G = 0; var.B = 0; GenFC(Off, Base.Deep); var.R = 255; var.G = var.R ; var.B = var.R ; var.X = Base.Colours;
   while(var.X) { GenFC((Base.Colours - var.X + On), Base.Deep); GenRGB(s, --var.X, Base.Colours); } }
 void ColourInit(uint8_t c, uint8_t d) { c = (c < 1) ? 1 : (c > Maxcol) ? Maxcol : c; d = (d < b3) ? 3 : (d > b3) ? 24 : 8;
-  if (c != Base.Colours || d != Base.Deep) { if (c != Base.Colours) { var.X = 8;
-    if (c < var.X) { while(--var.X > 1) Base.I[var.X-2] = (var.X <= c) ? var.X : c; }
-    else { while(--var.X > 1) Base.I[var.X-2] = (var.X * (c - 1) + 6) / 7; } }
+  if (c != Base.Colours || d != Base.Deep) { if (c != Base.Colours) {
+      Base.I[0] = (c == 1) ? 1 : 2; Base.I[1] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3); Base.I[2] = ((((c << 4) / 5) + 12) >> 3);
+      Base.I[3] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3); Base.I[4] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[5] = c; }
     Base.Colours = c; Base.Deep = d; var.U = Off; GenPalette(On); GenPalette(Off); } }
 Cell HowSize(uint8_t c, uint16_t w, Cell a) { var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5)); var.dpal = (uint8_t*)a;
   if (var.dpal < (var.dkey = var.dpal + 16384)) {
@@ -191,8 +191,9 @@ Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); if ((InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm))) return Off;
     var.off = Real(Off); (void)var.off; IRnd(); SWD(); SyncSize(); Base.Colours++; ColourInit(Base.Colours - 1, Base.Deep);
     Print(Base.Inc, Base.Attr, "\033[?1049;7;1000h\033[?25l"); }
-  else { VRam.SystemSwitch++; SwitchRaw(); Print(Base.Inc, var.A, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size); }
-  return On; }
+  else {
+    VRam.SystemSwitch++; SwitchRaw(); Print(Base.Inc, var.A, "\033[?1049;1000l\033[0m\033[?25h");
+    if (VRam.size) FreeRam(VRam.addr,VRam.size); } return On; }
 
 void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Convas.Win < Base.Win) {
