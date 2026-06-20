@@ -60,7 +60,7 @@ enum {
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset;
   uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, C, A, X, Y, D; int16_t U, Z;
   int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, Goc, PCell, CellP, Deep, Colours, D, DS, O, P, K, V, Inc, Fone, Border, Attr;
+typedef struct { uint8_t Count, Goc, PCell, D, DS, O, P, K, V, I[6],CellP, Deep, Colours, Inc, Fone, Border, Attr;
   uint16_t Win, On, Apm, Hz, FTime, Rnd, Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed;
   ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
@@ -117,12 +117,28 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
   Var_ var = {0}; \
-  Base_ Base = {0,0,0,CellPow,CFDeep,Fcolour,0,0,0,0,0,0,FInc,FFone,FBorder,FAttr,Wind,FHow,FApm,FHz,0,1, \
-    {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
+  Base_ Base = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},CellPow,CFDeep,Fcolour,FInc,FFone,FBorder,FAttr,Wind,FHow,FApm,FHz, \
+    0,1,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
   ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
   KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
   MAS_ VRam = {0,0,1}; 
-    
+
+#define I0            dark
+#define I1            snow
+#define I2            Base.I[0]
+#define I3            Base.I[1]
+#define I4            Base.I[2]
+#define I5            Base.I[3]
+#define I6            Base.I[4]
+#define I7            Base.I[5]
+#define F0            Dark
+#define F1            Snow
+#define F2            Dark + Base.I[0]
+#define F3            Dark + Base.I[1]
+#define F4            Dark + Base.I[2]
+#define F5            Dark + Base.I[3]
+#define F6            Dark + Base.I[4]
+#define F7            Dark + Base.I[5]
 #define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
