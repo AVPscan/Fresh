@@ -12,19 +12,15 @@
 #include <stdint.h>
 
 // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62]
-enum { dark, snow, Maxcol = 126, last, Dark, Snow, Last = 255, On = 0x01, Off = 0x00 };
-#define CellPow   13    // Масштаб холста [7..62] {по сути создание буфера для данных}
-#define Wind      1024  // Максимально окон на холсте [2..65535] {окна безрамочные по сути спрайты}
-#define FHow      10    // Частота вызова обработчика таймера [Off{0}..FHz] Гц
-#define FHz       500   // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
-#define FApm      200   // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
-#define CFDeep    24    // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
-#define Fcolour   126   // Количество оттенков света на старте [1..126] {0 - чёрный 1 - белый, 2 палитры и метода автосоздания}
-#define FInc      dark  // Цвет
-#define FFone     Snow  // Фон
-#define FBorder   Dark  // Фон за пределами холста
-#define FAttr     Off   // Атрибуты текста
-#if CellPow < 17        // Масштабирование разрешения в зависимости от размера холста(буфер)
+enum { Off, On };
+#define CellPow   13            // Масштаб холста [7..62] {по сути создание буфера для данных}
+#define Wind      1024          // Максимально окон на холсте [2..65535] {окна безрамочные по сути спрайты}
+#define FHow      10            // Частота вызова обработчика таймера [Off{0}..FHz] Гц
+#define FHz       500           // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
+#define FApm      200           // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
+#define CFDeep    24            // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
+#define Fcolour   600           // Количество оттенков света на старте [1..510] {0 - чёрный 1 - белый Last - 511, 2 палитры}
+#if CellPow < 17                // Масштабирование разрешения в зависимости от размера холста(буфер)
   typedef uint32_t udgoc;
   typedef int32_t  dgoc;
   typedef uint16_t ugoc;
@@ -58,18 +54,18 @@ enum {
   K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE };          //       декодирование из Buf.Key в Buf.Dat
 
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset;
-  uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, C, A, X, Y, D; int16_t U, Z;
-  int32_t Syn, Loop, Dis; uint32_t RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, Goc, PCell, D, DS, O, P, K, V, I[6],CellP, Deep, Colours, Inc, Fone, Border, Attr;
-  uint16_t Win, On, Apm, Hz, FTime, Rnd, Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed;
-  ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
+  uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ;
+  int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
+typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime,
+  Rnd, Last, AF, Inc, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf,
+  UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t col, F; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR,
+typedef struct { uint8_t F, Res; uint16_t Layer, Colour, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR,
   Xc, Yc; dgoc Xr, Yr; } Windows;
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
@@ -77,7 +73,7 @@ typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd;
   uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Win, Wec;
+typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe;
   dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 
 typedef struct {                            //UTFinfo  
@@ -117,30 +113,30 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
   Var_ var = {0}; \
-  Base_ Base = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},CellPow,CFDeep,Fcolour,FInc,FFone,FBorder,FAttr,Wind,FHow,FApm,FHz, \
-    0,1,{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
-  ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0,0}; \
+  Base_ Base = {0,0,0,0,0,0,0,0,CellPow,CFDeep,Fcolour,Wind,FHow,FApm,FHz,0,0,0,0,0,0,0,{0,0,0,0,0,0,0,0}, \
+    {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
+  ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0}; \
   KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
   MAS_ VRam = {0,0,1}; 
 
-#define I0            dark
-#define I1            snow
-#define I2            Base.I[0]
-#define I3            Base.I[1]
-#define I4            Base.I[2]
-#define I5            Base.I[3]
-#define I6            Base.I[4]
-#define I7            Base.I[5]
-#define F0            Dark
-#define F1            Snow
-#define F2            Dark + Base.I[0]
-#define F3            Dark + Base.I[1]
-#define F4            Dark + Base.I[2]
-#define F5            Dark + Base.I[3]
-#define F6            Dark + Base.I[4]
-#define F7            Dark + Base.I[5]
-#define APal(c)       ((PalBuf*)(var.dpal + ((c) << Base.P)))                 // адрес начала кода цвета
-#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << Base.K)))                 // адрес начала ячейки в буфере клавиатуры
+#define I0            Base.I[0]
+#define I1            Base.I[1]
+#define I2            Base.I[2]
+#define I3            Base.I[3]
+#define I4            Base.I[4]
+#define I5            Base.I[5]
+#define I6            Base.I[6]
+#define I7            Base.I[7]
+#define F0            Base.AF + Base.I[0]
+#define F1            Base.AF + Base.I[1]
+#define F2            Base.AF + Base.I[2]
+#define F3            Base.AF + Base.I[3]
+#define F4            Base.AF + Base.I[4]
+#define F5            Base.AF + Base.I[5]
+#define F6            Base.AF + Base.I[6]
+#define F7            Base.AF + Base.I[7]
+#define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))       // адрес начала кода цвета
+#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << 3)))                      // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                  // адрес вектора прерывания события
 #define Convas        (*(Canalysis*)var.dcon)                                 // адрес где организована разбивка холста
@@ -183,17 +179,17 @@ int8_t Fsin(int16_t u);                                               // Син�
 int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
 int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127])
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
-uint16_t CreateCA(uint8_t c, uint8_t a, char *Buf);                   // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
-void Print(uint8_t n, uint8_t m, char *str);                          // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
-void GenFC(uint8_t c, uint8_t deep);                                  // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру согласно Base.Deep
+uint16_t CreateCA(uint16_t c, uint8_t a, char *Buf);                  // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
+void Print(uint16_t n, uint8_t m, char *str);                         // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
+void GenFC(uint16_t c, uint8_t deep);                                 // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру согласно Base.Deep
 void SetSeparator(char s);                                            // Установить разделитель в формат времени
-void SetBorder(uint8_t on, uint8_t b);                                // Установить цвет бордюра и осчистить экран
+void SetBorder(uint8_t on, uint16_t b);                               // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
 void GenRGB(uint8_t mode, uint16_t c, uint16_t n);                    // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (Off/On)
 void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом Off {sin}
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
-void ColourInit(uint8_t c, uint8_t d);                                // Установка переменных цвета Colours Deep
+void ColourInit(uint16_t c, uint16_t d);                              // Установка переменных цвета Colours Deep
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
 Cell InitVram(uint8_t c,uint16_t w,uint16_t o,uint16_t h,uint16_t a); // Инициализация мира CellPower Win How Hz Apm
 Cell SystemSwitch(void);                                              // Вход/выход в мир
@@ -213,14 +209,14 @@ void WDown(void);                                                     // Рот�
 void WUp(void);                                                       // Ротация динамических окон в обратном направлении
 void WTop(uint16_t n);                                                // Установить окно выше остальных подобных
 void _WView(uint16_t n, uint8_t count, dgoc *args);                   // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
-uint16_t _Window(uint8_t t, int8_t col, uint8_t c, udgoc *a);         // Создание окна с палитрой col при col<0 статичное окно
+uint16_t _Window(uint8_t t, uint16_t col, uint8_t c, udgoc *a);       // Создание окна с палитрой col при col<0 статичное окно
 void _WExecs(uint16_t n, uint8_t cur, uint8_t c, AFunction *a);       // Настройка статического окна привязка функций к кодам клавиш
 void _WSet(uint16_t n, uint8_t c, uint8_t *a);                        // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvents(uint8_t c, uint8_t *a);                                 // Запомнить вектор системный событий
 void _SExec(uint8_t c, AFunction *a);                                 // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t c, uint8_t *a);                                   // Задать клавиши управления вьюпортом в обратном порядке
 void _FSet(uint8_t cp, uint8_t c, uint16_t *a);                       // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
-void _CSet(uint8_t c, uint8_t *a);                                    // Изменить {colours{,deep}}
+void _CSet(uint8_t c, uint16_t *a);                                   // Изменить {colours{,deep}}
 void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define WView(n, ...) _WView(n, (uint8_t)((sizeof((dgoc[]){0, ##__VA_ARGS__}) / sizeof(dgoc)) - 1), (dgoc[]){0, ##__VA_ARGS__} + 1)
 #define Window(t, col, ...) _Window(t, col, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
@@ -230,7 +226,7 @@ void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Заг�
 #define Exec(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define Keys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Fresh(cp, ...) _FSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
-#define Colour(...) _CSet((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define Colour(...) _CSet((uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
 Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
