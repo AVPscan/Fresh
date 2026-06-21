@@ -144,9 +144,9 @@ void GenFC(uint16_t c, uint8_t deep) { uint8_t i, j = 1, k = (deep > b3) ? 2 : (
     if (var.Y || ((i * 205) >> 11)) { src->d[src->l++] = 0x30 + (var.Y = (i * 205) >> 11); i -= var.Y * 10; } src->d[src->l++] = 0x30 + i; } src->d[src->l++] = 'm';
   dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
-void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = (((1 << 24) * c) / n) - On; var.G = (uint8_t)var.RGB;
+void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = ((uint32_t)c << 24) / n - On; var.G = (uint8_t)var.RGB;
     var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
-  else { var.Z = var.U + (c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
+  else { var.Z = var.U + ((uint32_t)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
 void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
 void SetBorder(uint8_t on, uint16_t b) { if (on) { b = Base.AF + Base.Last; } else  { b = (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b; }
   Print((Base.Border = b), var.A, "\033[2J"); }
@@ -161,9 +161,9 @@ void GenPalette(uint8_t s) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colou
 void ColourInit(uint16_t c, uint16_t d) { d = (d < b3) ? 3 : (d > b3) ? 24 : 8; c = (c < 1) ? 1 : (c < 256) ? c : 255;
   if (c != Base.Colours) { Base.Colours = c; Base.Last = c + 1; Base.AF = c + 2; var.Spal = (((Base.AF << 2) + Base.AF) << 3);
     var.dbuf = (char*)var.dcon + sizeof(Canalysis) + (var.Spal << 1); }
-  Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[7] = c; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3);
+  Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3);
   Base.I[4] = ((((c << 4) / 5) + 12) >> 3); Base.I[5] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3);
-  Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.Border = F0; Base.Fone = F1; Base.Inc = I0; Base.Deep = d; var.U = Off;
+  Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[7] = c; Base.Border = Fon(0); Base.Fone = Fon(1); Base.Ink = Ink(0); Base.Deep = d;
   GenPalette(On); GenPalette(Off); GenLast(Off); }
 Cell HowSize(uint8_t c, uint16_t w, Cell a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5));

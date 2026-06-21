@@ -57,7 +57,7 @@ typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t
   uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ;
   int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime,
-  Rnd, Last, AF, Inc, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf,
+  Rnd, Last, AF, Ink, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf,
   UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
 typedef struct { uint8_t l, d[31]; } PalBuf;
@@ -119,22 +119,8 @@ extern Var_ var;
   KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
   MAS_ VRam = {0,0,1}; 
 
-#define I0            Base.I[0]
-#define I1            Base.I[1]
-#define I2            Base.I[2]
-#define I3            Base.I[3]
-#define I4            Base.I[4]
-#define I5            Base.I[5]
-#define I6            Base.I[6]
-#define I7            Base.I[7]
-#define F0            Base.AF + Base.I[0]
-#define F1            Base.AF + Base.I[1]
-#define F2            Base.AF + Base.I[2]
-#define F3            Base.AF + Base.I[3]
-#define F4            Base.AF + Base.I[4]
-#define F5            Base.AF + Base.I[5]
-#define F6            Base.AF + Base.I[6]
-#define F7            Base.AF + Base.I[7]
+#define Ink(n)        Base.I[((n) & 7)]
+#define Fon(n)        Base.AF + Base.I[((n) & 7)]
 #define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))       // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << 3)))                      // адрес начала ячейки в буфере клавиатуры
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                // адрес начала структуры события
