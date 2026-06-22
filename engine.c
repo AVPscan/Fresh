@@ -181,22 +181,22 @@ Cell HowSize(uint8_t c, uint16_t w, Cell a) { Base.PCell = sizeof(AFunction); Ba
                     if ((char*)var.dpal < (var.dbuf = (char*)var.dpal + (var.Spal << 1))) {
                       if (var.dbuf < (var.end = (char*)var.dpal + ((((257 << 2) + 257) << 4) + 4096))) return (Cell)(var.end - a); }
   } } } } } } } } } return Off; }
-Cell InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
+void InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w; Base.Loop = On;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; if (!VRam.size || c != Base.CellP || w != Base.Win) {
     var.addr = VRam.addr; var.size = VRam.size; MemCpy(&var.Save, &var.dpal, sizeof(var.Save)); Base.Error = 4; if (!(VRam.size = HowSize(c,w,Off))) --Base.Error ;
     if (Base.Error == 4 && !(VRam.addr = GetRam(&VRam.size))) { Base.Error  = 2; } if (Base.Error  == 4 && !(VRam.size = HowSize(c,w,VRam.addr))) Base.Error = 1;
-    if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop = Off; return Base.Error; }
+    if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
     if (var.size) { FreeRam(var.addr,var.size); } SetSeparator(Base.Sep); if (((var.R = Base.Goc >> 1)) > 2) { --var.R; } Base.CellP = c; Base.Win = w;
     Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; var.off = 1 << c; Base.Mcol = var.off - 1;
-    Base.Mstr = ((var.off + (var.off << 3)) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.V = 2; Base.Count = 6; var.Syn = Base.Hz - var.Syn;
-    Base.Hz = (hz < 1) ? 1 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 51) ? 50 : ((apm > 1000) ? 1000 : apm);
-    Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Base.On = (how > Base.Hz) ? Base.Hz : how; Base.FTime = (Base.On) ? Base.On : 1;
-    var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off; Convas.CH = Base.Mstr; Convas.H = Off;
-    Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Mode = b2; Base.Loop = On; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
-  ColourInit(Base.Colours, Base.Deep); return (Base.Error = Off); }
+    Base.Mstr = ((var.off + (var.off << 3)) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.V = 2; Base.Count = 6; Base.Error = Off; 
+    Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off;
+    Convas.CH = Base.Mstr; Convas.H = Off; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Mode = b2; }
+  ColourInit(Base.Colours, Base.Deep); var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 1) ? 1 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn;
+  Base.Apm = (apm < 51) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how; Base.FTime = (Base.On) ? Base.On : 1;
+  var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
 Cell SystemSwitch(void) {
   if (VRam.SystemSwitch) {
-    VRam.SystemSwitch--; SwitchRaw(); if ((InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm))) return Off;
+    VRam.SystemSwitch--; SwitchRaw(); InitVram(Base.CellP, Base.Win, Base.On, Base.Hz, Base.Apm); if (!Base.Loop) return Off;
     Real(Off); IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
   else {
     VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) FreeRam(VRam.addr,VRam.size);
@@ -299,11 +299,11 @@ void _SExec(uint8_t c, AFunction *a) { uint8_t k = K_Mouse; while(k--) { if (Eve
     while(x-- && c--) { j = ECD; while(--j) { if (Event(j)->W == Base.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(uint8_t c, uint8_t *a) { uint8_t *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
 void _FSet(uint8_t cp, uint8_t c, uint16_t *a) { uint16_t w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
-  uint8_t b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1; if (c--) { w = a[Off]; if (c--) { o = a[On]; if (c--) { h = a[2]; if (c) { f = a[3]; } } } }
-  if ((var.off = InitVram(cp, w, o, h, f))) { Bye(); } SetPalette(b); }
+  uint8_t b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
+  if (c--) { w = a[Off]; if (c--) { o = a[On]; if (c--) { h = a[2]; if (c) { f = a[3]; } } } } InitVram(cp, w, o, h, f); SetPalette(b); }
 void _CSet(uint8_t c, uint16_t *a) { uint16_t l = Base.Colours, d = (uint16_t)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
 void _WData(uint16_t n, char *str, uint8_t c, udgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
-  Windows* w = Win(n); if (!(w->MaxVs)) {  
+  Windows* w = Win(n); if (!(w->MaxVs)) {
      }
   (void)*str; (void)c; (void)*a; }

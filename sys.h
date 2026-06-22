@@ -13,7 +13,7 @@
 
 // Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62]
 enum { Off, On };
-#define CellPow   13            // Масштаб холста [7..62] {по сути создание буфера для данных}
+#define CellPow   16            // Масштаб холста [7..62] {по сути создание буфера для данных}
 #define Wind      2             // Максимально окон на холсте [2..65535] {окна безрамочные по сути спрайты}
 #define FHow      Off           // Частота вызова обработчика таймера [Off{0}..FHz] Гц
 #define FHz       500           // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
@@ -176,7 +176,7 @@ void GenLast(int16_t c);                                              // Сге�
 void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
 void ColourInit(uint16_t c, uint16_t d);                              // Установка переменных цвета Colours Deep
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
-Cell InitVram(uint8_t c,uint16_t w,uint16_t o,uint16_t h,uint16_t a); // Инициализация мира CellPower Win How Hz Apm
+void InitVram(uint8_t c,uint16_t w,uint16_t o,uint16_t h,uint16_t a); // Инициализация мира CellPower Win How Hz Apm
 Cell SystemSwitch(void);                                              // Вход/выход в мир
 void MoveNorm(dgoc x, dgoc y);                                        // Нормализация перемещения
 void MoveConvas(dgoc dx, dgoc dy);                                    // Взаимосвязь перемещения по холсту и экранных координат
