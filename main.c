@@ -23,17 +23,14 @@ void body(void) {  // пока не дописано WinData,Render9
     if (!(w)) { *(p + l) = 0; while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
     snprintf(p, 100, "                                 "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) *(b + TS.c) = Off;
     if (TS.r > 3) Print((Base.On) ? Base.Last : Ink(5), aF | aI, b); } }
+
 //void body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
-void sb(void) { if (!Base.On) { static uint8_t c = On; c = (c > 7) ? Off : c; SetBorder(Base.On, Fon(c++)); } }
-void tim(void) { static int16_t c = Off; c = (c > 511) ? Off : c; GenLast(++c); SetBorder(Base.On, Base.Border); }
+void sb(void) { if (!Base.On) { static uint8_t c = On; SetBorder(Base.On, Fon(c++)); c = (c > 7) ? Off : c; } }
+void tim(void) { static int16_t c = Off; GenLast(++c); SetBorder(Base.On, Base.Border); c = (c > 511) ? Off : c; }
 
 void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, 10, 500, 250); Colour(7, 24);
   ugoc control = Window(On,Ink(0), -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, body);
   WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), Ink(0), Ink(0), Base.Last); WExec(control, K_Ctrl_K, WSwitch);
   WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(sb, tim, WDown, WUp); VP.Wexe = W1; }
 
-void Help(Cell argc, char *argv[], Cell *flag) {
-  if (argc > On) { if (MemCmp(argv[On], "-?", 2) == Off || MemCmp(argv[On], "-h", 2) == Off || MemCmp(argv[On], "-help", 5) == Off) {
-      if (*flag) { Print(Base.Border, Off, "\033[?1049l"); Print(Base.Fone, Off, ""); Print(Ink(4), aB | aC, " Created by Alexey Pozdnyakov "); *flag = Off;
-        Print(Ink(7), aC, "in 05.02.2026 version 10.14 email: avp70ru@mail.ru https://github.com/AVPscan \n\033[?1049h"); } } } }
-int main(int argc, char *argv[]) { Cell flag = SystemSwitch(); Help((Cell)argc, argv, &flag); if (flag) { Init(); while(VP.Loop) Free(); } return (int)SystemSwitch(); }
+int main() { SystemSwitch(); if (Base.Loop) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }

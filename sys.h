@@ -56,7 +56,7 @@ enum {
 typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset;
   uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ;
   int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime,
+typedef struct { uint8_t Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime,
   Rnd, Last, AF, Ink, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf,
   UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
@@ -73,7 +73,7 @@ typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd;
   uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { uint8_t Res1, Cod, Mode, Loop, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe;
+typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe;
   dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 
 typedef struct {                            //UTFinfo  
@@ -92,8 +92,7 @@ typedef struct {
   uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
 } Structure;
 typedef struct {
-  uint8_t col        ;                      // бит x      код цвета {максимум 128 цветовых оттенка} 
-  uint8_t colFon  : 1;                      // бит 7      {1/0} есть данные / нет данных
+  uint8_t col        ;                      // бит x      код цвета {максимум 255 цветовых оттенка 0 чёрный}
 } palet;
 typedef struct {
   uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
@@ -113,9 +112,9 @@ extern Var_ var;
 
 #define ENGINE_VARS_INIT \
   Var_ var = {0}; \
-  Base_ Base = {0,0,0,0,0,0,0,0,CellPow,CFDeep,Fcolour,Wind,FHow,FApm,FHz,0,0,0,0,0,0,0,{0,0,0,0,0,0,0,0}, \
+  Base_ Base = {0,0,0,0,0,0,0,0,0,0,CellPow,CFDeep,Fcolour,Wind,FHow,FApm,FHz,0,0,0,0,0,0,0,{0,0,0,0,0,0,0,0}, \
     {0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0}; \
-  ViewPort_ VP = {0,0,0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0}; \
+  ViewPort_ VP = {0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0}; \
   KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
   MAS_ VRam = {0,0,1}; 
 
