@@ -10,7 +10,7 @@
 #include <stdio.h> // временно snprintf -> WinData
 #include "sys.h"
 
-void body(void) {  // пока не дописано WinData,Render9
+void Body(void) {  // пока не дописано WinData,Render9
   char *b = var.dbuf + 512, *p = b; uint8_t l, v, w, j = 55, i = 8; Print(Base.Fone, Off, "\033[H"); while(i--) Print(Fon(7-i),Off," ");
   Print(Base.Fone, Off, ""); Cell s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
   snprintf(p, 91, " %ld Kbyte %d %d %d %ld ", s, Base.CellP, Base.Win, Base.Colours, var.end - var.dbuf); i = (uint8_t)StrLen(b); Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b);
@@ -24,13 +24,11 @@ void body(void) {  // пока не дописано WinData,Render9
     snprintf(p, 100, "                                 "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) *(b + TS.c) = Off;
     if (TS.r > 3) Print((Base.On) ? Base.Last : Ink(5), aF | aI, b); } }
 
-//void body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
-void sb(void) { if (!Base.On) { static uint8_t c = On; SetBorder(Base.On, Fon(c++)); c = (c > 7) ? Off : c; } }
-void tim(void) { static int16_t c = Off; GenLast(++c); SetBorder(Base.On, Base.Border); c = (c > 511) ? Off : c; }
-
-void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, 10, 500, 250); Colour(7, 24);
-  ugoc control = Window(On,Ink(0), -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, body);
+//void Body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
+void Space(void) { if (!Base.On) { static uint8_t c = Off; SetBorder(Base.On, Fon((c = (c + 1) & 7))); } }
+void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, Off, 500, 250); Colour(255, 24);
+  ugoc control = Window(On,Ink(0), -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, Body);
   WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), Ink(0), Ink(0), Base.Last); WExec(control, K_Ctrl_K, WSwitch);
-  WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(sb, tim, WDown, WUp); VP.Wexe = W1; }
+  WSet(W1, On, On); WView(W1, On, On); Even(' ', K_ALT_TAB, K_ALT_ENT); Exec(Space, WDown, WUp); VP.Wexe = W1; }
 
 int main() { if (SystemSwitch()) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }

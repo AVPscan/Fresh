@@ -136,9 +136,9 @@ extern Var_ var;
 #define End(c, r)     (Data(r) + *Offset(c, r))                               // адрес конца буфера ячейки холста
     
 #define SYS_VARS_INIT \
-  KeyIdMap NameId[] = {{"[A",K_UP},{"[B",K_DOW},{"[C",K_RIG},{"[D",K_LEF},{"[1;5A",K_Ctrl_UP},{"[1;5B",K_Ctrl_DOW},{"[1;5C",K_Ctrl_RIG},{"[1;5D",K_Ctrl_LEF}, \
-    {"[M", K_Mouse},{"[1;2P",K_F13},{"[1;2Q",K_F14},{"[1;2R",K_F15},{"[15~",K_F5},{"[17~",K_F6},{"[18~",K_F7},{"[19~",K_F8}, \
-    {"[1~",K_HOM},{"[2~",K_INS},{"[20~",K_F9},{"[21~",K_F10},{"[23~",K_F11},{"[24~",K_F12},{"[3~",K_DEL},{"[4~",K_END}, \
+  KeyIdMap NameId[] = {{"[A",K_UP},{"[B",K_DOW},{"[C",K_RIG},{"[D",K_LEF},{"[1;5A",K_Ctrl_UP},{"[1;5B",K_Ctrl_DOW},{"[1;5C",K_Ctrl_RIG}, \
+    {"[1;5D",K_Ctrl_LEF},{"[M", K_Mouse},{"[1;2P",K_F13},{"[1;2Q",K_F14},{"[1;2R",K_F15},{"[15~",K_F5},{"[17~",K_F6},{"[18~",K_F7}, \
+    {"[19~",K_F8},{"[1~",K_HOM},{"[2~",K_INS},{"[20~",K_F9},{"[21~",K_F10},{"[23~",K_F11},{"[24~",K_F12},{"[3~",K_DEL},{"[4~",K_END}, \
     {"[5~",K_PUP},{"[6~",K_PDN},{"[F",K_END},{"[H",K_HOM},{"OP",K_F1},{"OQ",K_F2},{"OR",K_F3},{"OS",K_F4}, \
     {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; \
   MSnS_ Flag = {0,0,1}; CR_ TS = {0};
@@ -166,14 +166,14 @@ int8_t Ftg(int16_t u);                                                // Тан�
 int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
 uint16_t CreateCA(uint16_t c, uint8_t a, char *Buf);                  // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
 void Print(uint16_t n, uint8_t m, char *str);                         // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
-void GenFC(uint16_t c, uint8_t deep);                                 // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру согласно Base.Deep
+void GenFC(uint16_t c, uint8_t deep);                                 // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру Base.Deep
 void SetSeparator(char s);                                            // Установить разделитель в формат времени
 void SetBorder(uint8_t on, uint16_t b);                               // Установить цвет бордюра и осчистить экран
 void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
 void GenRGB(uint8_t mode, uint16_t c, uint16_t n);                    // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (Off/On)
-void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом Off {sin}
-void GenPalette(uint8_t set);                                         // Автогенерация оттенков света в палитру
+void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом sinus
+void GenPalettes(void);                                               // Автогенерация оттенков света в палитры двумы методами
 void ColourInit(uint16_t c, uint16_t d);                              // Установка переменных цвета Colours Deep
 Cell HowSize(uint8_t c, uint16_t w, Cell addr);                       // Расчёт общего размера среды
 void InitVram(uint8_t c,uint16_t w,uint16_t o,uint16_t h,uint16_t a); // Инициализация мира CellPower Win How Hz Apm
@@ -184,6 +184,7 @@ uint8_t MoveScreen(dgoc mx, dgoc my);                                 // Вза�
 void Free(void);                                                      // Одна итерация Fresh
 void Encode(void);                                                    // Декодировать Buf.Key в Buf.Dat
 void RPEncode(void);                                                  // Прочитать событие из порта 0 и декодировать Buf.Key в Buf.Dat
+void ILColour(void);                                                  // Сгенерировать следующий цвет в Base.Last циклически [0..511] шаг 1 через sinus
 void Nop(void);                                                       // Заглушка, пустая функция
 void Anchor(void);                                                    // Вход в окно {Выход с окна}
 void SwitchCur(void);                                                 // Переключить отображение курсора вьюпорта
