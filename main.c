@@ -15,20 +15,21 @@ void Body(void) {  // пока не дописано WinData,Render9
   Print(Base.Fone, Off, ""); Cell s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
   snprintf(p, 91, " %ld Kbyte %d %d %d %ld ", s, Base.CellP, Base.Win, Base.Colours, var.end - var.dbuf); i = (uint8_t)StrLen(b); Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b);
   snprintf(b, 100, " Time %s                         ", Base.T); if ((uint8_t)StrLen(b) > (j - i)) { *(b + j - i) = Off; }
-  if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print((Base.On) ? Base.Last : Ink(5), Off, b); if (TS.r < 3) return;
+  if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(Ink(8), Off, b); if (TS.r < 3) return;
   snprintf(b, 100, "\nH%d A%d D%d C%d x%d y%d %d %d b%d x%d y%d                         ", Base.Hz/10, Base.Apm, Base.Deep, Base.Colours, VP.X, VP.Y, VP.Xs, VP.Ys,
-  Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print((Base.Colours == 1) ? Ink(0) : Ink(7), aC | aD, b);
+  Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print((Base.Colours == 1) ? Ink(0) : Ink(6), aC | aD, b);
   if (TS.r < 4) { return; } if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Dat; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10);
     w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Key(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
     if (!(w)) { *(p + l) = 0; while (l--) { *(p + l) = *(Buf.Key + l); } } else { w = *Buf.Key; snprintf(p, 10, "{%d}", w); } p += StrLen(p);
     snprintf(p, 100, "                                 "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) *(b + TS.c) = Off;
-    if (TS.r > 3) Print((Base.On) ? Base.Last : Ink(5), aF | aI, b); } }
+    if (TS.r > 3) Print(Ink(8), aF | aI, b); } }
 
 //void Body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
-void Space(void) { if (!Base.On) { static uint8_t c = Off; SetBorder(Base.On, Fon((c = (c + 1) & 7))); } }
-void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, Off, 500, 250); Colour(255, 24);
+void Tim(void) { static uint8_t c = Off; c = ((c + 1) & 7); SetBorder(Base.On, Fon(c)); }
+void Space(void) { if (!Base.On) Tim(); }
+void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, 10, 500, 250); Colour(7, 24);
   ugoc control = Window(On,Ink(0), -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, Body);
-  WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), Ink(0), Ink(0), Base.Last); WExec(control, K_Ctrl_K, WSwitch);
-  WSet(W1, On, On); WView(W1, On, On); Even(' ', K_ALT_TAB, K_ALT_ENT); Exec(Space, WDown, WUp); VP.Wexe = W1; }
+  WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), Ink(0), Ink(0), Ink(8)); WExec(control, K_Ctrl_K, WSwitch);
+  WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); VP.Wexe = W1; }
 
 int main() { if (SystemSwitch()) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }
