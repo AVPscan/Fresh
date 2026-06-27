@@ -27,9 +27,9 @@ void Body(void) {  // пока не дописано WinData,Render9
 //void Body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
 void Tim(void) { static uint8_t c = Off; c = ((c + 1) & 7); SetBorder(Base.On, Fon(c)); }
 void Space(void) { if (!Base.On) Tim(); }
-void Init(void) { Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Fresh(11, 999, 10, 500, 250); Colour(7, 24);
-  ugoc control = Window(On,Ink(0), -2, -2), W1 = Window(Off,Rand(Base.Colours + On), Off, Off, 80, 24); WExec(control, K_NO, Body);
-  WData(control, " %+5dMb %+3 %06c:%06c %5c ", ((VRam.size + 1048575)/1048576), Ink(0), Ink(0), Ink(8)); WExec(control, K_Ctrl_K, WSwitch);
-  WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); VP.Wexe = W1; }
+void Init(void) { Keys(K_F1, K_Ctrl_DOW, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_UP, K_LEF, K_DOW, K_RIG); Fresh(11, 999, Off, 500, 250);
+  Colour(7, 24); ugoc control = Window(On, Ink(0), -2, -2), W1 = Window(Off, Rand(Base.Colours + On), Off, Off, 80, 24); VP.Wexe = W1;
+  WSet(W1, On, On); WView(W1, On, On); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); WExec(control, K_NO, Body);
+  WExec(control, K_Ctrl_K, WSwitch); WData(control, " %+5dMb %+3 %06:%06 %5c ", ((VRam.size + 1048575)/1048576), Ink(8)); }
 
 int main() { if (SystemSwitch()) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }

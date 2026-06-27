@@ -186,7 +186,7 @@ void InitVram(uint8_t c, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { 
     if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
     if (var.size) { FreeRam(var.addr,var.size); } SetSeparator(Base.Sep); if (((var.R = Base.Goc >> 1)) > 2) { --var.R; } Base.CellP = c; Base.Win = w;
     Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1; var.off = 1 << c; Base.Mcol = var.off - 1;
-    Base.Mstr = ((var.off + (var.off << 3)) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c + var.R; Base.V = 2; Base.Count = 6; Base.Error = Off; 
+    Base.Mstr = ((var.off + (var.off << 3)) >> 5) - 1; Base.D = c + 2; Base.DS = c; Base.O = c; Base.V = 2; Base.Count = 6; Base.Error = Off; 
     Base.Spd1 = Base.Mcol >> 4; Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off;
     Convas.CH = Base.Mstr; Convas.H = Off; Convas.Min = Off; Convas.Max = Base.Win; Convas.Win = Base.Win; VP.Mode = b2; }
   ColourInit(Base.Colours, Base.Deep); var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz; var.Syn = Base.Hz - var.Syn;
