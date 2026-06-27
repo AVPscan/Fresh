@@ -53,28 +53,25 @@ enum {
   K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,                                                    // RPE   вектор обработчика чтение в Buf.Key и
   K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE };          //       декодирование из Buf.Key в Buf.Dat
 
-typedef struct { uint8_t *dpal, *dkey, *event, *exec, *dcon; char *dbuf; uint8_t *data, *info, *ds; ugoc *offset;
-  uint8_t *dwin; char *end; Cell off, addr, size, Save[12]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ;
-  int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime,
-  Rnd, Last, AF, Ink, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf,
-  UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
+typedef struct { uint8_t *dkey, *data, *ds, *pal; ugoc *offset; uint8_t *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
+  Cell off, addr, size, Save[12]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
+typedef struct { uint8_t Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, CellP, Deep; uint16_t Colours, Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
+  Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
-typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
+typedef struct { uint8_t F, Res; uint16_t Layer, Colour, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
+  dgoc Xr, Yr; } Windows;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef void (*AFunction)(void);
 typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t F, Res; uint16_t Layer, Colour, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR,
-  Xc, Yc; dgoc Xr, Yr; } Windows;
+typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
 typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
-typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd;
-  uint16_t tic; dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe;
-  dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
+typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic;
+  dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
+typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 
 typedef struct {                            //UTFinfo  
   uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -126,8 +123,8 @@ extern Var_ var;
 #define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                        // адрес вектора прерывания события
 #define Convas        (*(Canalysis*)var.dcon)                                       // адрес где организована разбивка холста
 #define Con(r)        (var.data + ((r) << Base.D))                                  // адрес начала буфера строки холста
-#define Info(c, r)    (var.info + (c) + ((r) << Base.DS))                           // адрес данных ячейки холста
-#define Cpal(c, r)    (var.ds + (c) + ((r) << Base.DS))                             // адрес данных палитры ячейки холста
+#define Info(c, r)    (var.ds + (c) + ((r) << Base.DS))                             // адрес данных ячейки холста
+#define Cpal(c, r)    (var.pal + (c) + ((r) << Base.DS))                            // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                          // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))              // адрес начала данных окна n
 #define Exe(v, func)  Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func))       // сброс вектора если адрес функции раньше Nop

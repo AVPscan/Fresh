@@ -113,11 +113,13 @@ void CSu(void) { var.RGB = 0; var.Y = Base.Count;
 uint16_t DSu(uint16_t d) { var.XYz = 0; var.Y = -1;
   while(++var.Y < Base.Count) { Base.Su[var.Y] = (uint16_t)((var.XYz = (var.XYz << 16) | Base.Su[var.Y]) / d); var.XYz %= d; }
   return (uint16_t)var.XYz; }
-void Time(void) { var.RGB = 0; var.Y = Base.Count;
-  while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; }
-  var.X = DSu(60); var.Y = ((var.X * 205) >> 11); Base.T[7] = 0x30 + var.X - (var.Y * 10); Base.T[6] = 0x30 + var.Y;
-  var.X = DSu(60); var.Y = ((var.X * 205) >> 11); Base.T[4] = 0x30 + var.X - (var.Y * 10); Base.T[3] = 0x30 + var.Y;
-  var.X = DSu(24); var.Y = ((var.X * 205) >> 11); Base.T[1] = 0x30 + var.X - (var.Y * 10); Base.T[0] = 0x30 + var.Y; }
+void Time(void) { var.RGB = 0; var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; }
+  var.X = DSu(60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
+  var.X = DSu(60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
+  var.X = DSu(24); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  Base.T[1] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[0] = 0x30 + var.Y; }
 
 void IRnd(void) { Base.Rnd = (uint16_t)(Flag.ns | On); }
 int16_t Rand(int16_t n) { Base.Rnd = (uint16_t)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
@@ -139,10 +141,12 @@ void GenFC(uint16_t c, uint8_t deep) { uint8_t i, j = 1, k = (deep > b3) ? 2 : (
   char *d[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)d[k], *dst = APal(c), *src = APal(Base.AF + c);
   if (k == 1 ) { var.R  = (16 + 36 * ((var.R  * 5 + 128) / 255) + 6 * ((var.G * 5 + 128)/ 255) + ((var.B * 5 + 128)/ 255)); }
   else { if (!k) { var.R  = (((var.R  * 299 + var.G * 587 + var.B * 114) > 127999) ? 90 : 30) + (((var.R  > 127) << 2) | ((var.G > 127) << 1) | (var.B > 127)); }
-         else j = 3; } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); var.RGB = var.R  | (var.G << 8) | (var.B << 16); while(j--) {
-    i = (uint8_t)var.RGB; var.RGB >>= b3; if (k) { src->d[src->l++] = ';'; } if ((var.Y = (i * 41) >> 12)) { src->d[src->l++] = 0x30 + var.Y; i -= var.Y * 100; }
-    if (var.Y || ((i * 205) >> 11)) { src->d[src->l++] = 0x30 + (var.Y = (i * 205) >> 11); i -= var.Y * 10; } src->d[src->l++] = 0x30 + i; } src->d[src->l++] = 'm';
-  dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
+         else j = 3; } src->l = mode->l; MemCpy(src->d, mode->d, mode->l); var.RGB = var.R  | (var.G << 8) | (var.B << 16);
+  while(j--) { i = (uint8_t)var.RGB; var.RGB >>= b3; if (k) { src->d[src->l++] = ';'; }
+    if ((var.Y = ((((i << 2) + i) << 3) + i) >> 12)) { src->d[src->l++] = 0x30 + var.Y; i -= (((((var.Y << 1) + var.Y) << 3) + var.Y) << 2); }
+    if ((var.R = (((((((((i << 1) + i) << 3) + i) << 1) + i) << 2) + i) >> 11)) || var.Y) { src->d[src->l++] = 0x30 + var.R; i -= (((var.R << 2) + var.R) << 1); }
+    src->d[src->l++] = 0x30 + i; }
+  src->d[src->l++] = 'm'; dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = ((uint32_t)c << 24) / n - On; var.G = (uint8_t)var.RGB;
     var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
@@ -168,9 +172,9 @@ Cell HowSize(uint8_t c, uint16_t w, Cell a) { Base.PCell = sizeof(AFunction); Ba
   Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 256) ? Base.Colours : 255; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
   var.Spal = (((Base.AF << 2) + Base.AF) << 3); var.dkey = (uint8_t*)a;
   if (var.dkey < (var.data = var.dkey + (256 << 3))) {
-    if (var.data < (var.info = var.data + (var.off << 2))) {
-      if (var.info < (var.ds = var.info + var.off)) {
-        if (var.ds < (uint8_t*)(var.offset = (ugoc*)(var.ds + var.off))) {
+    if (var.data < (var.ds = var.data + (var.off << 2))) {
+      if (var.ds < (var.pal = var.ds + var.off)) {
+        if (var.pal < (uint8_t*)(var.offset = (ugoc*)(var.pal + var.off))) {
           if ((uint8_t*)var.offset < (var.dwin = (uint8_t*)(var.offset + var.off))) {
             if (var.dwin < (var.event = (var.dwin + w * sizeof(Windows)))) {
               if (var.event < (var.exec = var.event + (sizeof(Events) << 8))) {
