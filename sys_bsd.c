@@ -28,7 +28,7 @@ void SwitchRaw(void) {
     tcgetattr(0, &oldt); struct termios newt = oldt; newt.c_lflag &= ~(ICANON | ECHO | ISIG ); newt.c_iflag &= ~(ICRNL | IXON | ISTRIP);
     tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
   else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
-  
+
 void GetKey(uint8_t *b) {
   uint8_t *p = b, c, len = 6; while (len--) b[len] = 0;
   if (read(0, p, 1) <= 0) { *p = K_ESC; return; }

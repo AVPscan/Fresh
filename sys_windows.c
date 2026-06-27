@@ -67,7 +67,7 @@ goc Real(ugoc fps) { LARGE_INTEGER n,f;
 Cell GetRam(Cell *size) { if (!*size) return 0;
   Cell l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
   if (!r) { l = 0; } *size = l; return (Cell)r; }
-    
+
 void FreeRam(Cell addr, Cell size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
 
 void SWD(void) { if (!VRam.addr) return;

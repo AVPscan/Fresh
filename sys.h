@@ -117,21 +117,23 @@ extern Var_ var;
 
 #define Ink(n)        ((n) > 7) ? Base.Last : Base.I[(n)]                           // Код цвета/фона  0 чёрный 1 белый [2..7] оттенки равномерно из диапазона
 #define Fon(n)        ((n) > 7) ? (Base.AF + Base.Last) : (Base.AF + Base.I[(n)])   //  [8..] доп ячейка - генерируемый цвет по таймеру
-#define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))             // адрес начала кода цвета
-#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << 3)))                            // адрес начала ячейки в буфере клавиатуры
-#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                      // адрес начала структуры события
-#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                        // адрес вектора прерывания события
-#define Convas        (*(Canalysis*)var.dcon)                                       // адрес где организована разбивка холста
+
 #define Con(r)        (var.data + ((r) << Base.D))                                  // адрес начала буфера строки холста
 #define Info(c, r)    (var.ds + (c) + ((r) << Base.DS))                             // адрес данных ячейки холста
 #define Cpal(c, r)    (var.pal + (c) + ((r) << Base.DS))                            // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                          // адрес ячейки в которой смещение указывающее на конец данных в буфере строки
+#define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << 3)))                            // адрес начала ячейки в буфере клавиатуры
+#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                      // адрес начала структуры события
+#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                        // адрес вектора прерывания события
+#define Convas        (*(Canalysis*)var.dcon)                                       // адрес где организована разбивка холста
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))              // адрес начала данных окна n
+#define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))             // адрес начала кода цвета
+
 #define Exe(v, func)  Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func))       // сброс вектора если адрес функции раньше Nop
-#define Start(c, r)   (Data(r) + ((c) ? *Offset((c) - 1, r) : 0))                   // адрес начала буфера ячейки холста
+#define Start(c, r)   (Con(r) + ((c) ? *Offset((c) - 1, r) : 0))                    // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })      // длина ячейки холста в байтах
-#define End(c, r)     (Data(r) + *Offset(c, r))                                     // адрес конца буфера ячейки холста
-    
+#define End(c, r)     (Con(r) + *Offset(c, r))                                      // адрес конца буфера ячейки холста
+
 #define SYS_VARS_INIT \
   KeyIdMap NameId[] = {{"[A",K_UP},{"[B",K_DOW},{"[C",K_RIG},{"[D",K_LEF},{"[1;5A",K_Ctrl_UP},{"[1;5B",K_Ctrl_DOW},{"[1;5C",K_Ctrl_RIG}, \
     {"[1;5D",K_Ctrl_LEF},{"[M", K_Mouse},{"[1;2P",K_F13},{"[1;2Q",K_F14},{"[1;2R",K_F15},{"[15~",K_F5},{"[17~",K_F6},{"[18~",K_F7}, \
