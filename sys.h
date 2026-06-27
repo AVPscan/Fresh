@@ -59,7 +59,7 @@ typedef struct { uint8_t Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, Cell
   Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr; } Base_;
 
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
-typedef struct { uint8_t F, Res; uint16_t Layer, Colour, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
+typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
   dgoc Xr, Yr; } Windows;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef void (*AFunction)(void);
@@ -193,7 +193,7 @@ void WDown(void);                                                     // Рот�
 void WUp(void);                                                       // Ротация динамических окон в обратном направлении
 void WTop(uint16_t n);                                                // Установить окно выше остальных подобных
 void _WView(uint16_t n, uint8_t count, dgoc *args);                   // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
-uint16_t _Window(uint8_t t, uint16_t col, uint8_t c, udgoc *a);       // Создание окна с палитрой col при col<0 статичное окно
+uint16_t _Window(uint8_t t, uint8_t col, uint8_t c, udgoc *a);        // Создание окна с палитрой col при col<0 статичное окно
 void _WExecs(uint16_t n, uint8_t cur, uint8_t c, AFunction *a);       // Настройка статического окна привязка функций к кодам клавиш
 void _WSet(uint16_t n, uint8_t c, uint8_t *a);                        // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvents(uint8_t c, uint8_t *a);                                 // Запомнить вектор системный событий

@@ -279,7 +279,7 @@ void _WView(uint16_t n, uint8_t c, dgoc *a) { dgoc x = Off, y = Off;
     if (w->F & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; } 
     else if ((udgoc)VP.X > (udgoc)Base.Mcol || (udgoc)VP.Y > (udgoc)Base.Mstr) return; }
   w->Xr = x; w->Yr = y; if (w->Xr) { w->F |= b1; } else { w->F &= ~b1; } }
-uint16_t _Window(uint8_t t, uint16_t col, uint8_t c, udgoc *a) { uint16_t l, n; Windows* w;
+uint16_t _Window(uint8_t t, uint8_t col, uint8_t c, udgoc *a) { uint16_t l, n; Windows* w;
   if (t) { if ((n = --Convas.S) < On) { Convas.S = Convas.Max; n = --Convas.S; }
     w = Win(n); w->F = 9; w->Layer = Convas.Max; l = Convas.Max - n; while(l--) --Win(n + l)->Layer; }
   else { if ((n = Convas.D++) > Convas.S) { Convas.D = Convas.Min; n = Convas.D++; } w = Win(n); w->F = 8; w->Layer = n; }
