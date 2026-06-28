@@ -64,7 +64,7 @@ typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, Ma
   dgoc Xr, Yr; } Windows;
 typedef struct { uint8_t C, N; uint16_t W; } Events;
 typedef void (*AFunction)(void);
-typedef struct { uint8_t Res1, Res2; uint16_t Min, Max, D, S, Win; ugoc W, H, CW, CH; } Canalysis;
+typedef struct { uint8_t Res1, Res2; uint16_t D, S, Win; ugoc W, H, CW, CH; } Canalysis;
 typedef struct { uint8_t l, d[31]; } PalBuf;
 typedef struct { ugoc c, r; } CR_;
 typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
@@ -109,12 +109,7 @@ extern Base_ Base;
 extern Var_ var;
 
 #define ENGINE_VARS_INIT \
-  Var_ var = {0}; \
-  Base_ Base = {0,0,0,0,0,0,0,0,0,0,CellPow,Fcolour,CFDeep,Dynam,Wind,FHow,FApm,FHz,0,0,0,0,0,0,0, \
-    {0,0,0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},{0,0,0,0,0,0},':',"00000000\0",0,0,0,0,0,0,0,0,0,0}; \
-  ViewPort_ VP = {0,0,9,K_RIG,K_DOW,K_LEF,K_UP,K_Ctrl_RIG,K_Ctrl_UP,K_Ctrl_LEF,K_Ctrl_DOW,K_F1,0,0,0,0,0,0}; \
-  KeyMouse_ Buf = {0,0,0,0,0,0,0,0,0,{0,0,0,0,0,0},0x20,0x21,0x22,0x60,0x61,0x64,0x65,0,0,0,0,0,0,0}; \
-  MAS_ VRam = {0,0,1}; 
+  Var_ var = {0}; Base_ Base = {0}; ViewPort_ VP = {0}; KeyMouse_ Buf = {0}; MAS_ VRam = {0,0,1}; 
 
 #define Ink(n)        ((n) > 7) ? Base.Last : Base.I[(n)]                           // Код цвета/фона  0 чёрный 1 белый [2..7] оттенки равномерно из диапазона
 #define Fon(n)        ((n) > 7) ? (Base.AF + Base.Last) : (Base.AF + Base.I[(n)])   //  [8..] доп ячейка - генерируемый цвет по таймеру
@@ -141,8 +136,7 @@ extern Var_ var;
     {"[1;5D",K_Ctrl_LEF},{"[M", K_Mouse},{"[1;2P",K_F13},{"[1;2Q",K_F14},{"[1;2R",K_F15},{"[15~",K_F5},{"[17~",K_F6},{"[18~",K_F7}, \
     {"[19~",K_F8},{"[1~",K_HOM},{"[2~",K_INS},{"[20~",K_F9},{"[21~",K_F10},{"[23~",K_F11},{"[24~",K_F12},{"[3~",K_DEL},{"[4~",K_END}, \
     {"[5~",K_PUP},{"[6~",K_PDN},{"[F",K_END},{"[H",K_HOM},{"OP",K_F1},{"OQ",K_F2},{"OR",K_F3},{"OS",K_F4}, \
-    {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; \
-  MSnS_ Flag = {0,0,1}; CR_ TS = {0};
+    {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; MSnS_ Flag = {0,0,1}; CR_ TS = {0};
 
 Cell StrLen(char *s);                                                 // Длина строки
 void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
