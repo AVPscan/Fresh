@@ -187,7 +187,7 @@ Cell HowSize(uint8_t c, uint8_t d, uint16_t w, Cell a) { Base.PCell = sizeof(AFu
   } } } } } } } } } } return Off; }
 void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.addr = VRam.addr; var.size = VRam.size;
-  MemCpy(&var.Save, &var.dpal, sizeof(var.Save)); SetSeparator(Base.Sep); Base.Loop = On; Base.Error = 4; if (!(VRam.size = HowSize(c,d,w,Off))) --Base.Error;
+  MemCpy(&var.Save, &var.dpal, sizeof(var.Save)); Base.Loop = On; Base.Error = 4; if (!(VRam.size = HowSize(c,d,w,Off))) --Base.Error;
   if (Base.Error == 4 && !(VRam.addr = GetRam(&VRam.size))) { Base.Error  = 2; } if (Base.Error  == 4 && !(VRam.size = HowSize(c,d,w,VRam.addr))) Base.Error = 1;
   if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
   if (var.size) { FreeRam(var.addr,var.size); } Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1;
@@ -196,12 +196,10 @@ void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t how, uint16_t hz, uint1
   Convas.H = Off; Convas.Win = Base.Win; VP.Mode = b2; VP.Key = 9; var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz;
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
   Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
-Cell SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); Base.Sep = ':';
-    InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) { return Off; } Real(Off); ColourInit(Fcolour, CFDeep); Time();
-    Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Buf.Lk = 0x20; Buf.Mk = 0x21; Buf.Rk = 0x22; Buf.Ru = 0x60;
-    Buf.Rd = 0x61; Buf.cRu = 0x64; Buf.cRd = 0x65; IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
-  else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); }
-    return Base.Error; } }
+Cell SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
+    Real(Off); ColourInit(Fcolour, CFDeep); Time(); SetSeparator(':'); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+    Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown); IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
+  else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
 
 void MoveNorm(dgoc x, dgoc y) { static uint8_t Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Convas.Win < Base.Win) {
@@ -299,6 +297,7 @@ void _SExec(uint8_t c, AFunction *a) { uint8_t k = K_Mouse; while(k--) { if (Eve
   if (Event(k)->C && c) { uint8_t j, x = Event(k)->C, i = Off;
     while(x-- && c--) { j = ECD; while(--j) { if (Event(j)->W == Base.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(uint8_t c, uint8_t *a) { uint8_t *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
+void _SMouse(uint8_t c, uint8_t *a) { uint8_t *p = &Buf.Lk, i = Off; c = (c > 7) ? 7 : c; while(c--) *p++ = a[i++]; }
 void _FSet(uint8_t cp, uint8_t c, uint16_t *a) { uint16_t d = Base.Dynamic, w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
   uint8_t b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { d = a[0]; if (c--) { w = a[1]; if (c--) { o = a[2]; if (c--) { h = a[3]; if (c) { f = a[4]; } } } } } if (d > 255) d = 255;

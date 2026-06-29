@@ -52,12 +52,13 @@ enum {
   K_BAC = 127, K_Ctrl_LEF, K_Ctrl_UP, K_Ctrl_RIG, K_Ctrl_DOW, K_LEF, K_UP, K_RIG,                     // ECD   вектор обработчика декодирование из
   K_DOW, K_HOM, K_END, K_PUP, K_PDN, K_INS, K_F1, K_F2,                                               //       Buf.Key в Buf.Dat
   K_F3, K_F4, K_F5, K_F6, K_F7, K_F8, K_F9, K_F10,                                                    // RPE   вектор обработчика чтение в Buf.Key и
-  K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE };          //       декодирование из Buf.Key в Buf.Dat
+  K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE,            //       декодирование из Buf.Key в Buf.Dat
+  M_Lkey = 0x20, M_Mkey, M_Rkey, M_Rollup = 0x60, M_Rolldown, M_ShRollup = 0x64, M_ShRolldown };      // Коды мыши которые обрабатываем
 
 typedef struct { uint8_t *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; uint8_t *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
   Cell off, addr, size, Save[13]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; uint16_t Win, On, Apm, Hz, FTime, Rnd,
-  Last, AF, Ink, Border, Fone, I[8], Su[6], Time[6], Timer[6]; char Sep, T[9]; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
+typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; uint16_t Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
+  Border, Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; uint8_t Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
 
 typedef struct { uint8_t d[4], u[4]; } KeyBuf;
 typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
@@ -195,6 +196,7 @@ void _WSet(uint16_t n, uint8_t c, uint8_t *a);                        // Нас�
 void _SEvents(uint8_t c, uint8_t *a);                                 // Запомнить вектор системный событий
 void _SExec(uint8_t c, AFunction *a);                                 // Привязать вектор системных событий к функциям
 void _SKeys(uint8_t c, uint8_t *a);                                   // Задать клавиши управления вьюпортом в обратном порядке
+void _SMouse(uint8_t c, uint8_t *a);                                  // Задать коды управления мышью
 void _FSet(uint8_t cp, uint8_t c, uint16_t *a);                       // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
 void _CSet(uint8_t c, uint16_t *a);                                   // Изменить {colours{,deep}}
 void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
@@ -207,6 +209,7 @@ void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Заг�
 #define Even(...) _SEvents((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Exec(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
 #define Keys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
+#define Mouse(...) _SMouse((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
 #define Fresh(cp, ...) _FSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define Colour(...) _CSet((uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
