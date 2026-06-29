@@ -11,16 +11,18 @@
 #define SYS_H
 #include <stdint.h>
 
-// Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..14}30}62]
-enum { Off, On };
+// Параметры на момент сборки, можно все изменить в RunTime единственное ограничение пределы для CellPow [7..16}32}60]
 #define CellPow   16            // Масштаб холста [7..60] {по сути создание буфера для данных}
 #define Wind      2             // Всего окон на холсте [2..65535] {окна безрамочные по сути спрайты}
-#define Dynam     1             // Сколько из них динамических окон
-#define FHow      Off           // Частота вызова обработчика таймера [Off{0}..FHz] Гц
+#define Dynam     1             // Сколько из них динамических окон [1..Wind]
+#define FHow      0             // Частота вызова обработчика таймера [Off{0}..FHz] Гц
 #define FHz       500           // Десятикратная частота электросети [0,1..1000] Гц {любая точка пространства}
 #define FApm      200           // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    24            // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
-#define Fcolour   255           // Количество оттенков света на старте [1..255] {0 - чёрный 1 - белый, 2 палитры}
+#define Fcolour   255           // Количество оттенков света на старте [1..254] {0 - чёрный 1 - белый, 2 палитры}
+typedef uintptr_t Cell;         // Разрядность процессора
+#define SCell sizeof(Cell)
+
 #if CellPow < 17                // Масштабирование разрешения в зависимости от размера холста(буфер)
   typedef uint32_t udgoc;
   typedef int32_t  dgoc;
@@ -37,15 +39,12 @@ enum { Off, On };
   typedef uint64_t ugoc;
   typedef int64_t  goc;
 #endif
-typedef uintptr_t Cell; // Разрядность процессора
-#define SCell sizeof(Cell)
 
-enum {
-  b0 = 0x01, b1 = 0x02, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100, // Битовые
+enum { Off, On,
+  b0 = 0x01, b1, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,        // Битовые
   b3210 = 0x0F, b10 = 0x03, b21 = 0x06, b65 = 0x60, b76 = 0xC0, b210 = 0x07, b765 = 0xE0,             //  маски
-  aD = 0x01,aB = 0x02, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40};                       // Режимы вывода текста
-enum {
-  K_NO, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                         // Расширенный набор ascii + все значимые клавиши
+  aD = 0x01, aB, aF = 0x04 , aC = 0x08, aU = 0x10, aI = 0x20, aS = 0x40,                              // Режимы вывода текста
+  K_NO = 0, K_Ctrl_A, K_Ctrl_B, K_Ctrl_C, K_Ctrl_D, K_Ctrl_E, K_Ctrl_F, K_Ctrl_G,                     // Расширенный набор ascii + все значимые клавиши
   K_DEL, K_TAB, K_LF, K_Ctrl_K, K_Ctrl_L, K_ENT, K_Ctrl_N, K_Ctrl_O,                                  //       клавиатуры, K_Mouse [....] Timer диапазон
   K_Ctrl_P, K_Ctrl_Q, K_Ctrl_R, K_Ctrl_S, K_Ctrl_T, K_Ctrl_U, K_Ctrl_V, K_Ctrl_W,                     //       векторов пользователя
   K_Ctrl_X, K_Ctrl_Y, K_Ctrl_Z, K_ESC, K_FS, K_GS, K_RS, K_US,                                        // Timer вектор обработчика таймера
@@ -55,25 +54,25 @@ enum {
   K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE,            //       декодирование из Buf.Key в Buf.Dat
   M_Lkey = 0x20, M_Mkey, M_Rkey, M_Rollup = 0x60, M_Rolldown, M_ShRollup = 0x64, M_ShRolldown };      // Коды мыши которые обрабатываем
 
+typedef struct { uint8_t d[4], u[4]; } KeyBuf;
+typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
+typedef struct { uint8_t C, N; uint16_t W; } Events;
+typedef void (*AFunction)(void);
+typedef struct { uint8_t Res1, Res2; uint16_t D, S, Win; ugoc W, H, CW, CH; } Canalysis;
+typedef struct { uint8_t l, d[19]; } PalBuf;
+
 typedef struct { uint8_t *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; uint8_t *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
   Cell off, addr, size, Save[13]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; uint16_t Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
   Border, Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; uint8_t Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
-
-typedef struct { uint8_t d[4], u[4]; } KeyBuf;
-typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc;
-  dgoc Xr, Yr; } Windows;
-typedef struct { uint8_t C, N; uint16_t W; } Events;
-typedef void (*AFunction)(void);
-typedef struct { uint8_t Res1, Res2; uint16_t D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t l, d[31]; } PalBuf;
-typedef struct { ugoc c, r; } CR_;
-typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
-typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
-typedef struct { char *name; uint8_t id; } KeyIdMap;
+typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic;
   dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
+typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
+
+typedef struct { ugoc c, r; } CR_;
+typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
+typedef struct { char *name; uint8_t id; } KeyIdMap;
 
 typedef struct {                            //UTFinfo  
   uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
@@ -101,13 +100,14 @@ typedef struct {
   uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } Flags;
 
-extern MAS_ VRam;
+extern Var_ var;
+extern Base_ Base;
 extern ViewPort_ VP;
 extern KeyMouse_ Buf;
-extern CR_ TS;
+extern MAS_ VRam;
+
 extern MSnS_ Flag;
-extern Base_ Base;
-extern Var_ var;
+extern CR_ TS;
 
 #define ENGINE_VARS_INIT \
   Var_ var = {0}; Base_ Base = {0}; ViewPort_ VP = {0}; KeyMouse_ Buf = {0}; MAS_ VRam = {0,0,1}; 
