@@ -15,7 +15,7 @@
 
 SYS_VARS_INIT;
 
-As SysWrite(void *buf, As len) { return (As)_write(1, buf, (unsigned int)len); }
+As SysWrite(void *buf, As len) { return (As)_write(1, buf, (As)len); }
 
 void SwitchRaw(void) {
   HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_CURSOR_INFO ci;
@@ -34,8 +34,8 @@ void SwitchRaw(void) {
     CONSOLE_CURSOR_INFO cinfo; GetConsoleCursorInfo(hOut, &cinfo); cinfo.bVisible = TRUE;
     SetConsoleCursorInfo(hOut, &cinfo); SetConsoleMode(hOut, oldModeOut); Flag.SwitchRaw++; } }
 
-void GetKey(uint8_t *b) {
-  uint8_t *p = b, c, len = 6; while (len--) *(p + len) = 0;
+void GetKey(anu *b) {
+  anu *p = b, c, len = 6; while (len--) *(p + len) = 0;
   HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0; GetNumberOfConsoleInputEvents(hIn, &ev);
   if (ev == 0) { *p = 27; return; }
   _read(0, p, 1); c = *p; if (c > 127) {
@@ -44,7 +44,7 @@ void GetKey(uint8_t *b) {
     return; }
   if (c > 31 && c < 127) return;
   *p++ = 27; *p = c; if (c != 27) return; 
-  uint8_t *s1, *s2, j = (uint8_t)(sizeof(NameId)/sizeof(KeyIdMap));
+  anu *s1, *s2, j = (anu)(sizeof(NameId)/sizeof(KeyIdMap));
   GetNumberOfConsoleInputEvents(hIn, &ev); if (ev == 0) return;
   _read(0, p, 1); s1 = p; while ((s1 - p) < 5) {
     GetNumberOfConsoleInputEvents(hIn, &ev); if (ev == 0) break;
@@ -53,11 +53,11 @@ void GetKey(uint8_t *b) {
   if (*s1 < 64) do { GetNumberOfConsoleInputEvents(hIn, &ev); if (ev == 0) break;
                      if (_read(0, &c, 1) <= 0) break; 
                      } while (c < 64);
-  while(j--) { s2 = (uint8_t*)NameId[j].name; if (*p != *s2) continue;
+  while(j--) { s2 = (anu*)NameId[j].name; if (*p != *s2) continue;
     s1 = p; while (*++s1 == *++s2 && *s2);
     if (!*s2) { *p = NameId[j].id; break; } }
-  if (j == (uint8_t)~Off) *p = Off;
-  if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
+  if (j == (anu)~Off) *p = Off;
+  if (*p++ == (anu)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
 goc Real(ugoc fps) { LARGE_INTEGER n,f;   
     if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); As t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
@@ -74,7 +74,7 @@ void SWD(void) { if (!VRam.addr) return;
   char *path = (char *)(var.dbuf); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
   for (char *p = path + len; p > path; p--) if (*p == '\\' || *p == '/') { *p = '\0'; SetCurrentDirectoryA(path); break; } }
 
-uint8_t SyncSize(void) {
+anu SyncSize(void) {
   if (!VRam.addr) return 0;
   static HANDLE hOut = NULL; if (!hOut) hOut = GetStdHandle(STD_OUTPUT_HANDLE);
   CONSOLE_SCREEN_BUFFER_INFO csbi; if (!GetConsoleScreenBufferInfo(hOut, &csbi)) return 0;

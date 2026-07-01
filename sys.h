@@ -21,29 +21,32 @@
 #define CFDeep    24            // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
 #define Fcolour   255           // Количество оттенков света на старте [1..254] {0 - чёрный 1 - белый, 2 палитры}
 
-typedef uintptr_t As;           // As основа (разрядность процессора)
-#define SCell sizeof(As)
-typedef uint32_t an;            // Anka число (беззнаковое)
-typedef int32_t san;
-typedef uint64_t dan;
-typedef int64_t dsan;
-
-#if CellPow < 17                // Масштабирование разрешения в зависимости от размера холста(буфер)
-  typedef uint32_t udgoc;
-  typedef int32_t  dgoc;
-  typedef uint16_t ugoc;
-  typedef int16_t  goc;         // Gocara пространство (знаковое)
+typedef uintptr_t  As;          // As основа (разрядность процессора)
+typedef uint8_t   anu;          // Anu — атом (беззнаковое)
+typedef int8_t   sanu;
+typedef uint16_t danu;
+typedef int16_t dsanu;
+typedef uint32_t   an;          // Anka число (беззнаковое)
+typedef int32_t   san;
+typedef uint64_t  dan;
+typedef int64_t  dsan;
+#if CellPow < 17
+  typedef an    udgoc;
+  typedef san    dgoc;
+  typedef danu   ugoc;
+  typedef dsanu   goc;          // Gocara пространство (знаковое)
 #elif CellPow < 33
-  typedef uint64_t udgoc;
-  typedef int64_t  dgoc;
-  typedef uint32_t ugoc;
-  typedef int32_t  goc;
+  typedef dan   udgoc;
+  typedef dsan   dgoc;
+  typedef an     ugoc;
+  typedef san     goc;
 #elif CellPow < 61
-  typedef uint64_t udgoc;
-  typedef int64_t  dgoc;
-  typedef uint64_t ugoc;
-  typedef int64_t  goc;
+  typedef dan   udgoc;
+  typedef dsan   dgoc;
+  typedef dan    ugoc;
+  typedef dsan    goc;
 #endif
+#define SCell sizeof(As)
 
 enum { Off, On,
   b0 = 0x01, b1, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,        // Битовые
@@ -59,50 +62,50 @@ enum { Off, On,
   K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE,            //       декодирование из Buf.Key в Buf.Dat
   M_Lkey = 0x20, M_Mkey, M_Rkey, M_Rollup = 0x60, M_Rolldown, M_ShRollup = 0x64, M_ShRolldown };      // Коды мыши которые обрабатываем
 
-typedef struct { uint8_t d[4], u[4]; } KeyBuf;
-typedef struct { uint8_t F, Colour; uint16_t Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
-typedef struct { uint8_t C, N; uint16_t W; } Events;
+typedef struct { anu d[4], u[4]; } KeyBuf;
+typedef struct { anu F, Colour; danu Layer, parent, child; ugoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; dgoc Xr, Yr; } Windows;
+typedef struct { anu C, N; danu W; } Events;
 typedef void (*AFunction)(void);
-typedef struct { uint8_t Res1, Res2; uint16_t D, S, Win; ugoc W, H, CW, CH; } Canalysis;
-typedef struct { uint8_t l, d[19]; } PalBuf;
+typedef struct { anu Res1, Res2; danu D, S, Win; ugoc W, H, CW, CH; } Canalysis;
+typedef struct { anu l, d[19]; } PalBuf;
 
-typedef struct { uint8_t *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; uint8_t *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
-  As off, addr, size, Save[13]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; san Syn, Loop, Dis, XY; an Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
-typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; uint16_t Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
-  Border, Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; uint8_t Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
-typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
-typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic;
+typedef struct { anu *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; anu *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
+  As off, addr, size, Save[13]; anu R, G, B, A, X, Y; dsanu C, U, Z, XZ; san Syn, Loop, Dis, XY; an Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
+typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; danu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
+  Border, Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; anu Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
+typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; danu Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
+typedef struct { anu pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; danu tic;
   dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { As addr, size; uint8_t SystemSwitch; } MAS_;
+typedef struct { As addr, size; anu SystemSwitch; } MAS_;
 
 typedef struct { ugoc c, r; } CR_;
-typedef struct { As s, ns; uint8_t SwitchRaw; } MSnS_;
-typedef struct { char *name; uint8_t id; } KeyIdMap;
+typedef struct { As s, ns; anu SwitchRaw; } MSnS_;
+typedef struct { char *name; anu id; } KeyIdMap;
 
-typedef struct {                            //UTFinfo  
-  uint8_t len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
-  uint8_t vis     : 2;                      // бит 32     визуальная ширина (0-2)
-  uint8_t Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
-  uint8_t Ctrl    : 1;                      // бит 5      управляющий код
-  uint8_t ds      : 1;                      // бит 6      {0} Data {1} Structure
-  uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
+typedef struct {
+  anu len     : 2;                      // бит 10     длина (0-3) + 1, игнорируем так как размер в байтах через offset
+  anu vis     : 2;                      // бит 32     визуальная ширина (0-2)
+  anu Dir     : 1;                      // бит 4      направление (0=LTR,1=RTL)
+  anu Ctrl    : 1;                      // бит 5      управляющий код
+  anu ds      : 1;                      // бит 6      {0} Data {1} Structure
+  anu Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
 } Data;
 typedef struct {
-  uint8_t len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
-  uint8_t right   : 1;                      // бит 4      {1} к правому
-  uint8_t left    : 1;                      // бит 5      {1} к левому {00}/{11} по центру (как заполнять поле структуры)
-  uint8_t ds      : 1;                      // бит 6      {1} Structure {0} Data
-  uint8_t Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
+  anu len     : 4;                      // бит 3210  длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
+  anu right   : 1;                      // бит 4      {1} к правому
+  anu left    : 1;                      // бит 5      {1} к левому {00}/{11} по центру (как заполнять поле структуры)
+  anu ds      : 1;                      // бит 6      {1} Structure {0} Data
+  anu Refresh : 1;                      // бит 7      {1/0} есть изменения / нет изменений
 } Structure;
 typedef struct {
-  uint8_t col        ;                      // бит x      код цвета {максимум 255 цветовых оттенка 0 чёрный}
+  anu col     : 8;                      // бит x      код цвета {максимум 255 цветовых оттенка 0 чёрный}
 } palet;
 typedef struct {
-  uint8_t sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
-  uint8_t vision  : 1;                      // бит 1      {1} отображается {0} не отображается
-  uint8_t cursor  : 1;                      // бит 2      {1} показывать {0} не показывать - курсор окна
-  uint8_t nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
-  uint8_t wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
+  anu sd      : 1;                      // бит 0      {1} статичное (не изменяется в размере на холсте, в байтах) {0} динамичное окно
+  anu vision  : 1;                      // бит 1      {1} отображается {0} не отображается
+  anu cursor  : 1;                      // бит 2      {1} показывать {0} не показывать - курсор окна
+  anu nowrap  : 1;                      // бит 3      {1} включен {0} выключен авто перенос строк окна
+  anu wait    : 1;                      // бит 4      {1} занято заливаются данные из файла/порта {0} свободно
 } Flags;
 
 extern Var_ var;
@@ -145,41 +148,41 @@ extern CR_ TS;
     {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; MSnS_ Flag = {0,0,1}; CR_ TS = {0};
 
 As StrLen(char *s);                                                   // Длина строки
-void MemSet(void* buf, uint8_t val, As len);                          // Заполнение куска памяти val
+void MemSet(void* buf, anu val, As len);                              // Заполнение куска памяти val
 void MemMove(void* dst, void* src, As len);                           // Перемещение куска памяти с проверкой наложения
 void MemCpy(void* dst, void* src, As len);                            // Копирование куска памяти, без проверки наложения!
-int8_t MemCmp(void* dst, void* src, As len);                          // Сравнение
-void UTFinfoTile(uint8_t *s, As len);                                 // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
-void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
+sanu MemCmp(void* dst, void* src, As len);                            // Сравнение
+void UTFinfoTile(anu *s, As len);                                     // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
+void UTFinfo(anu *s);                                                 // Рассказ об utf8 возвращает Buf.Cod = Data
 void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
-uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Dat Buf.Count
-uint8_t PopKey(void);                                                 // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
+anu ShowKey(void);                                                    // Показать ожидаемую/получаемую клавишу Buf.key Buf.Dat Buf.Count
+anu PopKey(void);                                                     // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Key(void);                                                       // Сколько клавиш в буфере
-uint16_t D96(uint16_t *a, uint16_t d);                                // Остаток от деления 96 битного числа
-void CSTime(uint32_t add);                                            // Сформировать строку времени увеличив при этом таймер на add
+danu D96(danu *a, danu d);                                            // Остаток от деления 96 битного числа
+void CSTime(an add);                                                  // Сформировать строку времени увеличив при этом таймер на add
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
-int16_t Rand(int16_t n);                                              // Случайное число [0...(n-1)]
-int8_t Fsin(int16_t u);                                               // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
-int8_t Fcos(int16_t u);                                               // Косинус    для всего диапазона дают [-127...+127]
-int8_t Ftg(int16_t u);                                                // Тангенс    бесконечность [-128] (для int8_t дианазон [-128,-127,ноль,127])
-int8_t Fctg(int16_t u);                                               // Котангенс  так как 0 и -128 не имеют обратных чисел!
-uint16_t CreateCA(uint16_t c, uint8_t a, char *Buf);                  // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
-void Print(uint16_t n, uint8_t m, char *str);                         // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
-void GenFC(uint16_t c, uint8_t deep);                                 // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру Base.Deep
+dsanu Rand(dsanu n);                                                  // Случайное число [0...(n-1)]
+sanu Fsin(dsanu u);                                                   // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
+sanu Fcos(dsanu u);                                                   // Косинус    для всего диапазона дают [-127...+127]
+sanu Ftg(dsanu u);                                                    // Тангенс    бесконечность [-128] (для sanu дианазон [-128,-127,ноль,127])
+sanu Fctg(dsanu u);                                                   // Котангенс  так как 0 и -128 не имеют обратных чисел!
+danu CreateCA(danu c, anu a, char *Buf);                              // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
+void Print(danu n, anu m, char *str);                                 // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
+void GenFC(danu c, anu deep);                                         // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру Base.Deep
 void SetSeparator(char s);                                            // Установить разделитель в формат времени
-void SetBorder(uint8_t on, uint16_t b);                               // Установить цвет бордюра и осчистить экран
-void SetPalette(uint8_t set);                                         // Установить палитру [0..1]
+void SetBorder(anu on, danu b);                                       // Установить цвет бордюра и осчистить экран
+void SetPalette(anu set);                                             // Установить палитру [0..1]
 void SwitchPalette(void);                                             // Переключить палитру
-void GenRGB(uint8_t mode, uint16_t c, uint16_t n);                    // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (Off/On)
-void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом sinus
+void GenRGB(anu mode, danu c, danu n);                                // Сгенерировать RGB позиции (с) из диапазона до (n) включительно методом (Off/On)
+void GenLast(dsanu c);                                                // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом sinus
 void GenPalettes(void);                                               // Автогенерация оттенков света в палитры двумы методами
-void ColourInit(uint16_t c, uint16_t d);                              // Установка переменных цвета Colours Deep
-As HowSize(uint8_t c, uint8_t d, uint16_t w, As a);                   // Расчёт общего размера среды
-void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t h, uint16_t z, uint16_t a); // Инициализация мира CellPower Dynamic Win How Hz Apm
+void ColourInit(danu c, danu d);                                      // Установка переменных цвета Colours Deep
+As HowSize(anu c, anu d, danu w, As a);                               // Расчёт общего размера среды
+void InitVram(anu c, anu d, danu w, danu h, danu z, danu a);          // Инициализация мира CellPower Dynamic Win How Hz Apm
 As SystemSwitch(void);                                                // Вход/выход в мир
 void MoveNorm(dgoc x, dgoc y);                                        // Нормализация перемещения
 void MoveConvas(dgoc dx, dgoc dy);                                    // Взаимосвязь перемещения по холсту и экранных координат
-uint8_t MoveScreen(dgoc mx, dgoc my);                                 // Взаимосвязь изменения экранных координат(мышью) и холста
+anu MoveScreen(dgoc mx, dgoc my);                                     // Взаимосвязь изменения экранных координат(мышью) и холста
 void Free(void);                                                      // Одна итерация Fresh
 void Encode(void);                                                    // Декодировать Buf.Key в Buf.Dat
 void RPEncode(void);                                                  // Прочитать событие из порта 0 и декодировать Buf.Key в Buf.Dat
@@ -191,37 +194,37 @@ void WSwitch(void);                                                   // Пок�
 void WASwitch(void);                                                  // Адаптивно показать окно {Спрятать окно}
 void WDown(void);                                                     // Ротация динамических окон
 void WUp(void);                                                       // Ротация динамических окон в обратном направлении
-void WTop(uint16_t n);                                                // Установить окно выше остальных подобных
-void _WView(uint16_t n, uint8_t count, dgoc *args);                   // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
-uint16_t _Window(uint8_t mode, uint8_t col, uint8_t c, udgoc *a);     // Создание окна с палитрой col при col<0 статичное окно
-void _WExecs(uint16_t n, uint8_t cur, uint8_t c, AFunction *a);       // Настройка статического окна привязка функций к кодам клавиш
-void _WSet(uint16_t n, uint8_t c, uint8_t *a);                        // Настройка окна включение/отключение {Cursor{,Warp}}
-void _SEvents(uint8_t c, uint8_t *a);                                 // Запомнить вектор системный событий
-void _SExec(uint8_t c, AFunction *a);                                 // Привязать вектор системных событий к функциям
-void _SKeys(uint8_t c, uint8_t *a);                                   // Задать клавиши управления вьюпортом в обратном порядке
-void _SMouse(uint8_t c, uint8_t *a);                                  // Задать коды управления мышью
-void _FSet(uint8_t cp, uint8_t c, uint16_t *a);                       // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
-void _CSet(uint8_t c, uint16_t *a);                                   // Изменить {colours{,deep}}
-void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-#define WView(n, ...) _WView(n, (uint8_t)((sizeof((dgoc[]){0, ##__VA_ARGS__}) / sizeof(dgoc)) - 1), (dgoc[]){0, ##__VA_ARGS__} + 1)
-#define Window(mode, col, ...) _Window(mode, col, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
-#define WDynamic(col, ...) _Window(1, col, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
-#define WStatic(col, ...) _Window(0, col, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
-#define WExec(n, cur, ...) _WExecs(n, cur, (uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define WSet(n, ...) _WSet(n, (uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define Even(...) _SEvents((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define Exec(...) _SExec((uint8_t)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define Keys(...) _SKeys((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define Mouse(...) _SMouse((uint8_t)((sizeof((uint8_t[]){0, ##__VA_ARGS__}) / sizeof(uint8_t)) - 1), (uint8_t[]){0, ##__VA_ARGS__} + 1)
-#define Fresh(cp, ...) _FSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
-#define Colour(...) _CSet((uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
-#define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
+void WTop(danu n);                                                    // Установить окно выше остальных подобных
+void _WView(danu n, anu count, dgoc *args);                           // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
+danu _Window(anu mode, anu col, anu c, udgoc *a);                     // Создание окна с палитрой col при col<0 статичное окно
+void _WExecs(danu n, anu cur, anu c, AFunction *a);                   // Настройка статического окна привязка функций к кодам клавиш
+void _WSet(danu n, anu c, anu *a);                                    // Настройка окна включение/отключение {Cursor{,Warp}}
+void _SEvents(anu c, anu *a);                                         // Запомнить вектор системный событий
+void _SExec(anu c, AFunction *a);                                     // Привязать вектор системных событий к функциям
+void _SKeys(anu c, anu *a);                                           // Задать клавиши управления вьюпортом в обратном порядке
+void _SMouse(anu c, anu *a);                                          // Задать коды управления мышью
+void _FSet(anu cp, anu c, danu *a);                                   // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
+void _CSet(anu c, danu *a);                                           // Изменить {colours{,deep}}
+void _WData(danu n, char *str, anu c, udgoc *a);                      // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+#define WView(n, ...) _WView(n, (anu)((sizeof((dgoc[]){0, ##__VA_ARGS__}) / sizeof(dgoc)) - 1), (dgoc[]){0, ##__VA_ARGS__} + 1)
+#define Window(mode, col, ...) _Window(mode, col, (anu)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
+#define WDynamic(col, ...) _Window(1, col, (anu)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
+#define WStatic(col, ...) _Window(0, col, (anu)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
+#define WExec(n, cur, ...) _WExecs(n, cur, (anu)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define WSet(n, ...) _WSet(n, (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
+#define Even(...) _SEvents((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
+#define Exec(...) _SExec((anu)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
+#define Keys(...) _SKeys((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
+#define Mouse(...) _SMouse((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
+#define Fresh(cp, ...) _FSet(cp, (anu)((sizeof((danu[]){0, ##__VA_ARGS__}) / sizeof(danu)) - 1), (danu[]){0, ##__VA_ARGS__} + 1)
+#define Colour(...) _CSet((anu)((sizeof((danu[]){0, ##__VA_ARGS__}) / sizeof(danu)) - 1), (danu[]){0, ##__VA_ARGS__} + 1)
+#define WData(n, str, ...) _WData(n, str, (anu)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
 As SysWrite(void *buf, As len);                                       // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
-void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
+void GetKey(anu *b);                                                  // Читаем utf8 из порта
 goc Real(ugoc fps);                                                   // Сколько реально прошло в ожидании
 As GetRam(As *size);                                                  // Взять память
 void FreeRam(As addr, As size);                                       // Вернуть память
-uint8_t SyncSize(void);                                               // Обновить рамки терминала
+anu SyncSize(void);                                                   // Обновить рамки терминала
 void SWD(void);                                                       // Установить рабочую директорию
 #endif /* SYS_H */

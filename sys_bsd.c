@@ -29,8 +29,8 @@ void SwitchRaw(void) {
     tcsetattr(0, TCSANOW, &newt); fcntl(0, F_SETFL, O_NONBLOCK); Flag.SwitchRaw--; } 
   else { tcsetattr(0, TCSANOW, &oldt); fcntl(0, F_SETFL, 0); Flag.SwitchRaw++; } }
 
-void GetKey(uint8_t *b) {
-  uint8_t *p = b, c, len = 6; while (len--) b[len] = 0;
+void GetKey(anu *b) {
+  anu *p = b, c, len = 6; while (len--) b[len] = 0;
   if (read(0, p, 1) <= 0) { *p = K_ESC; return; }
   c = *p; if (c > 127) {
     len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
@@ -38,15 +38,15 @@ void GetKey(uint8_t *b) {
     return; }
   if (c > 31 && c < 127) return;
   *p++ = K_ESC; *p = c; if (c != K_ESC) return; 
-  uint8_t *s1, *s2, j = (uint8_t)(sizeof(NameId)/sizeof(KeyIdMap));
+  anu *s1, *s2, j = (anu)(sizeof(NameId)/sizeof(KeyIdMap));
   if (read(0, p, 1) > 0) { s1 = p; while (((s1 - p) < 5) && (read(0, ++s1, 1) > 0)) if (*s1 > 63) break;
     if (*s1 < 64) while((read(0,&c,1) > 0) && (c < 64));
-    while(j--) { s2 = (uint8_t*)NameId[j].name;
+    while(j--) { s2 = (anu*)NameId[j].name;
       if (*p != *s2) continue;
       s1 = p; while (*++s1 == *++s2 && *s2);
       if (!*s2) { *p = NameId[j].id; break; } }
-    if (j == (uint8_t)~Off) *p = Off;
-    if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
+    if (j == (anu)~Off) *p = Off;
+    if (*p++ == (anu)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
 
 goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
   struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC, &f);
@@ -59,7 +59,7 @@ As GetRam(As *s) { if (!*s) return 0;
 
 void FreeRam(As a, As s) { if (a) munmap((void*)a, s); }
 
-uint8_t SyncSize(void) { if (!VRam.addr) return Off;
+anu SyncSize(void) { if (!VRam.addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
   if (ws.ws_col == TS.c && ws.ws_row == TS.r) return Off;
   TS.c = ws.ws_col; TS.r = ws.ws_row; return On; }
