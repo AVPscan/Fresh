@@ -250,7 +250,7 @@ void Free(void) { dgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE
       MoveConvas(dx, dy); } }
   if ((var.Syn += Real(Base.Apm) + Base.Hz) >= var.Loop) {
     if ((var.Dis += (var.Syn / var.Loop)) >= Base.FTime) { CSTime(var.Dis / Base.FTime); var.Dis %= Base.FTime; }
-    static dsanu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
+    static danu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
     var.Syn %= var.Loop; }
   if (Vector(Off)) { VP.Wexe = Event(Off)->W; Vector(Off)(); }
   if (SyncSize() || Buf.Ctrl > On) { SetBorder(Base.On, Base.Border); } else {  } }
