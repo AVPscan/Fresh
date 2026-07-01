@@ -102,22 +102,17 @@ anu PopKey(void) { anu d, i = Off;
   else { k->d[Off] &= ~b6; i = b1; } Buf.Count = k->d[i + On]; Buf.Dat = k->d[i] & ~b76;
   d = On + (k->d[i] & b10); while(d--) *(Buf.Key + d) = k->u[i + d];
   return On; }
-ugoc Key(void) { ugoc s = Off; anu d, c = Buf.push;
+danu Key(void) { danu s = Off; anu d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-danu A96(danu *a, an add) { var.XYz = add << 16; var.Y = Base.Count;
-  while((var.XYz >>= 16) && var.Y--) { *a = (danu)(var.XYz += *a); a--; } return var.XYz >> 16; }
-danu D96(danu *a, danu d) { var.XYz = 0; var.Y = Base.Count;
-  while(var.Y--) { *a = (danu)((var.XYz = (var.XYz << 16) | *a) / d); var.XYz %= d; a++; } return (danu)var.XYz; }
-void CSTime(an add) { var.XYz = add << 16;
-  var.Y = Base.Count; while((var.XYz >>= 16) && var.Y--) { Base.Timer[var.Y] = (danu)(var.XYz += Base.Timer[var.Y]); } var.XYz = 0;
-  var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (danu)(var.XYz += Base.Time[var.Y] + Base.Timer[var.Y]); var.XYz >>= 16; }
-  var.X = D96(&Base.Su[0], 60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+void CSDate(void) { Base.SD = Base.JDN + Base.TC; if ((Base.TT + Base.Time) > 86399) Base.SD++; }
+void CSTime(an add) { if ((Base.TT += add) > 86399) { Base.TT -= 86400; Base.TC++; }
+  var.XYz = Base.TT + Base.Time; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
-  var.X = D96(&Base.Su[0], 60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  var.XYz /= 60; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
-  var.X = D96(&Base.Su[0], 24); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  var.XYz /= 60; var.X = var.XYz % 24; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[1] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[0] = 0x30 + var.Y; }
 
 void IRnd(void) { Base.Rnd = (danu)(Flag.ns | On); }

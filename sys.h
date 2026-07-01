@@ -71,7 +71,7 @@ typedef struct { anu l, d[19]; } PalBuf;
 typedef struct { anu *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; anu *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
   As off, addr, size, Save[13]; anu R, G, B, A, X, Y; dsanu C, U, Z, XZ; san Syn, Loop, Dis, XY; an Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; danu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink, Border,
-  Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; anu Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
+  Fone, I[8]; char T[8]; anu Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; dan SD, JDN, TC; an Time, TT; } Base_;
 typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; danu Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 typedef struct { anu pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; danu tic; dgoc LkX, LkY, MkX, MkY, RkX,
   RkY; } KeyMouse_;
@@ -156,8 +156,8 @@ void UTFinfo(anu *s);                                        // Рассказ �
 void PushKey(void);                                          // Положить клавишу в буфер Buf.key
 anu ShowKey(void);                                           // Показать ожидаемую/получаемую клавишу Buf.key Buf.Dat Buf.Count
 anu PopKey(void);                                            // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
-ugoc Key(void);                                              // Сколько клавиш в буфере
-danu D96(danu *a, danu d);                                   // Остаток от деления 96 битного числа
+danu Key(void);                                              // Сколько клавиш в буфере
+void CSDate(void);                                           // Сформировать JDN в Base.SD учитывая таймер
 void CSTime(an add);                                         // Сформировать строку времени увеличив при этом таймер на add
 void IRnd(void);                                             // Инициализация генератора случайных чисел
 dsanu Rand(dsanu n);                                         // Случайное число [0...(n-1)]
