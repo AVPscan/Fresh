@@ -12,7 +12,7 @@
 
 void Body(void) {  // пока не дописано WinData,Render9
   char *b = var.dbuf + 512, *p = b; uint8_t l, v, w, j = 55, i = 8; Print(Base.Fone, Off, "\033[H"); while(i--) Print(Fon(7-i),Off," ");
-  Print(Base.Fone, Off, ""); Cell s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
+  Print(Base.Fone, Off, ""); As s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
   snprintf(p, 91, " %ld Kbyte %d %d %d %d %ld ", s, Base.CellP, Base.Dynamic, Base.Win, Base.Colours, var.end - var.dbuf); i = (uint8_t)StrLen(b);
   Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b); snprintf(b, 100, " Time %s                         ", Base.T); if ((uint8_t)StrLen(b) > (j - i)) { *(b + j - i) = Off; }
   if ((uint8_t)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(Ink(8), Off, b); if (TS.r < 3) return;

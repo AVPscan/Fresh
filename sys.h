@@ -20,14 +20,19 @@
 #define FApm      200           // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    24            // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
 #define Fcolour   255           // Количество оттенков света на старте [1..254] {0 - чёрный 1 - белый, 2 палитры}
-typedef uintptr_t Cell;         // Разрядность процессора
-#define SCell sizeof(Cell)
+
+typedef uintptr_t As;           // As основа (разрядность процессора)
+#define SCell sizeof(As)
+typedef uint32_t an;            // Anka число (беззнаковое)
+typedef int32_t san;
+typedef uint64_t dan;
+typedef int64_t dsan;
 
 #if CellPow < 17                // Масштабирование разрешения в зависимости от размера холста(буфер)
   typedef uint32_t udgoc;
   typedef int32_t  dgoc;
   typedef uint16_t ugoc;
-  typedef int16_t  goc;
+  typedef int16_t  goc;         // Gocara пространство (знаковое)
 #elif CellPow < 33
   typedef uint64_t udgoc;
   typedef int64_t  dgoc;
@@ -62,16 +67,16 @@ typedef struct { uint8_t Res1, Res2; uint16_t D, S, Win; ugoc W, H, CW, CH; } Ca
 typedef struct { uint8_t l, d[19]; } PalBuf;
 
 typedef struct { uint8_t *dkey, *data, *ds, *pal; ugoc *offset, *dlwin; uint8_t *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
-  Cell off, addr, size, Save[13]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; int32_t Syn, Loop, Dis, XY; uint32_t Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
+  As off, addr, size, Save[13]; uint8_t R, G, B, A, X, Y; int16_t C, U, Z, XZ; san Syn, Loop, Dis, XY; an Spal, RGB, XYz; dgoc Xr, Yr; } Var_;
 typedef struct { uint8_t Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; uint16_t Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
   Border, Fone, I[8], Su[6], Time[6], Timer[6]; char T[8]; uint8_t Error, Loop; goc Gmin, Gmax, Speed; ugoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; } Base_;
 typedef struct { uint8_t Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; uint16_t Wexe; dgoc X, Y, dXY; ugoc Xs, Ys; } ViewPort_;
 typedef struct { uint8_t pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; uint16_t tic;
   dgoc LkX, LkY, MkX, MkY, RkX, RkY; } KeyMouse_;
-typedef struct { Cell addr, size; uint8_t SystemSwitch; } MAS_;
+typedef struct { As addr, size; uint8_t SystemSwitch; } MAS_;
 
 typedef struct { ugoc c, r; } CR_;
-typedef struct { Cell s, ns; uint8_t SwitchRaw; } MSnS_;
+typedef struct { As s, ns; uint8_t SwitchRaw; } MSnS_;
 typedef struct { char *name; uint8_t id; } KeyIdMap;
 
 typedef struct {                            //UTFinfo  
@@ -123,11 +128,11 @@ extern CR_ TS;
 #define WStrVL(n, r)  (var.dlwin + (r) + ((n) * Base.W))                            // Визуальная длина строки окна
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))              // адрес начала данных окна n
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                      // адрес начала структуры события
-#define Vector(a)     (*(AFunction*)((Cell*)var.exec + (a)))                        // адрес вектора прерывания события
+#define Vector(a)     (*(AFunction*)((As*)var.exec + (a)))                          // адрес вектора прерывания события
 #define Convas        (*(Canalysis*)var.dcon)                                       // адрес где организована разбивка холста
 #define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))             // адрес начала кода цвета
 
-#define Exe(v, func)  Vector(v) = (((Cell)(func) < (Cell)Nop) ? Off : (func))       // сброс вектора если адрес функции раньше Nop
+#define Exe(v, func)  Vector(v) = (((As)(func) < (As)Nop) ? Off : (func))           // сброс вектора если адрес функции раньше Nop
 #define Start(c, r)   (Con(r) + ((c) ? *Offset((c) - 1, r) : 0))                    // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ ugoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })      // длина ячейки холста в байтах
 #define End(c, r)     (Con(r) + *Offset(c, r))                                      // адрес конца буфера ячейки холста
@@ -139,21 +144,19 @@ extern CR_ TS;
     {"[5~",K_PUP},{"[6~",K_PDN},{"[F",K_END},{"[H",K_HOM},{"OP",K_F1},{"OQ",K_F2},{"OR",K_F3},{"OS",K_F4}, \
     {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; MSnS_ Flag = {0,0,1}; CR_ TS = {0};
 
-Cell StrLen(char *s);                                                 // Длина строки
-void MemSet(void* buf, uint8_t val, Cell len);                        // Заполнение куска памяти val
-void MemMove(void* dst, void* src, Cell len);                         // Перемещение куска памяти с проверкой наложения
-void MemCpy(void* dst, void* src, Cell len);                          // Копирование куска памяти, без проверки наложения!
-int8_t MemCmp(void* dst, void* src, Cell len);                        // Сравнение
-void UTFinfoTile(uint8_t *s, Cell len);                               // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
+As StrLen(char *s);                                                   // Длина строки
+void MemSet(void* buf, uint8_t val, As len);                          // Заполнение куска памяти val
+void MemMove(void* dst, void* src, As len);                           // Перемещение куска памяти с проверкой наложения
+void MemCpy(void* dst, void* src, As len);                            // Копирование куска памяти, без проверки наложения!
+int8_t MemCmp(void* dst, void* src, As len);                          // Сравнение
+void UTFinfoTile(uint8_t *s, As len);                                 // Рассказ об utf8 возвращает Buf.Cod = Data с учётом буфера
 void UTFinfo(uint8_t *s);                                             // Рассказ об utf8 возвращает Buf.Cod = Data
 void PushKey(void);                                                   // Положить клавишу в буфер Buf.key
 uint8_t ShowKey(void);                                                // Показать ожидаемую/получаемую клавишу Buf.key Buf.Dat Buf.Count
 uint8_t PopKey(void);                                                 // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 ugoc Key(void);                                                       // Сколько клавиш в буфере
-void ASu(uint32_t add);                                               // Прибавить к Timer[] число
-void CSu(void);                                                       // Создание сумматора равного Дни:Время + Таймер
-uint16_t DSu(uint16_t d);                                             // Остаток от деления сумматора на делитель
-void Time(void);                                                      // Сформировать строку времени согласно длинне
+uint16_t D96(uint16_t *a, uint16_t d);                                // Остаток от деления 96 битного числа
+void CSTime(uint32_t add);                                            // Сформировать строку времени увеличив при этом таймер на add
 void IRnd(void);                                                      // Инициализация генератора случайных чисел
 int16_t Rand(int16_t n);                                              // Случайное число [0...(n-1)]
 int8_t Fsin(int16_t u);                                               // Синус      полный круг 360 градусов [0...511] шаг ~0,7 градуса
@@ -171,9 +174,9 @@ void GenRGB(uint8_t mode, uint16_t c, uint16_t n);                    // Сге�
 void GenLast(int16_t c);                                              // Сгенерировать цвет и фон, по углу, в позицию last текущей палитры методом sinus
 void GenPalettes(void);                                               // Автогенерация оттенков света в палитры двумы методами
 void ColourInit(uint16_t c, uint16_t d);                              // Установка переменных цвета Colours Deep
-Cell HowSize(uint8_t c, uint8_t d, uint16_t w, Cell a);               // Расчёт общего размера среды
+As HowSize(uint8_t c, uint8_t d, uint16_t w, As a);                   // Расчёт общего размера среды
 void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t h, uint16_t z, uint16_t a); // Инициализация мира CellPower Dynamic Win How Hz Apm
-Cell SystemSwitch(void);                                              // Вход/выход в мир
+As SystemSwitch(void);                                                // Вход/выход в мир
 void MoveNorm(dgoc x, dgoc y);                                        // Нормализация перемещения
 void MoveConvas(dgoc dx, dgoc dy);                                    // Взаимосвязь перемещения по холсту и экранных координат
 uint8_t MoveScreen(dgoc mx, dgoc my);                                 // Взаимосвязь изменения экранных координат(мышью) и холста
@@ -213,12 +216,12 @@ void _WData(uint16_t n, char *str, uint8_t c, udgoc *a);              // Заг�
 #define Fresh(cp, ...) _FSet(cp, (uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define Colour(...) _CSet((uint8_t)((sizeof((uint16_t[]){0, ##__VA_ARGS__}) / sizeof(uint16_t)) - 1), (uint16_t[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (uint8_t)((sizeof((udgoc[]){0, ##__VA_ARGS__}) / sizeof(udgoc)) - 1), (udgoc[]){0, ##__VA_ARGS__} + 1)
-Cell SysWrite(void *buf, Cell len);                                   // Выстрел в терминал
+As SysWrite(void *buf, As len);                                       // Выстрел в терминал
 void SwitchRaw(void);                                                 // Включение/выключение неблокирующего ввода RealTime
 void GetKey(uint8_t *b);                                              // Читаем utf8 из порта
 goc Real(ugoc fps);                                                   // Сколько реально прошло в ожидании
-Cell GetRam(Cell *size);                                              // Взять память
-void FreeRam(Cell addr, Cell size);                                   // Вернуть память
+As GetRam(As *size);                                                  // Взять память
+void FreeRam(As addr, As size);                                       // Вернуть память
 uint8_t SyncSize(void);                                               // Обновить рамки терминала
 void SWD(void);                                                       // Установить рабочую директорию
 #endif /* SYS_H */

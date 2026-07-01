@@ -20,7 +20,7 @@
 
 SYS_VARS_INIT;
 
-Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
+As SysWrite(void *buf, As len) { return (As)write(1, buf, len); }
 
 void SwitchRaw(void) {
   static struct termios oldt;
@@ -50,14 +50,14 @@ void GetKey(uint8_t *b) {
 
 goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
   struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f);
-  Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  As t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
-Cell GetRam(Cell *s) { if (!*s) return 0;
+As GetRam(As *s) { if (!*s) return 0;
   *s = (*s + 0xFFF) & ~0xFFF; void *r = mmap(0, *s, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (r == MAP_FAILED) { r = 0; *s = 0; } return (Cell)r; }
+  if (r == MAP_FAILED) { r = 0; *s = 0; } return (As)r; }
 
-void FreeRam(Cell a, Cell s) { if (a) munmap((void*)a, s); }
+void FreeRam(As a, As s) { if (a) munmap((void*)a, s); }
 
 uint8_t SyncSize(void) { if (!VRam.addr) return Off;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < Off) return Off;
@@ -66,7 +66,7 @@ uint8_t SyncSize(void) { if (!VRam.addr) return Off;
 
 extern char **environ;
 void SWD(void) { if (!VRam.addr) return;
-  char *path = (char*)(var.dbuf); Cell len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
+  char *path = (char*)(var.dbuf); As len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
   path[len] = 0; if (MemCmp(path, "/nix/store", 10) == 0) {
     for (char **env = environ; *env != NULL; env++) { char *e = *env;
       if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }

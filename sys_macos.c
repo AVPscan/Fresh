@@ -19,7 +19,7 @@
 
 SYS_VARS_INIT;
 
-Cell SysWrite(void *buf, Cell len) { return (Cell)write(1, buf, len); }
+As SysWrite(void *buf, As len) { return (As)write(1, buf, len); }
 
 void SwitchRaw(void) {
   static struct termios oldt;
@@ -49,14 +49,14 @@ void GetKey(uint8_t *b) {
 
 goc Real(ugoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_RAW, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
   struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_RAW, &f);
-  Cell t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
+  As t, r = ((t = (f.tv_sec - Flag.s) * 1000000000L + (f.tv_nsec - Flag.ns)) % 1000000000L); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec;
   return (goc)((fps * (t / 1000000000L)) + ((r) ? (1000000000L / r) : 0) - fps); }
 
-Cell GetRam(Cell *s) { if (!*s) return 0;
+As GetRam(As *s) { if (!*s) return 0;
   *s = (*s + 0xFFF) & ~0xFFF; void *r = mmap(0, *s, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (r == MAP_FAILED) { r = 0; *s = 0; } return (Cell)r; }
+  if (r == MAP_FAILED) { r = 0; *s = 0; } return (As)r; }
 
-void FreeRam(Cell a, Cell s) { if (a) munmap((void*)a, s); }
+void FreeRam(As a, As s) { if (a) munmap((void*)a, s); }
 
 uint8_t SyncSize(void) { if (!VRam.addr) return 0;
   struct winsize ws; if (ioctl(0, TIOCGWINSZ, &ws) < 0) return 0;

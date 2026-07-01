@@ -11,43 +11,43 @@
 
 ENGINE_VARS_INIT;
 
-Cell StrLen(char *s) { if (!s) return Off;
+As StrLen(char *s) { if (!s) return Off;
   uint8_t *f = (uint8_t*)s; while(*f++);
   return (--f - (uint8_t*)s); }
-void MemSet(void* buf, uint8_t val, Cell len) { uint8_t *p = (uint8_t*)buf;
-  while(len && ((Cell)p & (SCell - 1))) { len--; *p++ = val; }
+void MemSet(void* buf, uint8_t val, As len) { uint8_t *p = (uint8_t*)buf;
+  while(len && ((As)p & (SCell - 1))) { len--; *p++ = val; }
   if (len >= SCell) {
-    Cell vW = val * (((Cell) - 1) / 255); Cell *pW = (Cell*)p;
-    Cell i = len / SCell; len &= (SCell - 1); while(i--) *pW++ = vW;
+    As vW = val * ((SCell - 1) / 255); As *pW = (As*)p;
+    As i = len / SCell; len &= (SCell - 1); while(i--) *pW++ = vW;
     p = (uint8_t*)pW; }
   while(len--) *p++ = val; }
-void MemMove(void* dst, void* src, Cell len) {
+void MemMove(void* dst, void* src, As len) {
   if (dst > src) { uint8_t *d = (uint8_t*)dst + len, *s = (uint8_t*)src + len;
     while(len--) { *--d = *--s ; } }
   else if (dst != src ) { MemCpy(dst, src, len); } }
-void MemCpy(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
-  while(len && ((Cell)d & (SCell - 1))) { *d++ = *s++; len--; }
-  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
-    Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
-    Cell i = len / SCell; len &= (SCell - 1); while(i--) *dW++ = *sW++;
+void MemCpy(void* dst, void* src, As len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
+  while(len && ((As)d & (SCell - 1))) { *d++ = *s++; len--; }
+  if (len >= SCell && ((As)s & (SCell - 1)) == 0) {
+    As *dW = (As*)d; As *sW = (As*)s;
+    As i = len / SCell; len &= (SCell - 1); while(i--) *dW++ = *sW++;
     d = (uint8_t*)dW; s = (uint8_t*)sW; }
   while(len--) *d++ = *s++ ; }
-int8_t MemCmp(void* dst, void* src, Cell len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
-  while(len && ((Cell)d & (SCell - 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
-  if (len >= SCell && ((Cell)s & (SCell - 1)) == 0) {
-    Cell *dW = (Cell*)d; Cell *sW = (Cell*)s;
-    Cell i = len / SCell; len &= (SCell - 1); while(i-- && (*dW++ == *sW++));
+int8_t MemCmp(void* dst, void* src, As len) { uint8_t *d = (uint8_t*)dst, *s = (uint8_t*)src;
+  while(len && ((As)d & (SCell- 1))) { len--; if (*d++ != *s++) return (int8_t)(*--d - *--s); }
+  if (len >= SCell && ((As)s & (SCell - 1)) == 0) {
+    As *dW = (As*)d; As *sW = (As*)s;
+    As i = len / SCell; len &= (SCell - 1); while(i-- && (*dW++ == *sW++));
     if (i + 1) { --dW; --sW; len += SCell; }
     d = (uint8_t*)dW; s = (uint8_t*)sW; }
   while(len--) { if (*d++ != *s++) return (int8_t)(*--d - *--s); }
   return Off; }
 
-void UTFinfoTile(uint8_t *s, Cell len) { Buf.Dat = 0xC0; if (!len) return;
+void UTFinfoTile(uint8_t *s, As len) { Buf.Dat = 0xC0; if (!len) return;
   if ((*s & 0xE0) == 0xC0 && len < 0x02) return;
   else if ((*s & 0xF0) == 0xE0 && len < 0x03) return;
   else if ((*s & 0xF8) == 0xF0 && len < 0x04) return;
   UTFinfo(s); }
-void UTFinfo(uint8_t *s) { var.Y = *s++; Buf.Dat = Off; if (var.Y < 0x80) var.RGB = (uint32_t)var.Y;
+void UTFinfo(uint8_t *s) { var.Y = *s++; Buf.Dat = Off; if (var.Y < 0x80) var.RGB = (an)var.Y;
   else if ((var.Y & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80) { Buf.Dat++; var.RGB = ((var.Y & 0x1F) << 0x06) | (*s & 0x3F); }
   else if ((var.Y & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
     { Buf.Dat = 0x02; var.RGB = ((var.Y & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
@@ -106,19 +106,18 @@ ugoc Key(void) { ugoc s = Off; uint8_t d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void ASu(uint32_t add) { var.RGB = 0; var.Y = Base.Count;
-  while(var.Y--) { Base.Time[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + add); add = 0; if (!(var.RGB >>= 16)) break; } } 
-void CSu(void) { var.RGB = 0; var.Y = Base.Count;
-  while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; } } 
-uint16_t DSu(uint16_t d) { var.XYz = 0; var.Y = -1;
-  while(++var.Y < Base.Count) { Base.Su[var.Y] = (uint16_t)((var.XYz = (var.XYz << 16) | Base.Su[var.Y]) / d); var.XYz %= d; }
-  return (uint16_t)var.XYz; }
-void Time(void) { var.RGB = 0; var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.RGB += Base.Time[var.Y] + Base.Timer[var.Y]); var.RGB >>= 16; }
-  var.X = DSu(60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+uint16_t A96(uint16_t *a, an add) { var.XYz = add << 16; var.Y = Base.Count;
+  while((var.XYz >>= 16) && var.Y--) { *a = (uint16_t)(var.XYz += *a); a--; } return var.XYz >> 16; }
+uint16_t D96(uint16_t *a, uint16_t d) { var.XYz = 0; var.Y = Base.Count;
+  while(var.Y--) { *a = (uint16_t)((var.XYz = (var.XYz << 16) | *a) / d); var.XYz %= d; a++; } return (uint16_t)var.XYz; }
+void CSTime(an add) { var.XYz = add << 16;
+  var.Y = Base.Count; while((var.XYz >>= 16) && var.Y--) { Base.Timer[var.Y] = (uint16_t)(var.XYz += Base.Timer[var.Y]); } var.XYz = 0;
+  var.Y = Base.Count; while(var.Y--) { Base.Su[var.Y] = (uint16_t)(var.XYz += Base.Time[var.Y] + Base.Timer[var.Y]); var.XYz >>= 16; }
+  var.X = D96(&Base.Su[0], 60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
-  var.X = DSu(60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  var.X = D96(&Base.Su[0], 60); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
-  var.X = DSu(24); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+  var.X = D96(&Base.Su[0], 24); var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[1] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[0] = 0x30 + var.Y; }
 
 void IRnd(void) { Base.Rnd = (uint16_t)(Flag.ns | On); }
@@ -148,9 +147,9 @@ void GenFC(uint16_t c, uint8_t deep) { uint8_t i, j = 1, k = (deep > b3) ? 2 : (
     src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
-void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = (((uint32_t)c << 24) / n) - On; var.G = (uint8_t)var.RGB;
+void GenRGB(uint8_t mode, uint16_t c, uint16_t n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (uint8_t)var.RGB;
     var.RGB >>= 8; var.B = (uint8_t)var.RGB; var.RGB >>= 8; var.R  = (uint8_t)var.RGB; } 
-  else { var.Z = var.U + ((uint32_t)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
+  else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
 void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
 void SetBorder(uint8_t on, uint16_t b) {
   Print((Base.Border = (on) ? (Base.AF + Base.Last) : (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b), var.A, "\033[2J"); }
@@ -167,7 +166,7 @@ void ColourInit(uint16_t c, uint16_t d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 
   Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3); Base.I[4] = ((((c << 4) / 5) + 12) >> 3);
   Base.I[5] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3); Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[7] = Base.Colours;
   Base.Border = Fon(0); Base.Fone = Fon(1); Base.Ink = Ink(0); GenPalettes(); }
-Cell HowSize(uint8_t c, uint8_t d, uint16_t w, Cell a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
+As HowSize(uint8_t c, uint8_t d, uint16_t w, As a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.off = 1 << c; Base.Mcol = var.off - 1;
   Base.W = ((var.off + (var.off << 3)) >> 5); Base.Mstr = Base.W - 1; var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5));
   Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
@@ -183,7 +182,7 @@ Cell HowSize(uint8_t c, uint8_t d, uint16_t w, Cell a) { Base.PCell = sizeof(AFu
                   if (var.exec < (var.dcon = var.exec + (Base.PCell << 8))) {
                     if (var.dcon < (var.dpal = (var.dcon + sizeof(Canalysis)))) {
                       if ((char*)var.dpal < (var.dbuf = (char*)var.dpal + (var.Spal << 1))) {
-                        if (var.dbuf < (var.end = (char*)var.dpal + ((((256 << 2) + 256) << 4) + 4096))) return (Cell)(var.end - a); }
+                        if (var.dbuf < (var.end = (char*)var.dpal + ((((256 << 2) + 256) << 4) + 4096))) return (As)(var.end - a); }
   } } } } } } } } } } return Off; }
 void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t how, uint16_t hz, uint16_t apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.addr = VRam.addr; var.size = VRam.size;
@@ -196,8 +195,8 @@ void InitVram(uint8_t c, uint8_t d, uint16_t w, uint16_t how, uint16_t hz, uint1
   Convas.H = Off; Convas.Win = Base.Win; VP.Mode = b2; VP.Key = 9; var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz;
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
   Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
-Cell SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
-    Real(Off); ColourInit(Fcolour, CFDeep); Time(); SetSeparator(':'); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
+    Real(Off); ColourInit(Fcolour, CFDeep); CSTime(Off); SetSeparator(':'); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
     Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown); IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
   else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
 
@@ -250,7 +249,7 @@ void Free(void) { dgoc dx = Off, dy = Off; uint8_t i, *n; Buf.Ctrl = Off; Vector
       else if (Buf.Cod == VP.ud) dy = VP.dXY;
       MoveConvas(dx, dy); } }
   if ((var.Syn += Real(Base.Apm) + Base.Hz) >= var.Loop) {
-    if ((var.Dis += (var.Syn / var.Loop)) >= Base.FTime) { ASu(var.Dis / Base.FTime); Time(); var.Dis %= Base.FTime;  }
+    if ((var.Dis += (var.Syn / var.Loop)) >= Base.FTime) { CSTime(var.Dis / Base.FTime); var.Dis %= Base.FTime; }
     static int16_t c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
     var.Syn %= var.Loop; }
   if (Vector(Off)) { VP.Wexe = Event(Off)->W; Vector(Off)(); }

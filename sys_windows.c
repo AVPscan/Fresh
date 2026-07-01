@@ -15,7 +15,7 @@
 
 SYS_VARS_INIT;
 
-Cell SysWrite(void *buf, Cell len) { return (Cell)_write(1, buf, (unsigned int)len); }
+As SysWrite(void *buf, As len) { return (As)_write(1, buf, (unsigned int)len); }
 
 void SwitchRaw(void) {
   HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_CURSOR_INFO ci;
@@ -60,15 +60,15 @@ void GetKey(uint8_t *b) {
   if (*p++ == (uint8_t)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
 goc Real(ugoc fps) { LARGE_INTEGER n,f;   
-    if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); Cell t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
+    if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); As t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
       Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
     QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }
 
-Cell GetRam(Cell *size) { if (!*size) return 0;
-  Cell l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-  if (!r) { l = 0; } *size = l; return (Cell)r; }
+As GetRam(As *size) { if (!*size) return 0;
+  As l = (*size + 0xFFF) & ~0xFFF; void *r = VirtualAlloc(NULL, l, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+  if (!r) { l = 0; } *size = l; return (As)r; }
 
-void FreeRam(Cell addr, Cell size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
+void FreeRam(As addr, As size) { (void)size; if (addr) VirtualFree((void*)addr, 0, MEM_RELEASE); }
 
 void SWD(void) { if (!VRam.addr) return;
   char *path = (char *)(var.dbuf); DWORD len = GetModuleFileNameA(NULL, path, 1024); if (len == 0) return;
