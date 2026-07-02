@@ -29,7 +29,7 @@ void Tim(void) { static anu c = Off; c = ((c + 1) & 7); SetBorder(Base.On, Fon(c
 void Space(void) { if (!Base.On) Tim(); }
 
 void Init(void) { Fresh(11, 1, 999, Off, 500, 250); Colour(7, 24); Keys(K_ESC); Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp);
-  ugoc control = WStatic(Ink(7), -2, -2), W1 = WDynamic(Rand(Base.Colours + On) + On, Off, Off, 80, 24); WSet(W1, On, On); WView(W1, On, On); VP.Wexe = W1;
+  vanu control = WStatic(Ink(7), -2, -2), W1 = WDynamic(Rand(Base.Colours + On) + On, Off, Off, 80, 24); WSet(W1, On, On); WView(W1, On, On); VP.Wexe = W1;
   WData(control, " %+5dMb %+3 %06:%06 %5c ", ((VRam.size + 1048575)/1048576), Ink(8)); WExec(control, K_NO, Body); WExec(control, K_Ctrl_K, WSwitch); }
 
 int main() { if (SystemSwitch()) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }

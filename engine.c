@@ -32,14 +32,14 @@ void MemCpy(void* dst, void* src, As len) { anu *d = (anu*)dst, *s = (anu*)src;
     As i = len / SCell; len &= (SCell - 1); while(i--) *dW++ = *sW++;
     d = (anu*)dW; s = (anu*)sW; }
   while(len--) *d++ = *s++ ; }
-sanu MemCmp(void* dst, void* src, As len) { anu *d = (anu*)dst, *s = (anu*)src;
-  while(len && ((As)d & (SCell- 1))) { len--; if (*d++ != *s++) return (sanu)(*--d - *--s); }
+nanu MemCmp(void* dst, void* src, As len) { anu *d = (anu*)dst, *s = (anu*)src;
+  while(len && ((As)d & (SCell- 1))) { len--; if (*d++ != *s++) return (nanu)(*--d - *--s); }
   if (len >= SCell && ((As)s & (SCell - 1)) == 0) {
     As *dW = (As*)d; As *sW = (As*)s;
     As i = len / SCell; len &= (SCell - 1); while(i-- && (*dW++ == *sW++));
     if (i + 1) { --dW; --sW; len += SCell; }
     d = (anu*)dW; s = (anu*)sW; }
-  while(len--) { if (*d++ != *s++) return (sanu)(*--d - *--s); }
+  while(len--) { if (*d++ != *s++) return (nanu)(*--d - *--s); }
   return Off; }
 
 void UTFinfoTile(anu *s, As len) { Buf.Dat = 0xC0; if (!len) return;
@@ -102,36 +102,36 @@ anu PopKey(void) { anu d, i = Off;
   else { k->d[Off] &= ~b6; i = b1; } Buf.Count = k->d[i + On]; Buf.Dat = k->d[i] & ~b76;
   d = On + (k->d[i] & b10); while(d--) *(Buf.Key + d) = k->u[i + d];
   return On; }
-danu Key(void) { danu s = Off; anu d, c = Buf.push;
+vanu Key(void) { vanu s = Off; anu d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void CSDate(void) { Base.SD = Base.JDN + Base.TC; if ((Base.TT + Base.Time) > 86399) Base.SD++; }
-void CSTime(an add) { if ((Base.TT += add) > 86399) { Base.TT -= 86400; Base.TC++; }
-  var.XYz = Base.TT + Base.Time; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+void CSDate(void) { Base.JDN = Base.TJDN + Base.SJDN; if ((Base.TTime + Base.STime) > 86399) Base.JDN++; }
+void CSTime(an add) { if ((Base.TTime += add) > 86399) { Base.TTime -= 86400; Base.TJDN++; }
+  var.XYz = Base.TTime + Base.STime; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
   var.XYz /= 60; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
   var.XYz /= 60; var.X = var.XYz % 24; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[1] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[0] = 0x30 + var.Y; }
 
-void IRnd(void) { Base.Rnd = (danu)(Flag.ns | On); }
-dsanu Rand(dsanu n) { Base.Rnd = (danu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
-sanu Fcos(dsanu u) { return Fsin(u + 128); }
-sanu Fsin(dsanu u) { static sanu s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,18,19,20,21,23,24,25,26,27,28,30,31,
+void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
+vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
+nanu Fcos(vnanu u) { return Fsin(u + 128); }
+nanu Fsin(vnanu u) { static nanu s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,18,19,20,21,23,24,25,26,27,28,30,31,
   32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,51,52,53,54,55,55,56,57,58,58,59,60,60,61,62,62,63 };
-  sanu r = u & 63; r = (u & b6) ? 64 + s[r] : s[r]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
-sanu Ftg(dsanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
-sanu Fctg(dsanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
+  nanu r = u & 63; r = (u & b6) ? 64 + s[r] : s[r]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
+nanu Ftg(vnanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
+nanu Fctg(vnanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 
-danu CreateCA(danu c, anu a, char *dst) { char *src, *b = dst; static char *s = "24;21;22;1;\00022;2;\00023;3;\00024;4;\00027;7;\00029;9;\000";
+vanu CreateCA(vanu c, anu a, char *dst) { char *src, *b = dst; static char *s = "24;21;22;1;\00022;2;\00023;3;\00024;4;\00027;7;\00029;9;\000";
   if ((var.A ^= a)) { var.X = 64; var.Y = 36; *dst++ = '\33'; *dst++ = '['; while(var.X) { if ((var.A & var.X)) {
     src = s + var.Y + ((a & var.X) ? 3 : 0); *dst++ = *src++; *dst++ = *src++; if (*src) *dst++ = *src++; } var.X >>= 1; var.Y -= 6; } var.A = 2; }
   if (var.C == c) { if (var.A) *(dst - 1) = 'm'; } else { var.C = c; PalBuf* pal = APal(c); MemCpy(dst, pal->d + var.A, pal->l - var.A); dst += pal->l - var.A; }
-  var.A = a; return (danu)(dst - b); }
-void Print(danu c, anu a, char *str) { char *dst = var.dbuf + CreateCA(c, a, var.dbuf);
-  MemCpy(dst, str, (var.Z = (danu)StrLen(str))); SysWrite(var.dbuf, dst + var.Z - var.dbuf); }
-void GenFC(danu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c < 255) ? c : 255;
+  var.A = a; return (vanu)(dst - b); }
+void Print(vanu c, anu a, char *str) { char *dst = var.dbuf + CreateCA(c, a, var.dbuf);
+  MemCpy(dst, str, (var.Z = (vanu)StrLen(str))); SysWrite(var.dbuf, dst + var.Z - var.dbuf); }
+void GenFC(vanu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ? 0 : 1; c = (c < 255) ? c : 255;
   char *d[3] = { "\2\33[", "\6\33[38;5", "\6\33[38;2" }; PalBuf *mode = (PalBuf*)d[k], *dst = APal(c), *src = APal(Base.AF + c);
   if (k == 1 ) { var.R  = (16 + 36 * ((var.R  * 5 + 128) / 255) + 6 * ((var.G * 5 + 128)/ 255) + ((var.B * 5 + 128)/ 255)); }
   else { if (!k) { var.R  = (((var.R  * 299 + var.G * 587 + var.B * 114) > 127999) ? 90 : 30) + (((var.R  > 127) << 2) | ((var.G > 127) << 1) | (var.B > 127)); }
@@ -142,26 +142,26 @@ void GenFC(danu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ?
     src->d[src->l++] = 0x30 + i; }
   src->d[src->l++] = 'm'; dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
-void GenRGB(anu mode, danu c, danu n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (anu)var.RGB;
+void GenRGB(anu mode, vanu c, vanu n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (anu)var.RGB;
     var.RGB >>= 8; var.B = (anu)var.RGB; var.RGB >>= 8; var.R  = (anu)var.RGB; } 
   else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
 void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
-void SetBorder(anu on, danu b) {
+void SetBorder(anu on, vanu b) {
   Print((Base.Border = (on) ? (Base.AF + Base.Last) : (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b), var.A, "\033[2J"); }
 void SetPalette(anu set) { var.dpal = (var.dcon + sizeof(Canalysis)); if (set) var.dpal += var.Spal; }
 void SwitchPalette(void) { anu* a = (var.dcon + sizeof(Canalysis)); if (a == var.dpal) { a += var.Spal; } var.dpal = a; }
-void GenLast(dsanu c) { GenRGB(Off, c, 511); GenFC(Base.Last, Base.Deep); var.XY = var.Spal; anu *off = (anu*)APal(Base.Last);
+void GenLast(vnanu c) { GenRGB(Off, c, 511); GenFC(Base.Last, Base.Deep); var.XY = var.Spal; anu *off = (anu*)APal(Base.Last);
   if (var.dpal != (var.dcon + sizeof(Canalysis))) { var.XY = -var.XY; } MemCpy(off + var.XY, off, 20);
   MemCpy(off + var.XY + (var.Spal >> 1), off + (var.Spal >> 1), 20); }
 void GenPalettes(void) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; GenLast(Off); var.X = 2;
   while(var.X--) { SetPalette(var.X); var.R = 0; var.G = 0; var.B = 0; GenFC(Off, Base.Deep); var.R = 255; var.G = var.R; var.B = var.R;
     var.XZ = Base.Colours; while(var.XZ) { GenFC((Base.Last - var.XZ), Base.Deep); GenRGB(var.X, --var.XZ, Base.Colours); } } }
-void ColourInit(danu c, danu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; Base.Colours = (c < 1) ? 1 : (c < 255) ? c : 254; Base.Last = Base.Colours + 1;
+void ColourInit(vanu c, vanu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; Base.Colours = (c < 1) ? 1 : (c < 255) ? c : 254; Base.Last = Base.Colours + 1;
   Base.AF = Base.Colours + 2; var.Spal = (((Base.AF << 2) + Base.AF) << 3); var.dbuf = (char*)var.dcon + sizeof(Canalysis) + (var.Spal << 1);
   Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3); Base.I[4] = ((((c << 4) / 5) + 12) >> 3);
   Base.I[5] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3); Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[7] = Base.Colours;
   Base.Border = Fon(0); Base.Fone = Fon(1); Base.Ink = Ink(0); GenPalettes(); }
-As HowSize(anu c, anu d, danu w, As a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
+As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.off = 1 << c; Base.Mcol = var.off - 1;
   Base.W = ((var.off + (var.off << 3)) >> 5); Base.Mstr = Base.W - 1; var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5));
   Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
@@ -169,7 +169,7 @@ As HowSize(anu c, anu d, danu w, As a) { Base.PCell = sizeof(AFunction); Base.Go
   if (var.dkey < (var.data = var.dkey + (256 << 3))) {
     if (var.data < (var.ds = var.data + (var.off << 2))) {
       if (var.ds < (var.pal = var.ds + var.off)) {
-        if (var.pal < (anu*)(var.offset = (ugoc*)(var.pal + var.off))) {
+        if (var.pal < (anu*)(var.offset = (rgoc*)(var.pal + var.off))) {
           if (var.offset < (var.dlwin = (var.offset + var.off))) {
             if ((anu*)var.dlwin <= (var.dwin = (anu*)(var.dlwin + (Base.W * Base.Dynamic)))) {
               if (var.dwin < (var.event = (var.dwin + Base.Win * sizeof(Windows)))) {
@@ -179,12 +179,12 @@ As HowSize(anu c, anu d, danu w, As a) { Base.PCell = sizeof(AFunction); Base.Go
                       if ((char*)var.dpal < (var.dbuf = (char*)var.dpal + (var.Spal << 1))) {
                         if (var.dbuf < (var.end = (char*)var.dpal + ((((256 << 2) + 256) << 4) + 4096))) return (As)(var.end - a); }
   } } } } } } } } } } return Off; }
-void InitVram(anu c, anu d, danu w, danu how, danu hz, danu apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
+void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.addr = VRam.addr; var.size = VRam.size;
   MemCpy(&var.Save, &var.dpal, sizeof(var.Save)); Base.Loop = On; Base.Error = 4; if (!(VRam.size = HowSize(c,d,w,Off))) --Base.Error;
   if (Base.Error == 4 && !(VRam.addr = GetRam(&VRam.size))) { Base.Error  = 2; } if (Base.Error  == 4 && !(VRam.size = HowSize(c,d,w,VRam.addr))) Base.Error = 1;
   if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
-  if (var.size) { FreeRam(var.addr,var.size); } Base.UGmax = (ugoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1;
+  if (var.size) { FreeRam(var.addr,var.size); } Base.UGmax = (rgoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1;
   Base.Count = 6; Base.Error = Off; Base.D = Base.CellP + 2; Base.DS = Base.CellP; Base.O = Base.CellP; Base.V = 2; Base.Spd1 = Base.Mcol >> 4;
   Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off; Convas.CH = Base.Mstr;
   Convas.H = Off; Convas.Win = Base.Win; VP.Mode = b2; VP.Key = 9; var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz;
@@ -195,24 +195,24 @@ As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(
     Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown); IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
   else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
 
-void MoveNorm(dgoc x, dgoc y) { static anu Wait = 7; Wait = (Wait) ? Wait : 7;
+void MoveNorm(vgoc x, vgoc y) { static anu Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Convas.Win < Base.Win) {
     if (Convas.Win < Convas.D || Convas.Win >= Convas.S) { Windows* w = Win(Convas.Win);
-      dgoc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
+      vgoc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
       if (w->Xr && w->Yr && c && s) {
         var.Xr = (x < w->Xr) ? ((--Wait) ? w->Xr : (w->Xr + c - 1)) : (x >= (w->Xr + c)) ? ((--Wait) ? (w->Xr + c - 1) : w->Xr) : x;
         var.Yr = (y < w->Yr) ? ((--Wait) ? w->Yr : (w->Yr + s - 1)) : (y >= (w->Yr + s)) ? ((--Wait) ? (w->Yr + s - 1) : w->Yr) : y; return; } } }
   var.Xr = Base.Mcol; var.Yr = Base.Mstr;
   var.Xr = (x < -var.Xr) ? ((--Wait) ? -var.Xr : ((var.Xr << 1) + 1)) : (x > (var.Xr << 1)) ? ((--Wait) ? ((var.Xr << 1) + 1) : -var.Xr) : x;
   var.Yr = (y < -var.Yr) ? ((--Wait) ? -var.Yr : ((var.Yr << 1) + 1)) : (y > (var.Yr << 1)) ? ((--Wait) ? ((var.Yr << 1) + 1) : -var.Yr) : y; }
-void MoveConvas(dgoc dx, dgoc dy) { Buf.Ctrl = On; MoveNorm(VP.X + dx, VP.Y + dy);
+void MoveConvas(vgoc dx, vgoc dy) { Buf.Ctrl = On; MoveNorm(VP.X + dx, VP.Y + dy);
   dx = VP.X / (goc)TS.c; dy = VP.Y / (goc)TS.r; VP.X = var.Xr; VP.Y = var.Yr; VP.Xs = (VP.X < Off) ? (TS.c + (VP.X % (goc)TS.c)) : (VP.X % (goc)TS.c);
   VP.Ys = (VP.Y < Off) ? (TS.r + (VP.Y % (goc)TS.r)) : (VP.Y % (goc)TS.r); if ((VP.X / (goc)TS.c) != dx || (VP.Y / (goc)TS.r) != dy) Buf.Ctrl++; }
-anu MoveScreen(dgoc mx, dgoc my) {
+anu MoveScreen(vgoc mx, vgoc my) {
   if ((((VP.X - mx) ^ VP.X) & Base.Ginf) || (((VP.Y - my) ^ VP.Y) & Base.Ginf)) return Off;
   MoveNorm(VP.X - mx, VP.Y - my); VP.X = var.Xr; VP.Y = var.Yr; VP.Xs -= mx; VP.Ys -= my; return On; }
 
-void Free(void) { dgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE)();
+void Free(void) { vgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE)();
   if (*Buf.Key == K_ESC && *(Buf.Key + On) == K_NO) Buf.Cod = Off;
   else { Buf.Cod = (*Buf.Key & b7) ? Off : (*Buf.Key == K_ESC) ? *(Buf.Key + On) : *Buf.Key;
     if (Buf.Cod == K_Mouse) { Buf.Mkey = *(Buf.Key + 2); Buf.MX = *(Buf.Key + 3) - 0x21; Buf.MY = *(Buf.Key + 4) - 0x21; i = Off;
@@ -245,7 +245,7 @@ void Free(void) { dgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE
       MoveConvas(dx, dy); } }
   if ((var.Syn += Real(Base.Apm) + Base.Hz) >= var.Loop) {
     if ((var.Dis += (var.Syn / var.Loop)) >= Base.FTime) { CSTime(var.Dis / Base.FTime); var.Dis %= Base.FTime; }
-    static danu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
+    static vanu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
     var.Syn %= var.Loop; }
   if (Vector(Off)) { VP.Wexe = Event(Off)->W; Vector(Off)(); }
   if (SyncSize() || Buf.Ctrl > On) { SetBorder(Base.On, Base.Border); } else {  } }
@@ -259,32 +259,32 @@ void Bye(void) { Base.Loop = Off; }
 
 void WSwitch(void) { if (Win(VP.Wexe)->Xr) Win(VP.Wexe)->F ^= b1; }
 void WASwitch(void) { if (Win(VP.Wexe)->F ^= b1) WView(VP.Wexe); }
-void WDown(void) { if (Convas.D) { danu l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
-void WUp(void) { if (Convas.D) { danu l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
-void WTop(danu n) { danu l = Convas.D; if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void WDown(void) { if (Convas.D) { vanu l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
+void WUp(void) { if (Convas.D) { vanu l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
+void WTop(vanu n) { vanu l = Convas.D; if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (n > l) { l = Base.Win; } Win(n)->Layer = l; l -= n; while(l--) --Win(n + l)->Layer; }
 
-void _WView(danu n, anu c, dgoc *a) { dgoc x = Off, y = Off;
+void _WView(vanu n, anu c, vgoc *a) { vgoc x = Off, y = Off;
   if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) { return; } Windows* w = Win(n);
   if (c > On) { x = a[Off]; if (!(y = a[On])) x = Off;
     if (x && !(w->F & b0)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
-      if ((udgoc)VP.X > (udgoc)Base.Mcol || (udgoc)VP.Y > (udgoc)Base.Mstr) return; } }
+      if ((rvgoc)VP.X > (rvgoc)Base.Mcol || (rvgoc)VP.Y > (rvgoc)Base.Mstr) return; } }
   if (c == Off) { x = VP.Xs + On; y = VP.Ys + On;
     if (w->F & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; } 
-    else if ((udgoc)VP.X > (udgoc)Base.Mcol || (udgoc)VP.Y > (udgoc)Base.Mstr) return; }
+    else if ((rvgoc)VP.X > (rvgoc)Base.Mcol || (rvgoc)VP.Y > (rvgoc)Base.Mstr) return; }
   w->Xr = x; w->Yr = y; if (w->Xr) { w->F |= b1; } else { w->F &= ~b1; } }
-danu _Window(anu t, anu col, anu c, udgoc *a) { danu l, n; Windows* w;
+vanu _Window(anu t, anu col, anu c, rvgoc *a) { vanu l, n; Windows* w;
   if (t) { if (!Base.Dynamic) { return Base.Win; } if ((n = Convas.D++) >= Base.Dynamic) { n = --Convas.D; } w = Win(n); w->F = 8; w->Layer = n; }
   else { if ((--Convas.S) < Base.Dynamic) { ++Convas.S; } n = Convas.S; w = Win(n); w->F = 9; w->Layer = Base.Win;
     l = Base.Win - n; while(l--) --Win(n + l)->Layer; }
   w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Base.Mstr; w->Xr = Off; w->Yr = Off; w->W = Off; w->H = Off;
   if (c > On) { if ((w->Xr = a[0])) { if (!(w->Yr = a[1])) w->Xr = Off; } } if (c > 2) { w->W = a[2]; if (c > 3) w->H = a[3]; }
   w->Colour = col; if (w->F == 9) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->F |= b1; } return n; }
-void _WExecs(danu n, anu cur, anu c, AFunction *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WExecs(vanu n, anu cur, anu c, AFunction *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if ((Win(n)->F & b0) && c--) { Event(cur)->W = n; Exe(cur, a[Off]);
     if (Event(cur)->C && c) { anu j, k = Event(cur)->C, i = On; while(k-- && c--) { j = K_Mouse;
       while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } } }
-void _WSet(danu n, anu c, anu *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WSet(vanu n, anu c, anu *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (c--) { Windows* w = Win(n); w->F &= ~b2; if (a[Off]) { w->F |= b2; } if (c) { w->F &= ~b3; if (a[On]) { w->F |= b3; } } } }
 void _SEvents(anu c, anu *a) { anu m, k = c; while(k--) { m = a[k]; Event(m)->W = Base.Win; Event(m)->C = c; Event(m)->N = k; } }
 void _SExec(anu c, AFunction *a) { anu k = K_Mouse; while(k--) { if (Event(k)->W == Base.Win) {
@@ -292,13 +292,13 @@ void _SExec(anu c, AFunction *a) { anu k = K_Mouse; while(k--) { if (Event(k)->W
     while(x-- && c--) { j = ECD; while(--j) { if (Event(j)->W == Base.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(anu c, anu *a) { anu *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
 void _SMouse(anu c, anu *a) { anu *p = &Buf.Lk, i = Off; c = (c > 7) ? 7 : c; while(c--) *p++ = a[i++]; }
-void _FSet(anu cp, anu c, danu *a) { danu d = Base.Dynamic, w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
+void _FSet(anu cp, anu c, vanu *a) { vanu d = Base.Dynamic, w = Base.Win, o = Base.On, h = Base.Hz, f = Base.Apm;
   anu b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { d = a[0]; if (c--) { w = a[1]; if (c--) { o = a[2]; if (c--) { h = a[3]; if (c) { f = a[4]; } } } } } if (d > 255) d = 255;
   InitVram(cp, d, w, o, h, f); ColourInit(Base.Colours, Base.Deep); SetPalette(b); }
-void _CSet(anu c, danu *a) { danu l = Base.Colours, d = (danu)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
+void _CSet(anu c, vanu *a) { vanu l = Base.Colours, d = (vanu)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
-void _WData(danu n, char *str, anu c, udgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WData(vanu n, char *str, anu c, rvgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {
      }
   (void)*str; (void)c; (void)*a; }

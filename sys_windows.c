@@ -59,7 +59,7 @@ void GetKey(anu *b) {
   if (j == (anu)~Off) *p = Off;
   if (*p++ == (anu)K_Mouse) { len = 3; while(len--) _read(0, p++, 1); } }
 
-goc Real(ugoc fps) { LARGE_INTEGER n,f;   
+goc Real(rgoc fps) { LARGE_INTEGER n,f;   
     if (fps) { Sleep(1000 / fps); QueryPerformanceCounter(&n); As t = (n.QuadPart - Flag.s) * 1000000000L + Flag.ns; Flag.ns = t % 1000000000L;
       Flag.s = n.QuadPart; return (goc)((fps * (t / 1000000000L)) + (Flag.ns ? (1000000000L / Flag.ns) : 0) - fps); }
     QueryPerformanceFrequency(&f); QueryPerformanceCounter(&n); Flag.s = n.QuadPart; Flag.ns = f.QuadPart; return fps; }
