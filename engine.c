@@ -106,9 +106,10 @@ vanu Key(void) { vanu s = Off; anu d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void CSDate(void) { Base.JDN = Base.TJDN + Base.SJDN; if ((Base.TTime + Base.STime) > 86399) Base.JDN++; }
-void CSTime(an add) { if ((Base.TTime += add) > 86399) { Base.TTime -= 86400; Base.TJDN++; }
-  var.XYz = Base.TTime + Base.STime; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
+void CSTime(an add) { if (Base.SJDN < 2461079) { Base.SJDN = 2461079; } if (Base.SJDN == 2461079 && Base.STime < 43200) Base.STime = 43200;
+  if ((Base.TTime += add) > 86399) { Base.TTime -= 86400; Base.TJDN++; } Base.JDN = Base.TJDN + Base.SJDN; Base.Din = (Base.JDN % b210) + On;
+  Base.Sam = (Base.JDN * 400) / 146097; var.XYz = Base.TTime + Base.STime;
+  var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
   var.XYz /= 60; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
@@ -191,9 +192,11 @@ void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = si
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
   Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
 As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
-    Real(Off); ColourInit(Fcolour, CFDeep); CSTime(Off); SetSeparator(':'); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
-    Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown); IRnd(); SWD(); SyncSize(); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
-  else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
+    Real(Off); ColourInit(Fcolour, CFDeep); CSTime(Off); SetSeparator(':'); IRnd(); SWD(); SyncSize();
+    Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown);
+    Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
+  else { VRam.SystemSwitch++; SwitchRaw();
+    Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
 
 void MoveNorm(vgoc x, vgoc y) { static anu Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Convas.Win < Base.Win) {

@@ -158,7 +158,6 @@ void PushKey(void);                                          // Положить
 anu ShowKey(void);                                           // Показать ожидаемую/получаемую клавишу Buf.key Buf.Dat Buf.Count
 anu PopKey(void);                                            // Взять клавишу из буфера ожидаемая/получаемая Buf.key Buf.Cod = Data; Buf.Count;
 vanu Key(void);                                              // Сколько клавиш в буфере
-void CSDate(void);                                           // Сформировать JDN в Base.SD учитывая таймер
 void CSTime(an add);                                         // Сформировать строку времени увеличив при этом таймер на add
 void IRnd(void);                                             // Инициализация генератора случайных чисел
 vnanu Rand(vnanu n);                                         // Случайное число [0...(n-1)]
