@@ -108,7 +108,14 @@ vanu Key(void) { vanu s = Off; anu d, c = Buf.push;
 
 void CSTime(an add) { if (Base.SJDN < 2461079) { Base.SJDN = 2461079; } if (Base.SJDN == 2461079 && Base.STime < 43200) Base.STime = 43200;
   if ((Base.TTime += add) > 86399) { Base.TTime -= 86400; Base.TJDN++; } Base.JDN = Base.TJDN + Base.SJDN; Base.Din = (Base.JDN % b210) + On;
-  Base.Sam = (Base.JDN * 400) / 146097; var.XYz = Base.TTime + Base.STime;
+  static van last_jdn = Off; if (Base.JDN != last_jdn) { last_jdn = Base.JDN;
+    van cycle = Base.JDN / 146097, day_in_cycle = Base.JDN % 146097; van yr = (day_in_cycle * 400) / 146097;
+    van jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); yr -= (day_in_cycle < (jdn_jan1 % 146097));
+    jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); Base.Sam = yr + (cycle * 400);
+    van w_jan1 = jdn_jan1 % 7; van start_monday = jdn_jan1 + ((w_jan1 > 3) * 7) - w_jan1; yr -= (Base.JDN < start_monday);
+    jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); w_jan1 = jdn_jan1 % 7;
+    start_monday = jdn_jan1 + ((w_jan1 > 3) * 7) - w_jan1; Base.Sap = ((Base.JDN - start_monday) / 7) + On; }
+  var.XYz = Base.TTime + Base.STime;
   var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
   Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
   var.XYz /= 60; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
