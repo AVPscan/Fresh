@@ -106,22 +106,28 @@ vanu Key(void) { vanu s = Off; anu d, c = Buf.push;
   while(c != Buf.pop) { d = AKey(c--)->d[Off]; if (d & b7) s++; if (d & b6) s++; }
   return s; }
 
-void CSTime(an add) { if (Base.SJDN < 2461079) { Base.SJDN = 2461079; } if (Base.SJDN == 2461079 && Base.STime < 43200) Base.STime = 43200;
-  if ((Base.TTime += add) > 86399) { Base.TTime -= 86400; Base.TJDN++; } Base.JDN = Base.TJDN + Base.SJDN; Base.Din = (Base.JDN % b210) + On;
-  static van last_jdn = Off; if (Base.JDN != last_jdn) { last_jdn = Base.JDN;
-    van cycle = Base.JDN / 146097, day_in_cycle = Base.JDN % 146097; van yr = (day_in_cycle * 400) / 146097;
-    van jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); yr -= (day_in_cycle < (jdn_jan1 % 146097));
-    jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); Base.Sam = yr + (cycle * 400);
-    van w_jan1 = jdn_jan1 % 7; van start_monday = jdn_jan1 + ((w_jan1 > 3) * 7) - w_jan1; yr -= (Base.JDN < start_monday);
-    jdn_jan1 = (cycle * 146097) + (yr * 365) + (yr / 4) - (yr / 100) + (yr / 400); w_jan1 = jdn_jan1 % 7;
-    start_monday = jdn_jan1 + ((w_jan1 > 3) * 7) - w_jan1; Base.Sap = ((Base.JDN - start_monday) / 7) + On; }
-  var.XYz = Base.TTime + Base.STime;
-  var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
-  Base.T[7] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[6] = 0x30 + var.Y;
-  var.XYz /= 60; var.X = var.XYz % 60; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
-  Base.T[4] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[3] = 0x30 + var.Y;
-  var.XYz /= 60; var.X = var.XYz % 24; var.Y = (((((((((var.X << 1) + var.X) << 3) + var.X) << 1) + var.X) << 2) + var.X) >> 11);
-  Base.T[1] = 0x30 + var.X - (((var.Y << 2) + var.Y) << 1); Base.T[0] = 0x30 + var.Y; }
+van Times(van h, van m, van s) { return (van)(((((h % Base.HourInDay) * Base.MinInHour) + (m % Base.MinInHour)) * Base.SecInMin) + (s % Base.SecInMin)); }
+
+van Dates(van y, van m, van d) {
+  return (van)(((y + Base.ShiftYear) * Base.PlainYear) + (((y + Base.ShiftYear) * Base.PlainVis) / Base.CycleYears) + (m * Base.YearLength) / (12 * Base.CycleYears) + d - Base.EpochShift); }
+
+void CSTime(an add) { 
+  if (Base.SJDN < Base.CoreJDN) { Base.SJDN = Base.CoreJDN; } 
+  if (Base.SJDN == Base.CoreJDN && Base.STime < (Base.DaySec >> 1)) Base.STime = Base.DaySec >> 1;
+  if ((Base.TTime += add) >= Base.DaySec) { Base.TJDN += (Base.TTime / Base.DaySec); Base.TTime %= Base.DaySec; } 
+  Base.JDN = Base.TJDN + Base.SJDN; 
+  if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN;
+    Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
+    Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
+    Base.Sam -= ((Base.JDN + Base.EpochShift) < Base.Sap); Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
+    Base.Din = Base.Sap + (((Base.Sap % Base.DaysInWeek) > Base.WeekThresh) * Base.DaysInWeek) - (Base.Sap % Base.DaysInWeek); 
+    if ((Base.JDN + Base.EpochShift) < Base.Din) { Base.Sam--;
+      Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
+      Base.Din = Base.Sap + (((Base.Sap % Base.DaysInWeek) > Base.WeekThresh) * Base.DaysInWeek) - (Base.Sap % Base.DaysInWeek); }
+    Base.Sap = (((Base.JDN + Base.EpochShift) - Base.Din) / Base.DaysInWeek) + On; Base.Din = (Base.JDN % Base.DaysInWeek) + On; }
+  var.XYz = Base.TTime + Base.STime; Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin;
+  Base.Kal = var.XYz % Base.MinInHour; Base.Hor = var.XYz / Base.MinInHour; 
+}
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
@@ -153,7 +159,6 @@ void GenFC(vanu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ?
 void GenRGB(anu mode, vanu c, vanu n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (anu)var.RGB;
     var.RGB >>= 8; var.B = (anu)var.RGB; var.RGB >>= 8; var.R  = (anu)var.RGB; } 
   else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
-void SetSeparator(char s) { Base.T[2] = s; Base.T[5] = s; }
 void SetBorder(anu on, vanu b) {
   Print((Base.Border = (on) ? (Base.AF + Base.Last) : (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b), var.A, "\033[2J"); }
 void SetPalette(anu set) { var.dpal = (var.dcon + sizeof(Canalysis)); if (set) var.dpal += var.Spal; }
@@ -199,7 +204,10 @@ void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = si
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
   Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
 As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
-    Real(Off); ColourInit(Fcolour, CFDeep); CSTime(Off); SetSeparator(':'); IRnd(); SWD(); SyncSize();
+    Real(Off); ColourInit(Fcolour, CFDeep); Base.HourInDay = 24; Base.MinInHour = 60; Base.SecInMin = 60; Base.ShiftYear = 4800; Base.EpochShift = 32045;
+    Base.PlainYear = 365; Base.YearLength = 146097; Base.CycleYears = 400; Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears);
+    Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On; Base.DaysInWeek = 7; Base.WeekThresh = 3;
+    Base.CoreJDN = Dates(2026, 2, 7); IRnd(); SWD(); SyncSize();
     Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown);
     Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
   else { VRam.SystemSwitch++; SwitchRaw();
@@ -210,7 +218,7 @@ void MoveNorm(vgoc x, vgoc y) { static anu Wait = 7; Wait = (Wait) ? Wait : 7;
     if (Convas.Win < Convas.D || Convas.Win >= Convas.S) { Windows* w = Win(Convas.Win);
       vgoc c = (w->W > w->MaxCs) ? w->W : w->MaxCs, s = (w->H > w->MaxH) ? w->H : w->MaxH;
       if (w->Xr && w->Yr && c && s) {
-        var.Xr = (x < w->Xr) ? ((--Wait) ? w->Xr : (w->Xr + c - 1)) : (x >= (w->Xr + c)) ? ((--Wait) ? (w->Xr + c - 1) : w->Xr) : x;
+        var.Xr = (x < w->Xr) ? ((--Wait) ? w->Xr : (w->Xr + c - 1)) : (x >= (w->Xr + c)) ? ((--Wait)? (w->Xr + c - 1) : w->Xr) : x;
         var.Yr = (y < w->Yr) ? ((--Wait) ? w->Yr : (w->Yr + s - 1)) : (y >= (w->Yr + s)) ? ((--Wait) ? (w->Yr + s - 1) : w->Yr) : y; return; } } }
   var.Xr = Base.Mcol; var.Yr = Base.Mstr;
   var.Xr = (x < -var.Xr) ? ((--Wait) ? -var.Xr : ((var.Xr << 1) + 1)) : (x > (var.Xr << 1)) ? ((--Wait) ? ((var.Xr << 1) + 1) : -var.Xr) : x;
@@ -308,6 +316,8 @@ void _FSet(anu cp, anu c, vanu *a) { vanu d = Base.Dynamic, w = Base.Win, o = Ba
   InitVram(cp, d, w, o, h, f); ColourInit(Base.Colours, Base.Deep); SetPalette(b); }
 void _CSet(anu c, vanu *a) { vanu l = Base.Colours, d = (vanu)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
+void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; if (c--) { m = a[1]; if (c) { s = a[2];} } } Base.STime = Times(h, m ,s); }
+void _DSet(van y, anu c, anu *a) { anu m = Off, d = Off; if (c--) { m = a[0]; if (c) { d = a[1]; } } Base.SJDN = Dates(y, m ,d); }
 void _WData(vanu n, char *str, anu c, rvgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {
      }

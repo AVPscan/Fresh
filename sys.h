@@ -71,8 +71,9 @@ typedef struct { anu l, d[19]; } PalBuf;
 typedef struct { anu *dkey, *data, *ds, *pal; rgoc *offset, *dlwin; anu *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
   As off, addr, size, Save[13]; anu R, G, B, A, X, Y; vnanu C, U, Z, XZ; nan Syn, Loop, Dis, XY; an Spal, RGB, XYz; vgoc Xr, Yr; } Var_;
 typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; vanu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink, Border,
-  Fone, I[8]; char T[8]; anu Error, Loop, Din, Sap; goc Gmin, Gmax, Speed; rgoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van Sam, JDN, SJDN, TJDN;
-  an STime, TTime; } Base_;
+  Fone, I[8]; anu Error, Loop; goc Gmin, Gmax, Speed; rgoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van Sam, Din, Sap, JDN, SJDN, TJDN,
+  STime, TTime, LJDN, Hor, Kal, Vik, DaySec, HourInDay, MinInHour, SecInMin, PlainYear, YearLength, PlainVis, ShiftYear, EpochShift, CycleYears,
+  DaysInWeek, WeekThresh, CoreJDN; } Base_;
 typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; vanu Wexe; vgoc X, Y, dXY; rgoc Xs, Ys; } ViewPort_;
 typedef struct { anu pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; vanu tic; vgoc LkX, LkY, MkX, MkY, RkX,
   RkY; } KeyMouse_;
@@ -168,7 +169,6 @@ nanu Fctg(vnanu u);                                          // Котанген
 vanu CreateCA(vanu c, anu a, char *Buf);                     // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
 void Print(vanu n, anu m, char *str);                        // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
 void GenFC(vanu c, anu deep);                                // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру Base.Deep
-void SetSeparator(char s);                                   // Установить разделитель в формат времени
 void SetBorder(anu on, vanu b);                              // Установить цвет бордюра и осчистить экран
 void SetPalette(anu set);                                    // Установить палитру [0..1]
 void SwitchPalette(void);                                    // Переключить палитру
@@ -204,6 +204,8 @@ void _SKeys(anu c, anu *a);                                  // Задать к�
 void _SMouse(anu c, anu *a);                                 // Задать коды управления мышью
 void _FSet(anu cp, anu c, vanu *a);                          // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
 void _CSet(anu c, vanu *a);                                  // Изменить {colours{,deep}}
+void _TSet(anu c, anu *a);                                   // Настройка времени {hour{,minutes{,seconds}}}
+void _DSet(van y, anu c, anu *a);                            // Настройка даты year{,month{,day}}
 void _WData(vanu n, char *str, anu c, rvgoc *a);             // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define WView(n, ...) _WView(n, (anu)((sizeof((vgoc[]){0, ##__VA_ARGS__}) / sizeof(vgoc)) - 1), (vgoc[]){0, ##__VA_ARGS__} + 1)
 #define Window(mode, col, ...) _Window(mode, col, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
@@ -217,6 +219,8 @@ void _WData(vanu n, char *str, anu c, rvgoc *a);             // Загрузка
 #define Mouse(...) _SMouse((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
 #define Fresh(cp, ...) _FSet(cp, (anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1)
 #define Colour(...) _CSet((anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1)
+#define Time(...) _TSet((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
+#define Date(year, ...) _DSet(year, (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
 #define WData(n, str, ...) _WData(n, str, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
 As SysWrite(void *buf, As len);                              // Выстрел в терминал
 void SwitchRaw(void);                                        // Включение/выключение неблокирующего ввода RealTime

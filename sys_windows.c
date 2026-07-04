@@ -13,6 +13,11 @@
 
 #include "sys.h"
 
+#ifdef _WIN32
+  __declspec(dllimport) DWORD __stdcall timeBeginPeriod(UINT uPeriod);
+  __declspec(dllimport) DWORD __stdcall timeEndPeriod(UINT uPeriod);
+#endif
+
 SYS_VARS_INIT;
 
 As SysWrite(void *buf, As len) { return (As)_write(1, buf, (As)len); }
@@ -21,7 +26,7 @@ void SwitchRaw(void) {
   HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_CURSOR_INFO ci;
   static DWORD oldModeIn, oldModeOut; static UINT oldCP, oldOutCP;  
   if (Flag.SwitchRaw) {
-    oldCP = GetConsoleCP(); oldOutCP = GetConsoleOutputCP();
+    timeBeginPeriod(1); oldCP = GetConsoleCP(); oldOutCP = GetConsoleOutputCP();
     GetConsoleMode(hIn, &oldModeIn); GetConsoleMode(hOut, &oldModeOut);
     SetConsoleCP(65001); SetConsoleOutputCP(65001); CONSOLE_CURSOR_INFO cinfo;
     GetConsoleCursorInfo(hOut, &cinfo); cinfo.bVisible = FALSE; SetConsoleCursorInfo(hOut, &cinfo);
@@ -29,15 +34,20 @@ void SwitchRaw(void) {
     newModeIn |= (ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_VIRTUAL_TERMINAL_INPUT);
     SetConsoleMode(hIn, newModeIn);
     SetConsoleMode(hOut, oldModeOut | ENABLE_VIRTUAL_TERMINAL_PROCESSING); Flag.SwitchRaw--; }
-  else {
+  else { timeEndPeriod(1);
     FlushConsoleInputBuffer(hIn); SetConsoleCP(oldCP); SetConsoleOutputCP(oldOutCP); SetConsoleMode(hIn, oldModeIn);
     CONSOLE_CURSOR_INFO cinfo; GetConsoleCursorInfo(hOut, &cinfo); cinfo.bVisible = TRUE;
     SetConsoleCursorInfo(hOut, &cinfo); SetConsoleMode(hOut, oldModeOut); Flag.SwitchRaw++; } }
 
 void GetKey(anu *b) {
   anu *p = b, c, len = 6; while (len--) *(p + len) = 0;
-  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0; GetNumberOfConsoleInputEvents(hIn, &ev);
-  if (ev == 0) { *p = 27; return; }
+  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); DWORD ev = 0; while (1) {
+    GetNumberOfConsoleInputEvents(hIn, &ev);
+    if (ev == 0) { *p = 27; return; }
+    INPUT_RECORD ir; DWORD readEv = 0; PeekConsoleInputA(hIn, &ir, 1, &readEv);
+    if (ir.EventType == FOCUS_EVENT || ir.EventType == MENU_EVENT) {
+      ReadConsoleInputA(hIn, &ir, 1, &readEv); continue; }
+    break; }
   _read(0, p, 1); c = *p; if (c > 127) {
     len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
     while (--len) _read(0, ++p, 1);
