@@ -23,7 +23,7 @@ SYS_VARS_INIT;
 As SysWrite(void *buf, As len) { return (As)_write(1, buf, (As)len); }
 
 void SwitchRaw(void) {
-  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE); CONSOLE_CURSOR_INFO ci;
+  HANDLE hIn = GetStdHandle(STD_INPUT_HANDLE); HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
   static DWORD oldModeIn, oldModeOut; static UINT oldCP, oldOutCP;  
   if (Flag.SwitchRaw) {
     timeBeginPeriod(1); oldCP = GetConsoleCP(); oldOutCP = GetConsoleOutputCP();
