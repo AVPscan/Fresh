@@ -108,26 +108,16 @@ vanu Key(void) { vanu s = Off; anu d, c = Buf.push;
 
 van Times(van h, van m, van s) { return (van)(((((h % Base.HourInDay) * Base.MinInHour) + (m % Base.MinInHour)) * Base.SecInMin) + (s % Base.SecInMin)); }
 
-van Dates(van y, van m, van d) {
-  return (van)(((y + Base.ShiftYear) * Base.PlainYear) + (((y + Base.ShiftYear) * Base.PlainVis) / Base.CycleYears) + (m * Base.YearLength) / (12 * Base.CycleYears) + d - Base.EpochShift); }
+van Dates(van y, van m, van d) { y += Base.ShiftYear - (m < 3); m += ((m < 3) * 12) - 3;
+  return (van)(((y * Base.PlainYear) + ((y * Base.PlainVis) / Base.CycleYears)) + (((m * Base.YearLength) + (Base.YearLength / 2)) / (12 * Base.CycleYears)) + d - Base.EpochShift); }
 
 void CSTime(an add) { 
-  if (Base.SJDN < Base.CoreJDN) { Base.SJDN = Base.CoreJDN; } 
-  if (Base.SJDN == Base.CoreJDN && Base.STime < (Base.DaySec >> 1)) Base.STime = Base.DaySec >> 1;
-  if ((Base.TTime += add) >= Base.DaySec) { Base.TJDN += (Base.TTime / Base.DaySec); Base.TTime %= Base.DaySec; } 
-  Base.JDN = Base.TJDN + Base.SJDN; 
-  if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN;
-    Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
-    Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
-    Base.Sam -= ((Base.JDN + Base.EpochShift) < Base.Sap); Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
-    Base.Din = Base.Sap + (((Base.Sap % Base.DaysInWeek) > Base.WeekThresh) * Base.DaysInWeek) - (Base.Sap % Base.DaysInWeek); 
-    if ((Base.JDN + Base.EpochShift) < Base.Din) { Base.Sam--;
-      Base.Sap = (Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears);
-      Base.Din = Base.Sap + (((Base.Sap % Base.DaysInWeek) > Base.WeekThresh) * Base.DaysInWeek) - (Base.Sap % Base.DaysInWeek); }
-    Base.Sap = (((Base.JDN + Base.EpochShift) - Base.Din) / Base.DaysInWeek) + On; Base.Din = (Base.JDN % Base.DaysInWeek) + On; }
-  var.XYz = Base.TTime + Base.STime; Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin;
-  Base.Kal = var.XYz % Base.MinInHour; Base.Hor = var.XYz / Base.MinInHour; 
-}
+  if (Base.JDN < Base.CoreJDN) Base.JDN = Base.CoreJDN;
+  if ((Base.Time += add) >= Base.DaySec) { Base.JDN += (Base.Time / Base.DaySec); Base.Time %= Base.DaySec; }
+  if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN; Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
+    Base.Sap = ((Base.JDN + Base.EpochShift - ((Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears))) / Base.DaysInWeek) + On;
+    Base.Din = (Base.JDN % Base.DaysInWeek) + On; } var.XYz = Base.Time;
+  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = var.XYz / Base.MinInHour; }
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
@@ -204,14 +194,9 @@ void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = si
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
   Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
 As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
-    Real(Off); ColourInit(Fcolour, CFDeep); Base.HourInDay = 24; Base.MinInHour = 60; Base.SecInMin = 60; Base.ShiftYear = 4800; Base.EpochShift = 32045;
-    Base.PlainYear = 365; Base.YearLength = 146097; Base.CycleYears = 400; Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears);
-    Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On; Base.DaysInWeek = 7; Base.WeekThresh = 3;
-    Base.CoreJDN = Dates(2026, 2, 7); IRnd(); SWD(); SyncSize();
-    Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown);
-    Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
-  else { VRam.SystemSwitch++; SwitchRaw();
-    Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
+    Real(Off); ColourInit(Fcolour, CFDeep); Planet(); IRnd(); SWD(); SyncSize(); Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG);
+    Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown); Print(Off, Off, "\033[?1049;7;1000h\033[?25l"); return On; }
+  else { VRam.SystemSwitch++; SwitchRaw(); Print(Off, Off, "\033[?1049;1000l\033[0m\033[?25h"); if (VRam.size) { FreeRam(VRam.addr,VRam.size); } return Base.Error; } }
 
 void MoveNorm(vgoc x, vgoc y) { static anu Wait = 7; Wait = (Wait) ? Wait : 7;
   if (VP.Mode & b1 && Convas.Win < Base.Win) {
@@ -316,8 +301,13 @@ void _FSet(anu cp, anu c, vanu *a) { vanu d = Base.Dynamic, w = Base.Win, o = Ba
   InitVram(cp, d, w, o, h, f); ColourInit(Base.Colours, Base.Deep); SetPalette(b); }
 void _CSet(anu c, vanu *a) { vanu l = Base.Colours, d = (vanu)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
-void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; if (c--) { m = a[1]; if (c) { s = a[2];} } } Base.STime = Times(h, m ,s); }
-void _DSet(van y, anu c, anu *a) { anu m = Off, d = Off; if (c--) { m = a[0]; if (c) { d = a[1]; } } Base.SJDN = Dates(y, m ,d); }
+void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; if (c--) { m = a[1]; if (c) { s = a[2];} } } Base.Time = Times(h, m ,s); }
+void _DSet(van y, anu c, anu *a) { anu m = On, d = On; if (c--) { m = a[0]; if (c) { d = a[1]; } } Base.JDN = Dates(y, m ,d); }
+void _PSet(anu c, van *a) { if (c != 5) { Base.HourInDay = 24; Base.MinInHour = 60; Base.SecInMin = 60; Base.CycleYears = 400; Base.YearLength = 146097; }
+  else { van *d = &Base.YearLength; while(c--) { *d-- = a[c]; } c = 5; }
+  Base.PlainYear = (Base.YearLength / Base.CycleYears); Base.ShiftYear = 12 * Base.CycleYears; Base.EpochShift = (Base.ShiftYear / Base.CycleYears) * Base.YearLength - On;
+  Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears); Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On;
+  Base.DaysInWeek = 7; Base.CoreJDN = Off; if (c != 5) { Base.CoreJDN = Dates(2026, 2, 7); } CSTime(Off); }
 void _WData(vanu n, char *str, anu c, rvgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {
      }
