@@ -17,6 +17,7 @@ ifeq ($(OS),Windows_NT)
 	RM = del /Q 2>NUL || rm -f
 	RUN_CMD = .\\$(TARGET)$(EXT)
 	GET_SIZE = wc -c < $(TARGET)$(EXT) 2>NUL || echo 0
+    LDFLAGS += -lwinmm
 else ifeq ($(UNAME_S),Linux)
 	SYS_SRC = sys_linux.c
 	EXT =
