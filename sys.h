@@ -35,15 +35,15 @@ typedef int64_t  vnan; // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,inf,-7FFFFFFFFFFFFFFF
   typedef vanu   rgoc; // an      [ан]  число, количество         (санскр. anka   — цифра)
   typedef vnanu   goc; // goc     [гоч] пространство, место       (санскр. gocara — сфера)
 #elif CellPow < 33
-  typedef van   rvgoc; // Din     (санскр. Dina       — день)
-  typedef vnan   vgoc; // Sap     (санскр. Saptán     — неделя)
-  typedef an     rgoc; // Sam     (санскр. Saṃvatsara — год)
-  typedef nan     goc;
-#elif CellPow < 61
-  typedef van   rvgoc; // r       (санскр. Rah       — свободный от {знака} )
-  typedef vnan   vgoc; // n       (санскр. Nimitta   — знак{овое} )
-  typedef van    rgoc; // v       (санскр. Vṛddhi    — увеличение {разрядности вдвое} )
-  typedef vnan    goc;
+  typedef van   rvgoc; // Din     (санскр. Dina       — день)   Vik сек
+  typedef vnan   vgoc; // Sap     (санскр. Saptán     — неделя) Kal мин
+  typedef an     rgoc; // Sam     (санскр. Saṃvatsara — год)    Hor час
+  typedef nan     goc; // JDN     число дней от начала цикла планеты
+#elif CellPow < 61     // Time    сумматор времени в течении суток
+  typedef van   rvgoc;
+  typedef vnan   vgoc; // r       (санскр. Rah       — свободный от {знака} )
+  typedef van    rgoc; // n       (санскр. Nimitta   — знак{овое} )
+  typedef vnan    goc; // v       (санскр. Vṛddhi    — увеличение {разрядности вдвое} )
 #endif
 #define SCell sizeof(As)
 
