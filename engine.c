@@ -116,8 +116,8 @@ void CSTime(an add) {
   if ((Base.Time += add) >= Base.DaySec) { Base.JDN += (Base.Time / Base.DaySec); Base.Time %= Base.DaySec; }
   if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN; Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
     Base.Sap = ((Base.JDN + Base.EpochShift - ((Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears))) / Base.DaysInWeek) + On;
-    Base.Din = (Base.JDN % Base.DaysInWeek) + On; } var.XYz = Base.Time;
-  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = var.XYz / Base.MinInHour; }
+    Base.Din = (Base.JDN % Base.DaysInWeek) + On; } var.XYz = (Base.Time + (Base.DaySec >> 1)) % Base.DaySec;
+  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = (var.XYz / Base.MinInHour) % (Base.HourInDay >> 1); }
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
@@ -302,7 +302,8 @@ void _FSet(anu cp, anu c, vanu *a) { vanu d = Base.Dynamic, w = Base.Win, o = Ba
   InitVram(cp, d, w, o, h, f); ColourInit(Base.Colours, Base.Deep); SetPalette(b); }
 void _CSet(anu c, vanu *a) { vanu l = Base.Colours, d = (vanu)Base.Deep, b = (var.dpal == (var.dcon + sizeof(Canalysis))) ? 0 : 1;
   if (c--) { l = a[Off]; if (c) { d = a[On]; } } ColourInit(l, d); SetPalette(b); }
-void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; if (c--) { m = a[1]; if (c) { s = a[2];} } } Base.Time = Times(h, m ,s); }
+void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; if (c--) { m = a[1]; if (c) { s = a[2];} } } Base.Time = (Times(h, m, s) + (Base.DaySec >> 1)) % Base.DaySec;
+  if (h >= (Base.HourInDay >> 1)) Base.JDN++; }
 void _DSet(van y, anu c, anu *a) { anu m = On, d = On; if (c--) { m = a[0]; if (c) { d = a[1]; } } Base.JDN = Dates(y, m ,d); }
 void _PSet(anu c, van *a) { if (c != 5) { Base.HourInDay = 24; Base.MinInHour = 60; Base.SecInMin = 60; Base.CycleYears = 400; Base.YearLength = 146097; }
   else { van *d = &Base.YearLength; while(c--) { *d-- = a[c]; } }
