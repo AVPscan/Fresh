@@ -117,7 +117,8 @@ void CSTime(an add) {
   if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN; Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
     Base.Sap = ((Base.JDN + Base.EpochShift - ((Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears))) / Base.DaysInWeek) + On;
     Base.Din = (Base.JDN % Base.DaysInWeek) + On; } var.XYz = (Base.Time + (Base.DaySec >> 1)) % Base.DaySec;
-  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = (var.XYz / Base.MinInHour) % (Base.HourInDay >> 1); }
+  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = (var.XYz / Base.MinInHour) % (Base.HourInDay >> 1);
+  if (!Base.Hor) Base.Hor = (Base.HourInDay >> 1); }
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
