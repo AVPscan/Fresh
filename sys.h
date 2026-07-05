@@ -72,7 +72,7 @@ typedef struct { anu *dkey, *data, *ds, *pal; rgoc *offset, *dlwin; anu *dwin, *
   As off, addr, size, Save[13]; anu R, G, B, A, X, Y; vnanu C, U, Z, XZ; nan Syn, Loop, Dis, XY; an Spal, RGB, XYz; vgoc Xr, Yr; } Var_;
 typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; vanu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink, Border,
   Fone, I[8]; anu Error, Loop; goc Gmin, Gmax, Speed; rgoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van LJDN, CoreJDN, JDN, Time, Hor, Kal, Vik,
-  Din, Sap, Sam, DaySec, HourInDay, MinInHour, SecInMin, CycleYears, YearLength, PlainYear, PlainVis, ShiftYear, EpochShift, DaysInWeek; } Base_;
+  Din, Sap, Sam, HourInDay, MinInHour, SecInMin, CycleYears, YearLength, PlainYear, PlainVis, ShiftYear, EpochShift, DaySec, DaysInWeek; } Base_;
 typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; vanu Wexe; vgoc X, Y, dXY; rgoc Xs, Ys; } ViewPort_;
 typedef struct { anu pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; vanu tic; vgoc LkX, LkY, MkX, MkY, RkX,
   RkY; } KeyMouse_;
