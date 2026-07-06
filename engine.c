@@ -116,9 +116,9 @@ void CSTime(an add) {
   if ((Base.Time += add) >= Base.DaySec) { Base.JDN += (Base.Time / Base.DaySec); Base.Time %= Base.DaySec; }
   if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN; Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
     Base.Sap = ((Base.JDN + Base.EpochShift - ((Base.Sam * Base.PlainYear) + ((Base.Sam * Base.PlainVis) / Base.CycleYears))) / Base.DaysInWeek) + On;
-    Base.Din = (Base.JDN % Base.DaysInWeek) + On; } var.XYz = (Base.Time + (Base.DaySec >> 1)) % Base.DaySec;
-  Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour; Base.Hor = (var.XYz / Base.MinInHour) % (Base.HourInDay >> 1);
-  if (!Base.Hor) Base.Hor = (Base.HourInDay >> 1); }
+    Base.Din = (Base.JDN % Base.DaysInWeek) + On; }
+  var.XYz = (Base.Time + (Base.DaySec >> 1)) % Base.DaySec; Base.Vik = var.XYz % Base.SecInMin; var.XYz /= Base.SecInMin; Base.Kal = var.XYz % Base.MinInHour;
+  if (!(Base.Hor = (var.XYz / Base.MinInHour) % (Base.HourInDay >> 1))) Base.Hor = (Base.HourInDay >> 1); }
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
@@ -128,6 +128,10 @@ nanu Fsin(vnanu u) { static nanu s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,1
   nanu r = u & 63; r = (u & b6) ? 64 + s[r] : s[r]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
 nanu Ftg(vnanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 nanu Fctg(vnanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
+van CoreSqrt(van x) { if (!x) return Off;
+  var.X1 = x >> 1; do { var.X2 = var.X1; var.X1 = (var.X1 + x / var.X1) >> 1; 
+  } while ((var.X2 > var.X1 ? var.X2 - var.X1 : var.X1 - var.X2) > On);
+  return var.X1; }
 
 vanu CreateCA(vanu c, anu a, char *dst) { char *src, *b = dst; static char *s = "24;21;22;1;\00022;2;\00023;3;\00024;4;\00027;7;\00029;9;\000";
   if ((var.A ^= a)) { var.X = 64; var.Y = 36; *dst++ = '\33'; *dst++ = '['; while(var.X) { if ((var.A & var.X)) {

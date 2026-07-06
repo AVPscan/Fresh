@@ -69,7 +69,7 @@ typedef struct { anu Res1, Res2; vanu D, S, Win; rgoc W, H, CW, CH; } Canalysis;
 typedef struct { anu l, d[19]; } PalBuf;
 
 typedef struct { anu *dkey, *data, *ds, *pal; rgoc *offset, *dlwin; anu *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
-  As off, addr, size, Save[13]; anu R, G, B, A, X, Y; vnanu C, U, Z, XZ; nan Syn, Loop, Dis, XY; an Spal, RGB, XYz; vgoc Xr, Yr; } Var_;
+  As off, addr, size, Save[13]; anu R, G, B, A, X, Y; vnanu C, U, Z, XZ; nan Syn, Loop, Dis, XY; an Spal, RGB, XYz; vgoc Xr, Yr; van X1, X2; } Var_;
 typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; vanu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink, Border,
   Fone, I[8]; anu Error, Loop; goc Gmin, Gmax, Speed; rgoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van LJDN, CoreJDN, JDN, Time, Hor, Kal, Vik,
   Din, Sap, Sam, HourInDay, MinInHour, SecInMin, CycleYears, YearLength, PlainYear, PlainVis, ShiftYear, EpochShift, DaySec, DaysInWeek; } Base_;
@@ -165,6 +165,7 @@ nanu Fsin(vnanu u);                                          // Синус      
 nanu Fcos(vnanu u);                                          // Косинус    для всего диапазона дают [-127...+127]
 nanu Ftg(vnanu u);                                           // Тангенс    бесконечность [-128] (для nanu дианазон [-128,-127,ноль,127])
 nanu Fctg(vnanu u);                                          // Котангенс  так как 0 и -128 не имеют обратных чисел!
+van CoreSqrt(van x);                                         // Квадратный корень
 vanu CreateCA(vanu c, anu a, char *Buf);                     // Создать с адреса ansi последовательность цвета, атрибутов и вернуть её длину
 void Print(vanu n, anu m, char *str);                        // Вывод строки в палитре и атрибуте напрямую игнорируя Fresh
 void GenFC(vanu c, anu deep);                                // Установить по индексу c[0...127], cR cG cB - фон и цвет в палитру Base.Deep
