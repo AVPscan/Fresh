@@ -13,8 +13,8 @@
 void Body(void) {  // пока не дописано WinData,Render9
   char *b = var.dbuf + 512, *p = b; anu l, v, w, j = 60, i = 8; Print(Base.Fone, Off, "\033[H"); while(i--) Print(Fon(7-i),Off," ");
   Print(Base.Fone, Off, ""); As s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
-  snprintf(p, 91, " %llu Kbyte %d %d %d %d %lld ", s, Base.CellP, Base.Dynamic, Base.Win, Base.Colours, var.end - var.dbuf); i = (anu)StrLen(b);
-  Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b); snprintf(b, 100, "%llu %llu %llu %llu:%llu:%llu                         ", Base.Din, Base.Sap, Base.Sam, Base.Hor, Base.Kal, Base.Vik);
+  snprintf(p, 91, " %lu Kbyte %d %d %d %d %ld ", s, Base.CellP, Base.Dynamic, Base.Win, Base.Colours, var.end - var.dbuf); i = (anu)StrLen(b);
+  Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b); snprintf(b, 100, "%lu %lu %lu %lu:%lu:%lu                         ", Base.Din, Base.Sap, Base.Sam, Base.Hor, Base.Kal, Base.Vik);
   if ((anu)StrLen(b) > (j - i)) { *(b + j - i) = Off; } if ((anu)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(Ink(8), Off, b); if (TS.r < 3) return;
   snprintf(b, 100, "\nH%d A%d D%d C%d x%d y%d %d %d b%d x%d y%d                         ", Base.Hz/10, Base.Apm, Base.Deep, Base.Colours, VP.X, VP.Y, VP.Xs, VP.Ys,
   Buf.Mkey, Buf.MX, Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; } Print((Base.Colours == 1) ? Ink(0) : Ink(6), aC | aD, b);

@@ -169,7 +169,7 @@ void ColourInit(vanu c, vanu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; 
   Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3); Base.I[4] = ((((c << 4) / 5) + 12) >> 3);
   Base.I[5] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3); Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[7] = Base.Colours;
   Base.Border = Fon(0); Base.Fone = Fon(1); Base.Ink = Ink(0); GenPalettes(); }
-As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(AFunction); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
+As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(As); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.off = 1 << c; Base.Mcol = var.off - 1;
   Base.W = ((var.off + (var.off << 3)) >> 5); Base.Mstr = Base.W - 1; var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5));
   Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
@@ -289,14 +289,14 @@ vanu _Window(anu t, anu col, anu c, rvgoc *a) { vanu l, n; Windows* w;
   w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Base.Mstr; w->Xr = Off; w->Yr = Off; w->W = Off; w->H = Off;
   if (c > On) { if ((w->Xr = a[0])) { if (!(w->Yr = a[1])) w->Xr = Off; } } if (c > 2) { w->W = a[2]; if (c > 3) w->H = a[3]; }
   w->Colour = col; if (w->F == 9) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->F |= b1; } return n; }
-void _WExecs(vanu n, anu cur, anu c, AFunction *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WExecs(vanu n, anu cur, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if ((Win(n)->F & b0) && c--) { Event(cur)->W = n; Exe(cur, a[Off]);
     if (Event(cur)->C && c) { anu j, k = Event(cur)->C, i = On; while(k-- && c--) { j = K_Mouse;
       while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } } }
 void _WSet(vanu n, anu c, anu *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (c--) { Windows* w = Win(n); w->F &= ~b2; if (a[Off]) { w->F |= b2; } if (c) { w->F &= ~b3; if (a[On]) { w->F |= b3; } } } }
 void _SEvents(anu c, anu *a) { anu m, k = c; while(k--) { m = a[k]; Event(m)->W = Base.Win; Event(m)->C = c; Event(m)->N = k; } }
-void _SExec(anu c, AFunction *a) { anu k = K_Mouse; while(k--) { if (Event(k)->W == Base.Win) {
+void _SExec(anu c, As *a) { anu k = K_Mouse; while(k--) { if (Event(k)->W == Base.Win) {
   if (Event(k)->C && c) { anu j, x = Event(k)->C, i = Off;
     while(x-- && c--) { j = ECD; while(--j) { if (Event(j)->W == Base.Win && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } break; } } }
 void _SKeys(anu c, anu *a) { anu *p = &VP.Key, i = Off; p += *p; c = (c > VP.Key) ? VP.Key : c; while(c--) *p-- = a[i++]; }
@@ -315,7 +315,7 @@ void _PSet(anu c, van *a) { if (c != 5) { Base.HourInDay = 24; Base.MinInHour = 
   Base.PlainYear = (Base.YearLength / Base.CycleYears); Base.ShiftYear = (Base.HourInDay >> 1) * Base.CycleYears; Base.EpochShift = (Base.ShiftYear / Base.CycleYears) * Base.YearLength - On;
   Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears); Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On; Base.DaysInWeek = 7;
   Base.CoreJDN = (Base.HourInDay == 24 && Base.MinInHour == 60 && Base.SecInMin == 60 && Base.CycleYears == 400 && Base.YearLength == 146097) ? Dates(2026, 2, 7) : Off; CSTime(Off); }
-void _WData(vanu n, char *str, anu c, rvgoc *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WData(vanu n, char *str, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {
      }
   (void)*str; (void)c; (void)*a; }

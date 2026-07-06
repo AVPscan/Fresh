@@ -46,6 +46,13 @@ typedef int64_t  vnan; // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,inf,-7FFFFFFFFFFFFFFF
   typedef vnan    goc; // v       (санскр. Vṛddhi    — увеличение {разрядности вдвое} )
 #endif
 #define SCell sizeof(As)
+#define _V_anu(...)    (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1
+#define _V_vanu(...)   (anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1
+#define _V_van(...)    (anu)((sizeof((van[]){0, ##__VA_ARGS__}) / sizeof(van)) - 1), (van[]){0, ##__VA_ARGS__} + 1
+#define _V_vgoc(...)   (anu)((sizeof((vgoc[]){0, ##__VA_ARGS__}) / sizeof(vgoc)) - 1), (vgoc[]){0, ##__VA_ARGS__} + 1
+#define _V_rvgoc(...)  (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1
+#define _V_AsPtr(...)  (anu)((sizeof((void*[]){0, ##__VA_ARGS__}) / SCell) - 1), (As*)(void*[]){0, ##__VA_ARGS__} + 1
+#define _V_AsNum(...)  (anu)((sizeof((As[]){0, ##__VA_ARGS__}) / SCell) - 1), (As[]){0, ##__VA_ARGS__} + 1
 
 enum { Off, On,
   b0 = 0x01, b1, b2 = 0x04, b3 = 0x08, b4 = 0x10, b5 = 0x20, b6 = 0x40, b7 = 0x80, b8 = 0x100,   // Битовые
@@ -64,7 +71,6 @@ enum { Off, On,
 typedef struct { anu d[4], u[4]; } KeyBuf;
 typedef struct { anu F, Colour; vanu Layer, parent, child; rgoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; vgoc Xr, Yr; } Windows;
 typedef struct { anu C, N; vanu W; } Events;
-typedef void (*AFunction)(void);
 typedef struct { anu Res1, Res2; vanu D, S, Win; rgoc W, H, CW, CH; } Canalysis;
 typedef struct { anu l, d[19]; } PalBuf;
 
@@ -131,11 +137,10 @@ extern CR_ TS;
 #define WStrVL(n, r)  (var.dlwin + (r) + ((n) * Base.W))                          // Визуальная длина строки окна
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))            // адрес начала данных окна n
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                    // адрес начала структуры события
-#define Vector(a)     (*(AFunction*)((As*)var.exec + (a)))                        // адрес вектора прерывания события
+#define Vector(a)     (((void(**)(void))var.exec)[(a)])                           // адрес вектора прерывания события
 #define Convas        (*(Canalysis*)var.dcon)                                     // адрес где организована разбивка холста
 #define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))           // адрес начала кода цвета
-
-#define Exe(v, func)  Vector(v) = (((As)(func) < (As)Nop) ? Off : (func))         // сброс вектора если адрес функции раньше Nop
+#define Exe(v, func)  (((As*)var.exec)[(v)]) = (((As)(func) < (As)Nop) ? Off : (As)(func))
 #define Start(c, r)   (Con(r) + ((c) ? *Offset((c) - 1, r) : 0))                  // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ rgoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })    // длина ячейки холста в байтах
 #define End(c, r)     (Con(r) + *Offset(c, r))                                    // адрес конца буфера ячейки холста
@@ -196,10 +201,10 @@ void WUp(void);                                              // Ротация �
 void WTop(vanu n);                                           // Установить окно выше остальных подобных
 void _WView(vanu n, anu count, vgoc *args);                  // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
 vanu _Window(anu mode, anu col, anu c, rvgoc *a);            // Создание окна с палитрой col при col<0 статичное окно
-void _WExecs(vanu n, anu cur, anu c, AFunction *a);          // Настройка статического окна привязка функций к кодам клавиш
+void _WExecs(vanu n, anu cur, anu c, As *a);                 // Настройка статического окна привязка функций к кодам клавиш
 void _WSet(vanu n, anu c, anu *a);                           // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvents(anu c, anu *a);                                // Запомнить вектор системный событий
-void _SExec(anu c, AFunction *a);                            // Привязать вектор системных событий к функциям
+void _SExec(anu c, As *a);                                   // Привязать вектор системных событий к функциям
 void _SKeys(anu c, anu *a);                                  // Задать клавиши управления вьюпортом в обратном порядке
 void _SMouse(anu c, anu *a);                                 // Задать коды управления мышью
 void _FSet(anu cp, anu c, vanu *a);                          // Изменить CellPower {,Win{,How{,Hz{,Fps}}}}
@@ -207,23 +212,25 @@ void _CSet(anu c, vanu *a);                                  // Изменить
 void _TSet(anu c, anu *a);                                   // Настройка времени {hour{,minutes{,seconds}}}
 void _DSet(van y, anu c, anu *a);                            // Настройка даты year{,month{,day}}
 void _PSet(anu c, van *a);                                   // Настройка планеты {hour{,minutes{,seconds{,cyear{,lyear}}}}}
-void _WData(vanu n, char *str, anu c, rvgoc *a);             // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-#define WView(n, ...) _WView(n, (anu)((sizeof((vgoc[]){0, ##__VA_ARGS__}) / sizeof(vgoc)) - 1), (vgoc[]){0, ##__VA_ARGS__} + 1)
-#define Window(mode, col, ...) _Window(mode, col, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
-#define WDynamic(col, ...) _Window(1, col, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
-#define WStatic(col, ...) _Window(0, col, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
-#define WExec(n, cur, ...) _WExecs(n, cur, (anu)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define WSet(n, ...) _WSet(n, (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Even(...) _SEvents((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Exec(...) _SExec((anu)((sizeof((AFunction[]){0, ##__VA_ARGS__}) / sizeof(AFunction)) - 1), (AFunction[]){0, ##__VA_ARGS__} + 1)
-#define Keys(...) _SKeys((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Mouse(...) _SMouse((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Fresh(cp, ...) _FSet(cp, (anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1)
-#define Colour(...) _CSet((anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1)
-#define Time(...) _TSet((anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Date(year, ...) _DSet(year, (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1)
-#define Planet(...) _PSet((anu)((sizeof((van[]){0, ##__VA_ARGS__}) / sizeof(van)) - 1), (van[]){0, ##__VA_ARGS__} + 1)
-#define WData(n, str, ...) _WData(n, str, (anu)((sizeof((rvgoc[]){0, ##__VA_ARGS__}) / sizeof(rvgoc)) - 1), (rvgoc[]){0, ##__VA_ARGS__} + 1)
+void _WData(vanu n, char *str, anu c, As *a);                // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+
+#define WView(n, ...)        _WView(n, _V_vgoc(__VA_ARGS__))
+#define Window(mode,col,...) _Window(mode, col, _V_rvgoc(__VA_ARGS__))
+#define WDynamic(col, ...)   _Window(1, col, _V_rvgoc(__VA_ARGS__))
+#define WStatic(col, ...)    _Window(0, col, _V_rvgoc(__VA_ARGS__))
+#define WData(n, str, ...)   _WData(n, str, _V_AsNum(__VA_ARGS__))
+#define WSet(n, ...)         _WSet(n, _V_anu(__VA_ARGS__))
+#define Exec(...)            _SExec(_V_AsPtr(__VA_ARGS__))
+#define WExec(n, cur, ...)   _WExecs(n, cur, _V_AsPtr(__VA_ARGS__))
+#define Even(...)            _SEvents(_V_anu(__VA_ARGS__))
+#define Keys(...)            _SKeys(_V_anu(__VA_ARGS__))
+#define Mouse(...)           _SMouse(_V_anu(__VA_ARGS__))
+#define Time(...)            _TSet(_V_anu(__VA_ARGS__))
+#define Date(year, ...)      _DSet(year, _V_anu(__VA_ARGS__))
+#define Fresh(cp, ...)       _FSet(cp, _V_vanu(__VA_ARGS__))
+#define Colour(...)          _CSet(_V_vanu(__VA_ARGS__))
+#define Planet(...)          _PSet(_V_van(__VA_ARGS__))
+
 As SysWrite(void *buf, As len);                              // Выстрел в терминал
 void SwitchRaw(void);                                        // Включение/выключение неблокирующего ввода RealTime
 void GetKey(anu *b);                                         // Читаем utf8 из порта
