@@ -97,7 +97,7 @@ typedef struct {
   anu Refresh : 1; // бит 7    {1/0} есть изменения / нет изменений
 } Data;
 typedef struct {
-  anu len     : 4; // бит 3210 длина = 1+(0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
+  anu len     : 4; // бит 3210 длина = (0-15) ascii {32...126} визуальная длина равна длине в байтах (числа)
   anu right   : 1; // бит 4    {1} к правому
   anu left    : 1; // бит 5    {1} к левому {00}/{11} по центру (как заполнять поле структуры)
   anu ds      : 1; // бит 6    {1} Structure {0} Data
@@ -137,10 +137,11 @@ extern CR_ TS;
 #define WStrVL(n, r)  (var.dlwin + (r) + ((n) * Base.W))                          // Визуальная длина строки окна
 #define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))            // адрес начала данных окна n
 #define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                    // адрес начала структуры события
-#define Vector(a)     (((void(**)(void))var.exec)[(a)])                           // адрес вектора прерывания события
+#define VHas(a)       (((vanu*)var.exec)[(a)])                                    // Проверка на обработчик
+#define Vector(a)     ((void(*)(void))((As)Nop + VHas(a)))                        // адрес вектора прерывания события
 #define Convas        (*(Canalysis*)var.dcon)                                     // адрес где организована разбивка холста
 #define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))           // адрес начала кода цвета
-#define Exe(v, func)  (((As*)var.exec)[(v)]) = (((As)(func) < (As)Nop) ? Off : (As)(func))
+#define Exe(v, func)  ((vanu*)var.exec)[(v)] = (vanu)(((As)(func) < (As)Nop) ? Off : ((As)(func) - (As)Nop))
 #define Start(c, r)   (Con(r) + ((c) ? *Offset((c) - 1, r) : 0))                  // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ rgoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })    // длина ячейки холста в байтах
 #define End(c, r)     (Con(r) + *Offset(c, r))                                    // адрес конца буфера ячейки холста
@@ -213,7 +214,6 @@ void _TSet(anu c, anu *a);                                   // Настройк
 void _DSet(van y, anu c, anu *a);                            // Настройка даты year{,month{,day}}
 void _PSet(anu c, van *a);                                   // Настройка планеты {hour{,minutes{,seconds{,cyear{,lyear}}}}}
 void _WData(vanu n, char *str, anu c, As *a);                // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
-
 #define WView(n, ...)        _WView(n, _V_vgoc(__VA_ARGS__))
 #define Window(mode,col,...) _Window(mode, col, _V_rvgoc(__VA_ARGS__))
 #define WDynamic(col, ...)   _Window(1, col, _V_rvgoc(__VA_ARGS__))
@@ -230,7 +230,6 @@ void _WData(vanu n, char *str, anu c, As *a);                // Загрузка
 #define Fresh(cp, ...)       _FSet(cp, _V_vanu(__VA_ARGS__))
 #define Colour(...)          _CSet(_V_vanu(__VA_ARGS__))
 #define Planet(...)          _PSet(_V_van(__VA_ARGS__))
-
 As SysWrite(void *buf, As len);                              // Выстрел в терминал
 void SwitchRaw(void);                                        // Включение/выключение неблокирующего ввода RealTime
 void GetKey(anu *b);                                         // Читаем utf8 из порта

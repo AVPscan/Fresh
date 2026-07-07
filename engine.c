@@ -182,7 +182,7 @@ As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(As); Base.Goc = siz
             if ((anu*)var.dlwin <= (var.dwin = (anu*)(var.dlwin + (Base.W * Base.Dynamic)))) {
               if (var.dwin < (var.event = (var.dwin + Base.Win * sizeof(Windows)))) {
                 if (var.event < (var.exec = var.event + (sizeof(Events) << 8))) {
-                  if (var.exec < (var.dcon = var.exec + (Base.PCell << 8))) {
+                  if (var.exec < (var.dcon = var.exec + (2 << 8))) {
                     if (var.dcon < (var.dpal = (var.dcon + sizeof(Canalysis)))) {
                       if ((char*)var.dpal < (var.dbuf = (char*)var.dpal + (var.Spal << 1))) {
                         if (var.dbuf < (var.end = (char*)var.dpal + ((((256 << 2) + 256) << 4) + 4096))) return (As)(var.end - a); }
@@ -197,7 +197,7 @@ void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = si
   Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off; Convas.CH = Base.Mstr;
   Convas.H = Off; Convas.Win = Base.Win; VP.Mode = b2; VP.Key = 9; var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz;
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
-  Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Vector(ECD) = Encode; Vector(RPE) = RPEncode; }
+  Base.FTime = (Base.On) ? Base.On : 25; var.Loop = (Base.Apm * Base.Hz) / Base.FTime; Exe(ECD, Encode); Exe(RPE, RPEncode); }
 As SystemSwitch(void) { if (VRam.SystemSwitch) { VRam.SystemSwitch--; SwitchRaw(); InitVram(CellPow, Dynam, Wind, FHow, FHz, FApm); if (!Base.Loop) return Off;
     Real(Off); ColourInit(Fcolour, CFDeep); Planet(); Base.Time = Times((Base.HourInDay >> 1), Off, Off); IRnd(); SWD(); SyncSize();
     Keys(K_F1,K_Ctrl_DOW,K_Ctrl_LEF,K_Ctrl_UP,K_Ctrl_RIG,K_UP,K_LEF,K_DOW,K_RIG); Mouse(M_Lkey,M_Mkey,M_Rkey,M_Rollup,M_Rolldown,M_ShRollup,M_ShRolldown);
@@ -234,7 +234,7 @@ void Free(void) { vgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE
       else if (Buf.Mkey == Buf.Rk) { Buf.RkX = Buf.MX; Buf.RkY = Buf.MY; i = b1; }
       if (i && MoveScreen(VP.Xs - Buf.MX, VP.Ys - Buf.MY)) {  } }
     else { if (Buf.Cod) {
-        if (Vector(Buf.Cod)) { Buf.Ctrl++; VP.Wexe = Event(Buf.Cod)->W; Vector(Buf.Cod)(); }
+        if (VHas(Buf.Cod)) { Buf.Ctrl++; VP.Wexe = Event(Buf.Cod)->W; Vector(Buf.Cod)(); }
         n = &VP.Key; i = *n++; while (i--) if (*n++ == Buf.Cod) { Buf.Ctrl++; break; } }
       if (!Buf.Ctrl) PushKey(); }
     if (Buf.Cod) { ++Buf.tic; Buf.Ctrl = On; } }
@@ -254,9 +254,9 @@ void Free(void) { vgoc dx = Off, dy = Off; anu i, *n; Buf.Ctrl = Off; Vector(RPE
       MoveConvas(dx, dy); } }
   if ((var.Syn += Real(Base.Apm) + Base.Hz) >= var.Loop) {
     if ((var.Dis += (var.Syn / var.Loop)) >= Base.FTime) { CSTime(var.Dis / Base.FTime); var.Dis %= Base.FTime; }
-    static vanu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && Vector(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
+    static vanu c = Off; GenLast((c = (c + 1) & 511)); if (Base.On && VHas(Timer)) { VP.Wexe = Event(Timer)->W; Vector(Timer)(); }
     var.Syn %= var.Loop; }
-  if (Vector(Off)) { VP.Wexe = Event(Off)->W; Vector(Off)(); }
+  if (VHas(Off)) { VP.Wexe = Event(Off)->W; Vector(Off)(); }
   if (SyncSize() || Buf.Ctrl > On) { SetBorder(Base.On, Base.Border); } else {  } }
 
 void Nop(void) { }
