@@ -128,9 +128,9 @@ nanu Fsin(vnanu u) { static nanu s[64] = { 0,1,2,3,4,6,7,8,9,11,12,13,14,15,17,1
   nanu r = u & 63; r = (u & b6) ? 64 + s[r] : s[r]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
 nanu Ftg(vnanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 nanu Fctg(vnanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
-van CoreSqrt(van x) { if (!x) return Off;
-  var.X1 = x >> 1; do { var.X2 = var.X1; var.X1 = (var.X1 + x / var.X1) >> 1; 
-  } while ((var.X2 > var.X1 ? var.X2 - var.X1 : var.X1 - var.X2) > On);
+van CoreSqrt(van x) { if (!x) { return Off; } var.X1 = x >> 1;
+  do { var.X2 = var.X1; var.X1 = (var.X1 + x / var.X1) >> 1; }
+  while ((var.X2 > var.X1 ? var.X2 - var.X1 : var.X1 - var.X2) > On);
   return var.X1; }
 
 vanu CreateCA(vanu c, anu a, char *dst) { char *src, *b = dst; static char *s = "24;21;22;1;\00022;2;\00023;3;\00024;4;\00027;7;\00029;9;\000";
@@ -182,18 +182,18 @@ As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(As); Base.Goc = siz
             if ((anu*)var.dlwin <= (var.dwin = (anu*)(var.dlwin + (Base.W * Base.Dynamic)))) {
               if (var.dwin < (var.event = (var.dwin + Base.Win * sizeof(Windows)))) {
                 if (var.event < (var.exec = var.event + (sizeof(Events) << 8))) {
-                  if (var.exec < (var.dcon = var.exec + (2 << 8))) {
+                  if (var.exec < (var.dcon = var.exec + (4 << 8))) {
                     if (var.dcon < (var.dpal = (var.dcon + sizeof(Canalysis)))) {
                       if ((char*)var.dpal < (var.dbuf = (char*)var.dpal + (var.Spal << 1))) {
                         if (var.dbuf < (var.end = (char*)var.dpal + ((((256 << 2) + 256) << 4) + 4096))) return (As)(var.end - a); }
   } } } } } } } } } } return Off; }
 void InitVram(anu c, anu d, vanu w, vanu how, vanu hz, vanu apm) { Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.addr = VRam.addr; var.size = VRam.size;
-  MemCpy(&var.Save, &var.dpal, sizeof(var.Save)); Base.Loop = On; Base.Error = 4; if (!(VRam.size = HowSize(c,d,w,Off))) --Base.Error;
+  MemCpy(&var.Save, &var.dcon, sizeof(var.Save)); Base.Loop = On; Base.Error = 4; if (!(VRam.size = HowSize(c,d,w,Off))) --Base.Error;
   if (Base.Error == 4 && !(VRam.addr = GetRam(&VRam.size))) { Base.Error  = 2; } if (Base.Error  == 4 && !(VRam.size = HowSize(c,d,w,VRam.addr))) Base.Error = 1;
-  if (Base.Error < 4) { MemCpy(&var.dpal, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
+  if (Base.Error < 4) { MemCpy(&var.dcon, &var.Save, sizeof(var.Save)); VRam.addr = var.addr; VRam.size = var.size; Base.Loop--; return; }
   if (var.size) { FreeRam(var.addr,var.size); } Base.UGmax = (rgoc)(-1); Base.Gmax = Base.UGmax >> 1; Base.Ginf = ~Base.Gmax; Base.Gmin = Base.Ginf + 1;
-  Base.Count = 6; Base.Error = Off; Base.D = Base.CellP + 2; Base.DS = Base.CellP; Base.O = Base.CellP; Base.V = 2; Base.Spd1 = Base.Mcol >> 4;
+  Base.Count = 6; Base.Error = Off; Base.D = Base.CellP + 2; Base.DS = Base.CellP; Base.O = Base.CellP; Base.Spd1 = Base.Mcol >> 4; Base.V = 2; //?
   Base.Spd0 = Base.Spd1 >> 2; Base.Speed = Base.Spd1; Convas.D = Off; Convas.S = Base.Win; Convas.CW = Base.Mcol; Convas.W = Off; Convas.CH = Base.Mstr;
   Convas.H = Off; Convas.Win = Base.Win; VP.Mode = b2; VP.Key = 9; var.Syn = Base.Hz - var.Syn; Base.Hz = (hz < 25) ? 25 : (hz > 10000) ? 10000 : hz;
   var.Syn = Base.Hz - var.Syn; Base.Apm = (apm < 50) ? 50 : ((apm > 1000) ? 1000 : apm); Base.On = (how > Base.Hz) ? Base.Hz : how;
@@ -268,12 +268,12 @@ void Bye(void) { Base.Loop = Off; }
 
 void WSwitch(void) { if (Win(VP.Wexe)->Xr) Win(VP.Wexe)->F ^= b1; }
 void WASwitch(void) { if (Win(VP.Wexe)->F ^= b1) WView(VP.Wexe); }
-void WDown(void) { if (Convas.D) { vanu l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
-void WUp(void) { if (Convas.D) { vanu l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
-void WTop(vanu n) { vanu l = Convas.D; if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void WDown(void) { if (Convas.D) { rgoc l = Convas.D; Win(--l)->Layer = Off; while(l) ++Win(--l)->Layer; } }
+void WUp(void) { if (Convas.D) { rgoc l = Convas.D; Win(Off)->Layer = --l; while(l) --Win(--l)->Layer; } }
+void WTop(rgoc n) { rgoc l = Convas.D; if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (n > l) { l = Base.Win; } Win(n)->Layer = l; l -= n; while(l--) --Win(n + l)->Layer; }
 
-void _WView(vanu n, anu c, vgoc *a) { vgoc x = Off, y = Off;
+void _WView(rgoc n, anu c, vgoc *a) { vgoc x = Off, y = Off;
   if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) { return; } Windows* w = Win(n);
   if (c > On) { x = a[Off]; if (!(y = a[On])) x = Off;
     if (x && !(w->F & b0)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
@@ -282,18 +282,18 @@ void _WView(vanu n, anu c, vgoc *a) { vgoc x = Off, y = Off;
     if (w->F & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; } 
     else if ((rvgoc)VP.X > (rvgoc)Base.Mcol || (rvgoc)VP.Y > (rvgoc)Base.Mstr) return; }
   w->Xr = x; w->Yr = y; if (w->Xr) { w->F |= b1; } else { w->F &= ~b1; } }
-vanu _Window(anu t, anu col, anu c, rvgoc *a) { vanu l, n; Windows* w;
+rgoc _Window(anu t, anu col, anu c, rvgoc *a) { rgoc l, n; Windows* w;
   if (t) { if (!Base.Dynamic) { return Base.Win; } if ((n = Convas.D++) >= Base.Dynamic) { n = --Convas.D; } w = Win(n); w->F = 8; w->Layer = n; }
   else { if ((--Convas.S) < Base.Dynamic) { ++Convas.S; } n = Convas.S; w = Win(n); w->F = 9; w->Layer = Base.Win;
     l = Base.Win - n; while(l--) --Win(n + l)->Layer; }
   w->parent = n; w->child = n; w->MaxVs = Off; w->XCur = Off; w->YCur = Off; w->WFirstSR = Base.Mstr; w->Xr = Off; w->Yr = Off; w->W = Off; w->H = Off;
   if (c > On) { if ((w->Xr = a[0])) { if (!(w->Yr = a[1])) w->Xr = Off; } } if (c > 2) { w->W = a[2]; if (c > 3) w->H = a[3]; }
   w->Colour = col; if (w->F == 9) { if (w->W < b1) { w->W = b1; } if (!w->H) { w->H++; } } if (w->Xr) { w->F |= b1; } return n; }
-void _WExecs(vanu n, anu cur, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WExecs(rgoc n, anu cur, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if ((Win(n)->F & b0) && c--) { Event(cur)->W = n; Exe(cur, a[Off]);
     if (Event(cur)->C && c) { anu j, k = Event(cur)->C, i = On; while(k-- && c--) { j = K_Mouse;
       while(--j) { if (Event(j)->W == n && Event(j)->N == i) { Exe(j, a[i]); i++; break; } } } } } }
-void _WSet(vanu n, anu c, anu *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WSet(rgoc n, anu c, anu *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   if (c--) { Windows* w = Win(n); w->F &= ~b2; if (a[Off]) { w->F |= b2; } if (c) { w->F &= ~b3; if (a[On]) { w->F |= b3; } } } }
 void _SEvents(anu c, anu *a) { anu m, k = c; while(k--) { m = a[k]; Event(m)->W = Base.Win; Event(m)->C = c; Event(m)->N = k; } }
 void _SExec(anu c, As *a) { anu k = K_Mouse; while(k--) { if (Event(k)->W == Base.Win) {
@@ -315,7 +315,7 @@ void _PSet(anu c, van *a) { if (c != 5) { Base.HourInDay = 24; Base.MinInHour = 
   Base.PlainYear = (Base.YearLength / Base.CycleYears); Base.ShiftYear = (Base.HourInDay >> 1) * Base.CycleYears; Base.EpochShift = (Base.ShiftYear / Base.CycleYears) * Base.YearLength - On;
   Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears); Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On; Base.DaysInWeek = 7;
   Base.CoreJDN = (Base.HourInDay == 24 && Base.MinInHour == 60 && Base.SecInMin == 60 && Base.CycleYears == 400 && Base.YearLength == 146097) ? Dates(2026, 2, 7) : Off; CSTime(Off); }
-void _WData(vanu n, char *str, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
+void _WData(rgoc n, char *str, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;
   Windows* w = Win(n); if (!(w->MaxVs)) {
      }
   (void)*str; (void)c; (void)*a; }

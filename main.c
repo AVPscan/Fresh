@@ -16,8 +16,8 @@ void Body(void) {  // пока не дописано WinData,Render9
   snprintf(p, 91, " %lu Kbyte %d %d %d %d %ld ", s, Base.CellP, Base.Dynamic, Base.Win, Base.Colours, var.end - var.dbuf); i = (anu)StrLen(b);
   Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b); snprintf(b, 100, "%lu %lu %lu %lu:%lu:%lu                         ", Base.Din, Base.Sap, Base.Sam, Base.Hor, Base.Kal,
   Base.Vik); if ((anu)StrLen(b) > (j - i)) { *(b + j - i) = Off; } if ((anu)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(Ink(8), Off, b); if (TS.r < 3) return;
-  snprintf(b, 100, "\nH%d A%d D%d C%d x%d y%d %d %d b%d x%d y%d %d                       ", Base.Hz/10, Base.Apm, Base.Deep, Base.Colours, VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX,
-  Buf.MY, Base.Mcol); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; }
+  snprintf(b, 100, "\nH%d A%d D%d C%d x%d y%d %d %d b%d x%d y%d                            ", Base.Hz/10, Base.Apm, Base.Deep, Base.Colours, VP.X, VP.Y, VP.Xs, VP.Ys, Buf.Mkey, Buf.MX,
+  Buf.MY); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) { *(b + TS.c) = Off; }
   Print((Base.Colours == 1) ? Ink(0) : Ink(6), aC | aD, b);
   if (TS.r < 4) { return; } if (Buf.pop > Buf.push) { i = PopKey(); } else { i = ShowKey(); } w = Buf.Dat; if (i || Buf.Count) { l = On + (w & b10); v = ((w>>2) & b10);
     w = (w & b5) ? On : Off; p = b; snprintf(p, 100, "\nKeys %d {%d:%d} Repeat %d lvm %d%d%d ", Key(), Buf.pop, Buf.push, Buf.Count, l, v, w); p += StrLen(p);
@@ -25,13 +25,13 @@ void Body(void) {  // пока не дописано WinData,Render9
     snprintf(p, 100, "                                 "); if (StrLen(b) > j) { *(b + j) = Off; } if (StrLen(b) >= TS.c) *(b + TS.c) = Off;
     if (TS.r > 3) Print(Ink(8), aF | aI, b); } }
 
-//void Body(void) { WinData(VP.Wexe, "%1fb%d%d%s", VP.Mode, VP.X, VP.Y, Base.T); }
+//void Body(void) { WinData(VP.Wexe, "%1fb%d%d%d%d%d%d%d%d", VP.Mode, VP.X, VP.Y, Base.Din, Base.Sap, Base.Sam, Base.Hor, Base.Kal, Base.Vik); }
 void Tim(void) { static anu c = Off; c = ((c + 1) & 7); SetBorder(Base.On, Fon(c)); }
 void Space(void) { if (!Base.On) Tim(); }
 
-void Init(void) { Fresh(10, 1, 100, Off, 500, 250); Colour(15, 24); Planet(24, 60, 60, 400, 146097); Date(2026, 7, 7); Time(23, 00); SetPalette(On); Keys(K_ESC);
-  Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); vanu control = WStatic(Ink(7), -2, -2), W1 = WDynamic(Rand(Base.Colours + On) + On, Off, Off, 80, 24);
-  WSet(W1, On, On); WView(W1, On, On); VP.Wexe = W1; WData(control, " %+5dMb %+3 %06:%06 %5c ", ((VRam.size + 1048575)/1048576), Ink(8)); WExec(control, K_NO, Body);
-  WExec(control, K_Ctrl_K, WSwitch); }
+void Init(void) { Fresh(8, 1, 100, Off, 500, 250); Colour(7, 24); Planet(24, 60, 60, 400, 146097); Date(2026, 7, 9); Time(13, 28); SetPalette(On); Keys(K_ESC);
+  Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); rgoc control = WStatic(Ink(7), -2, -2), W1 = WDynamic(Rand(Base.Colours + On) + On, Off, Off, 80, 24);
+  WSet(W1, On, On); WView(W1, On, On); VP.Wexe = W1; WData(control, " %+5dMb %+3 %|6:%|6 %02c.%02.%4 %02:%02:%02 ", ((VRam.size + 1048575)/1048576), Ink(8));
+  WExec(control, K_NO, Body); WExec(control, K_Ctrl_K, WSwitch); }
 
 int main() { if (SystemSwitch()) { Init(); while(Base.Loop) Free(); } return SystemSwitch(); }

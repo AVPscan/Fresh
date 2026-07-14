@@ -18,34 +18,46 @@
 #define FHz       500  // Десятикратная частота электросети [1..10000] Гц {любая точка пространства}
 #define FApm      200  // Частота нажатия на клавишы [50..1000] Гц {установите больше fps монитора и всё поймёте}
 #define CFDeep    24   // Глубина цвета [3 8 24] бита {8 256 2^24 максимальное число генерируемых оттенков света}
-#define Fcolour   255  // Количество оттенков света на старте [1..254] {0 - чёрный 1 - белый, 2 палитры}
+#define Fcolour   7    // Количество оттенков света на старте [1..254] {0 - чёрный 1 - белый, 2 палитры}
 
-typedef uintptr_t  As; // Разрядность процессора
-typedef uint8_t   anu; // 1   anu [0..FF]
-typedef int8_t   nanu; // 1  n    [0,+1..+7F,inf,-7F..-1]
-typedef uint16_t vanu; // 2  v    [0..FFFF]
-typedef int16_t vnanu; // 2 vn    [0,+1..+7FFF,inf,-7FFF..-1]
-typedef uint32_t   an; // 4   an  [0..FFFFFFFF]
-typedef int32_t   nan; // 4  n    [0,+1..+7FFFFFFF,inf,-7FFFFFFF..-1]
-typedef uint64_t  van; // 8  v    [0..FFFFFFFFFFFFFFFF]
-typedef int64_t  vnan; // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,inf,-7FFFFFFFFFFFFFFF..-1]
-#if CellPow < 17
-  typedef an    rvgoc; // As      [ас]  основа, бытие             (санскр. as     — существовать)
-  typedef nan    vgoc; // anu     [ану́] атом, минимальная единица (санскр. anu    — атом)
-  typedef vanu   rgoc; // an      [ан]  число, количество         (санскр. anka   — цифра)
-  typedef vnanu   goc; // goc     [гоч] пространство, место       (санскр. gocara — сфера)
-#elif CellPow < 33
-  typedef van   rvgoc; // Din     (санскр. Dina       — день)   Vik сек
-  typedef vnan   vgoc; // Sap     (санскр. Saptán     — неделя) Kal мин
-  typedef an     rgoc; // Sam     (санскр. Saṃvatsara — год)    Hor час
-  typedef nan     goc; // JDN     число дней от начала цикла планеты
-#elif CellPow < 61     // Time    сумматор времени в течении суток
-  typedef van   rvgoc;
-  typedef vnan   vgoc; // r       (санскр. Rah       — свободный от {знака} )
-  typedef van    rgoc; // n       (санскр. Nimitta   — знак{овое} )
-  typedef vnan    goc; // v       (санскр. Vṛddhi    — увеличение {разрядности вдвое} )
+typedef uintptr_t  As;   // Разрядность процессора
+#define SCell __SIZEOF_POINTER__
+typedef uint8_t   anu;   // 1   anu [0..FF]
+typedef int8_t   nanu;   // 1  n    [0,+1..+7F,inf,-7F..-1]
+typedef uint16_t vanu;   // 2  v    [0..FFFF]
+typedef int16_t vnanu;   // 2 vn    [0,+1..+7FFF,inf,-7FFF..-1]
+#if SCell > 7
+  typedef uint32_t   an; // 4   an  [0..FFFFFFFF]
+  typedef int32_t   nan; // 4  n    [0,+1..+7FFFFFFF,inf,-7FFFFFFF..-1]
+  typedef uint64_t  van; // 8  v    [0..FFFFFFFFFFFFFFFF]
+  typedef int64_t  vnan; // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,inf,-7FFFFFFFFFFFFFFF..-1]
+#elif SCell > 3
+  typedef uint16_t   an; // 2 As      [ас]  основа, бытие             (санскр. as     — существовать)
+  typedef int16_t   nan; // 2 anu     [ану́] атом, минимальная единица (санскр. anu    — атом)
+  typedef uint32_t  van; // 4 an      [ан]  число, количество         (санскр. anka   — цифра)
+  typedef int32_t  vnan; // 4
+#else
+  typedef uint16_t   an; // 2 Din     (санскр. Dina       — день)   Vik сек
+  typedef int16_t   nan; // 2 Sap     (санскр. Saptán     — неделя) Kal мин
+  typedef uint16_t  van; // 2 Sam     (санскр. Saṃvatsara — год)    Hor час
+  typedef int16_t  vnan; // 2 JDN     число дней от начала цикла планеты
 #endif
-#define SCell sizeof(As)
+#if CellPow < 17
+  typedef an    rvgoc; // goc     [гоч] пространство, место       (санскр. gocara — сфера)
+  typedef nan    vgoc; // r       (санскр. Rah       — свободный от {знака})
+  typedef vanu   rgoc; // n       (санскр. Nimitta   — знак{овое})
+  typedef vnanu   goc; // v       (санскр. Vṛddhi    — увеличение {разрядности вдвое})
+#elif CellPow < 33
+  typedef van   rvgoc;
+  typedef vnan   vgoc;
+  typedef an     rgoc;
+  typedef nan     goc;
+#elif CellPow < 61
+  typedef van   rvgoc;
+  typedef vnan   vgoc;
+  typedef van    rgoc;
+  typedef vnan    goc;
+#endif
 #define _V_anu(...)    (anu)((sizeof((anu[]){0, ##__VA_ARGS__}) / sizeof(anu)) - 1), (anu[]){0, ##__VA_ARGS__} + 1
 #define _V_vanu(...)   (anu)((sizeof((vanu[]){0, ##__VA_ARGS__}) / sizeof(vanu)) - 1), (vanu[]){0, ##__VA_ARGS__} + 1
 #define _V_van(...)    (anu)((sizeof((van[]){0, ##__VA_ARGS__}) / sizeof(van)) - 1), (van[]){0, ##__VA_ARGS__} + 1
@@ -68,20 +80,22 @@ enum { Off, On,
   K_F11, K_F12, K_F13, K_F14, K_F15, K_ALT_TAB, K_ALT_ENT, K_Mouse, Timer = 253, ECD, RPE,       //       декодирование из Buf.Key в Buf.Dat
   M_Lkey = 0x20, M_Mkey, M_Rkey, M_Rollup = 0x60, M_Rolldown, M_ShRollup = 0x64, M_ShRolldown }; // Коды мыши которые обрабатываем
 
-typedef struct { anu d[4], u[4]; } KeyBuf;
-typedef struct { anu F, Colour; vanu Layer, parent, child; rgoc W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; vgoc Xr, Yr; } Windows;
-typedef struct { anu C, N; vanu W; } Events;
-typedef struct { anu Res1, Res2; vanu D, S, Win; rgoc W, H, CW, CH; } Canalysis;
+typedef struct { anu CellP, MaxColours; rgoc MaxWin, Win, D, S, W, H, CW, CH; } Canalysis;
 typedef struct { anu l, d[19]; } PalBuf;
+typedef struct { anu d[4], u[4]; } KeyBuf;
+typedef struct { anu C, N; rgoc W; } Events;
 
-typedef struct { anu *dkey, *data, *ds, *pal; rgoc *offset, *dlwin; anu *dwin, *event, *exec, *dcon, *dpal; char *dbuf, *end;
+typedef struct { anu F, Colour; rgoc Layer, parent, child, W, H, MaxCs, MaxVs, MaxH, XCur, YCur, WFirstSR, Xc, Yc; vgoc Xr, Yr; } Windows;
+
+typedef struct { anu *dcon, *dpal, *dkey, *event, *exec, *dwin, *ds, *pal; rgoc *offset, *dlwin; anu *data; char *dbuf, *end;
   As off, addr, size, Save[13]; anu R, G, B, A, X, Y; vnanu C, U, Z, XZ; nan Syn, Loop, Dis, XY; an Spal, RGB, XYz; vgoc Xr, Yr; van X1, X2; } Var_;
-typedef struct { anu Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; vanu Win, On, Apm, Hz, FTime, Rnd, Last, AF, Ink, Border,
-  Fone, I[8]; anu Error, Loop; goc Gmin, Gmax, Speed; rgoc Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van LJDN, CoreJDN, JDN, Time, Hor, Kal, Vik,
-  Din, Sap, Sam, HourInDay, MinInHour, SecInMin, CycleYears, YearLength, PlainYear, PlainVis, ShiftYear, EpochShift, DaySec, DaysInWeek; } Base_;
-typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; vanu Wexe; vgoc X, Y, dXY; rgoc Xs, Ys; } ViewPort_;
+typedef struct { anu Error, Loop, Count, Goc, PCell, D, DS, O, V, Attr, CellP, Colours, Deep, Dynamic; vanu On, Apm, Hz, FTime, Rnd, Last, AF, Ink,
+  Border, Fone, I[8]; goc Gmin, Gmax, Speed; rgoc Win, Ginf, UGmax, Spd0, Spd1, Mcol, Mstr, W; van LJDN, CoreJDN, JDN, Time, Hor, Kal, Vik, Din, Sap,
+  Sam, HourInDay, MinInHour, SecInMin, CycleYears, YearLength, PlainYear, PlainVis, ShiftYear, EpochShift, DaySec, DaysInWeek; } Base_;
+typedef struct { anu Cod, Mode, Key, ri, ud, le, up, ssc, scs, bcu, Anchor, Exit; vgoc X, Y, dXY; rgoc Wexe, Xs, Ys; } ViewPort_;
 typedef struct { anu pop, push, Mkey, MX, MY, Ctrl, Cod, Count, Dat, Key[6], Lk, Mk, Rk, Ru, Rd, cRu, cRd; vanu tic; vgoc LkX, LkY, MkX, MkY, RkX,
   RkY; } KeyMouse_;
+
 typedef struct { As addr, size; anu SystemSwitch; } MAS_;
 
 typedef struct { rgoc c, r; } CR_;
@@ -124,34 +138,35 @@ extern MSnS_ Flag;
 extern CR_ TS;
 
 #define ENGINE_VARS_INIT \
-  Var_ var = {0}; Base_ Base = {0}; ViewPort_ VP = {0}; KeyMouse_ Buf = {0}; MAS_ VRam = {0,0,1}; 
+  MAS_ VRam = {.SystemSwitch = 1}; ViewPort_ VP = {0}; Var_ var = {0}; Base_ Base = {0}; KeyMouse_ Buf = {0};
 
 #define Ink(n)        ((n) > 7) ? Base.Last : Base.I[(n)]                         // Код цвета/фона  0 чёрный 1 белый [2..7] оттенки равномерно из
 #define Fon(n)        ((n) > 7) ? (Base.AF + Base.Last) : (Base.AF + Base.I[(n)]) //   диапазона [8..] доп ячейка - генерируемый цвет по таймеру
 
+#define Convas        (*(Canalysis*)var.dcon)                                     // адрес где организована разбивка холста
+#define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))           // адрес начала кода цвета
 #define AKey(k)       ((KeyBuf*)(var.dkey + ((k) << 3)))                          // адрес начала ячейки в буфере клавиатуры
+#define Event(m)      ((Events*)(var.event + ((m) * sizeof(Events))))             // адрес начала структуры события
+#define VHas(a)       (((an*)var.exec)[(a)])                                      // Проверка на обработчик
+#define Vector(a)     ((void(*)(void))((As)Nop + VHas(a)))                        // адрес вектора прерывания события
+#define Exe(v, func)  ((an*)var.exec)[(v)] = (an)(((As)(func) < (As)Nop) ? Off : ((As)(func) - (As)Nop))
+#define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))            // адрес начала данных окна n
 #define Con(r)        (var.data + ((r) << Base.D))                                // адрес начала буфера строки холста
 #define Info(c, r)    (var.ds + (c) + ((r) << Base.DS))                           // адрес данных ячейки холста
 #define Cpal(c, r)    (var.pal + (c) + ((r) << Base.DS))                          // адрес данных палитры ячейки холста
 #define Offset(c, r)  (var.offset + (c) + ((r) << Base.O))                        // адрес ячейки в которой смещение указывающее на конец данных в буфере
 #define WStrVL(n, r)  (var.dlwin + (r) + ((n) * Base.W))                          // Визуальная длина строки окна
-#define Win(n)        ((Windows*)(var.dwin + ((n) * sizeof(Windows))))            // адрес начала данных окна n
-#define Event(m)      ((Events*)(var.event + ((m) << Base.V)))                    // адрес начала структуры события
-#define VHas(a)       (((vanu*)var.exec)[(a)])                                    // Проверка на обработчик
-#define Vector(a)     ((void(*)(void))((As)Nop + VHas(a)))                        // адрес вектора прерывания события
-#define Convas        (*(Canalysis*)var.dcon)                                     // адрес где организована разбивка холста
-#define APal(c)       ((PalBuf*)(var.dpal + ((((c) << 2) + (c)) << 2)))           // адрес начала кода цвета
-#define Exe(v, func)  ((vanu*)var.exec)[(v)] = (vanu)(((As)(func) < (As)Nop) ? Off : ((As)(func) - (As)Nop))
 #define Start(c, r)   (Con(r) + ((c) ? *Offset((c) - 1, r) : 0))                  // адрес начала буфера ячейки холста
 #define Length(c, r)  ({ rgoc* _t = Offset(c,r); *_t - ((c) ? *(_t-1) : 0); })    // длина ячейки холста в байтах
 #define End(c, r)     (Con(r) + *Offset(c, r))                                    // адрес конца буфера ячейки холста
 
 #define SYS_VARS_INIT \
+  CR_ TS = {0}; MSnS_ Flag = {.SwitchRaw = 1}; \
   KeyIdMap NameId[] = {{"[A",K_UP},{"[B",K_DOW},{"[C",K_RIG},{"[D",K_LEF},{"[1;5A",K_Ctrl_UP},{"[1;5B",K_Ctrl_DOW},{"[1;5C",K_Ctrl_RIG}, \
     {"[1;5D",K_Ctrl_LEF},{"[M", K_Mouse},{"[1;2P",K_F13},{"[1;2Q",K_F14},{"[1;2R",K_F15},{"[15~",K_F5},{"[17~",K_F6},{"[18~",K_F7}, \
     {"[19~",K_F8},{"[1~",K_HOM},{"[2~",K_INS},{"[20~",K_F9},{"[21~",K_F10},{"[23~",K_F11},{"[24~",K_F12},{"[3~",K_DEL},{"[4~",K_END}, \
     {"[5~",K_PUP},{"[6~",K_PDN},{"[F",K_END},{"[H",K_HOM},{"OP",K_F1},{"OQ",K_F2},{"OR",K_F3},{"OS",K_F4}, \
-    {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}}; MSnS_ Flag = {0,0,1}; CR_ TS = {0};
+    {"\t",K_ALT_TAB},{"\r",K_ALT_ENT}};
 
 As StrLen(char *s);                                          // Длина строки
 void MemSet(void* buf, anu val, As len);                     // Заполнение куска памяти val
@@ -199,11 +214,11 @@ void WSwitch(void);                                          // Показать
 void WASwitch(void);                                         // Адаптивно показать окно {Спрятать окно}
 void WDown(void);                                            // Ротация динамических окон
 void WUp(void);                                              // Ротация динамических окон в обратном направлении
-void WTop(vanu n);                                           // Установить окно выше остальных подобных
-void _WView(vanu n, anu count, vgoc *args);                  // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
-vanu _Window(anu mode, anu col, anu c, rvgoc *a);            // Создание окна с палитрой col при col<0 статичное окно
-void _WExecs(vanu n, anu cur, anu c, As *a);                 // Настройка статического окна привязка функций к кодам клавиш
-void _WSet(vanu n, anu c, anu *a);                           // Настройка окна включение/отключение {Cursor{,Warp}}
+void WTop(rgoc n);                                           // Установить окно выше остальных подобных
+void _WView(rgoc n, anu count, vgoc *args);                  // Привязать окно на холсте либо на экране(статическое), при Off{,Off} не отображать
+rgoc _Window(anu mode, anu col, anu c, rvgoc *a);            // Создание окна с палитрой col при col<0 статичное окно
+void _WExecs(rgoc n, anu cur, anu c, As *a);                 // Настройка статического окна привязка функций к кодам клавиш
+void _WSet(rgoc n, anu c, anu *a);                           // Настройка окна включение/отключение {Cursor{,Warp}}
 void _SEvents(anu c, anu *a);                                // Запомнить вектор системный событий
 void _SExec(anu c, As *a);                                   // Привязать вектор системных событий к функциям
 void _SKeys(anu c, anu *a);                                  // Задать клавиши управления вьюпортом в обратном порядке
@@ -213,7 +228,7 @@ void _CSet(anu c, vanu *a);                                  // Изменить
 void _TSet(anu c, anu *a);                                   // Настройка времени {hour{,minutes{,seconds}}}
 void _DSet(van y, anu c, anu *a);                            // Настройка даты year{,month{,day}}
 void _PSet(anu c, van *a);                                   // Настройка планеты {hour{,minutes{,seconds{,cyear{,lyear}}}}}
-void _WData(vanu n, char *str, anu c, As *a);                // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
+void _WData(rgoc n, char *str, anu c, As *a);                // Загрузка данных в окно n согласно шаблону str с позиции курсора окна { ... }
 #define WView(n, ...)        _WView(n, _V_vgoc(__VA_ARGS__))
 #define Window(mode,col,...) _Window(mode, col, _V_rvgoc(__VA_ARGS__))
 #define WDynamic(col, ...)   _Window(1, col, _V_rvgoc(__VA_ARGS__))
