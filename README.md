@@ -44,7 +44,7 @@ typedef struct { anu l[511], h; } MatBuf;           // inf 8000{0000{0000{0000}}
 //typedef struct { union { anu l[1]; anu h; }; };   // Возможность работать с anu как со структурой
 //typedef struct { anu l[4..], h; };                // Любые расширения [0..255] 0 на входе будет воспринят как 256 байтовое число!
 
-typedef struct { anu Size, Nim, Carry, N, S, T; int16_t M; MatBuf sr, rr; anu *c, *a, *b, *o, *r; } var_;
+typedef struct { anu Size, Nim, Carry, N, S, T; MatBuf sr, rr; anu *c, *a, *b, *o, *r, *oh, *rh, *ch; } var_;
 var_ Mat = {.Size = 1,.Nim = 0};
 
 // विकार (Vikāra) [вика́ра] — Модификация, изменение состояния
@@ -76,12 +76,12 @@ void Mul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c 
     Mat.Carry = 2; } return; }
   }
 
-void VMul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.o--; Mat.r--; Mat.c--;
-  Mat.M = (Mat.N = Mat.Size) ? Mat.Size : 256; Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*++Mat.o = *Mat.a++) ? 0 : Mat.S;
-    Mat.T = (*++Mat.r = *Mat.b++) ? 0 : Mat.T; *++Mat.c = 0; *(Mat.o + Mat.M) = 0; *(Mat.r + Mat.M) = 0;
-    *(Mat.c + Mat.M) = 0; } Mat.o++; Mat.r++; Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
-  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *++Mat.c = 0; *(Mat.c + Mat.M) = 0;
-  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *(Mat.c + Mat.M)= 0x80;
+void VMul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = Mat.Size;
+  Mat.oh = Mat.o + 1 + --Mat.N; Mat.rh = Mat.r + 1 + Mat.N; Mat.ch = Mat.c + 1 + Mat.N++; Mat.S = 2; Mat.T = 2;
+  while(--Mat.N) { Mat.S = (*Mat.o++ = *Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; *Mat.oh++ = 0;
+    *Mat.rh++ = 0; *Mat.c++ = 0; *Mat.ch++ = 0; } Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
+  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *Mat.c = 0; *Mat.ch = 0;
+  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.ch = 0x80;
     Mat.Carry = 2; } return; }
   }
 
@@ -94,12 +94,12 @@ void Div (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a 
   }
 
 void VDiv (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
-  Mat.c--; Mat.a--; Mat.M = (Mat.N = Mat.Size) ? Mat.Size : 256; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
-    Mat.S = (*++Mat.c = *++Mat.a) ? 0 : Mat.S; Mat.S = (*(Mat.c + Mat.M) = *(Mat.a + Mat.M)) ? 0 : Mat.S; *Mat.o++ = 0; }
-  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; Mat.S = (*++Mat.c = *++Mat.a) ? 0 : Mat.S;
-  Mat.S = (Mat.S && (*(Mat.c + Mat.M) = *(Mat.a + Mat.M)) == 0x80) ? 2 : (Mat.S && !(*(Mat.c + Mat.M) = *(Mat.a + Mat.M))) ? 1 : 0;
-  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *(Mat.c + Mat.M) = 0x80;
-    Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { c--; Mat.N = Mat.Size; while(--Mat.N) *++c = 0; *(c + Mat.M) = 0; } return; }
+   Mat.oh = Mat.a + 1 + --Mat.N; Mat.rh = Mat.c + 1 + Mat.N++; Mat.ch = Mat.rh; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
+    Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S; Mat.S = (*Mat.ch++ = *Mat.oh++) ? 0 : Mat.S; *Mat.o++ = 0; }
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; Mat.S = (*Mat.c = *Mat.a) ? 0 : Mat.S;
+  Mat.S = (Mat.S && (*Mat.ch = *Mat.oh) == 0x80) ? 2 : (Mat.S && !(*Mat.ch)) ? 1 : 0;
+  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *Mat.ch = 0x80;
+    Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { Mat.N = Mat.Size; while(--Mat.N) *c++ = 0; *Mat.rh++ = 0; } return; }
     if (Mat.S == 1 || Mat.T == 1) return; }
   }
 
