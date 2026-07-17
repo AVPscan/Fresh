@@ -72,32 +72,35 @@ void Mul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c 
   Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*Mat.o++ = *Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
     *Mat.c++ = 0; } Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
   Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *Mat.c = 0;
-  if (Mat.S || Mat.T) { if (Mat.S == 2 || Mat.T == 2) { *Mat.c = 0x80; } return; }
+  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.c = 0x80;
+    Mat.Carry = 2; } return; }
   }
 
 void VMul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.o--; Mat.r--; Mat.c--;
-  Mat.N = Mat.Size; Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*++Mat.o = *Mat.a++) ? 0 : Mat.S;
+  Mat.M = (Mat.N = Mat.Size) ? Mat.Size : 256; Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*++Mat.o = *Mat.a++) ? 0 : Mat.S;
     Mat.T = (*++Mat.r = *Mat.b++) ? 0 : Mat.T; *++Mat.c = 0; *(Mat.o + Mat.M) = 0; *(Mat.r + Mat.M) = 0;
     *(Mat.c + Mat.M) = 0; } Mat.o++; Mat.r++; Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
   Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *++Mat.c = 0; *(Mat.c + Mat.M) = 0;
-  if (Mat.S || Mat.T) { if (Mat.S == 2 || Mat.T == 2) { *(Mat.c + Mat.M)= 0x80; } return; }
+  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *(Mat.c + Mat.M)= 0x80;
+    Mat.Carry = 2; } return; }
   }
 
 void Div (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
-  Mat.M = (Mat.Size) ? Mat.Size : 256; while(--Mat.M) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S; *Mat.o++ = 0; }
-  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0;
-  Mat.S = ((*Mat.c = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.c = *Mat.a)) ? 1 : 0; if (Mat.S || Mat.T) {
-    if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *Mat.c = 0x80; Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) {
-    Mat.N = Mat.Size; while(--Mat.N) *c++ = 0; } return; }
+  Mat.N = Mat.Size; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S; *Mat.o++ = 0; }
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0;
+  Mat.S = (Mat.S && (*Mat.c = *Mat.a) == 0x80) ? 2 : (Mat.S && !(*Mat.c = *Mat.a)) ? 1 : 0;
+  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *Mat.c = 0x80; Mat.Carry = 2; }
+    else if (Mat.T == 2 && !Mat.S) { Mat.N = Mat.Size; while(--Mat.N) *c++ = 0; } return; } if (Mat.S == 1 || Mat.T == 1) return; }
   }
 
 void VDiv (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
   Mat.c--; Mat.a--; Mat.M = (Mat.N = Mat.Size) ? Mat.Size : 256; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
-    Mat.S = ((*++Mat.c = *++Mat.a) && (*(Mat.c + Mat.M) = *(Mat.a + Mat.M))) ? 0 : Mat.S; *Mat.o++ = 0; }
-  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0;
-  Mat.S = (((*++Mat.c = *++Mat.a) == 0) && (*(Mat.c + Mat.M) = *(Mat.a + Mat.M)) == 0x80) ? Mat.S : (Mat.S && !(*Mat.c = *Mat.a) && !(*(Mat.c + Mat.M) = *(Mat.a + Mat.M))) ? 1 : 0;
-  if (Mat.S || Mat.T) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *(Mat.c + Mat.M) = 0x80; Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) {
-    Mat.N = Mat.Size; c--; while(--Mat.N) *++c = 0; *(c + Mat.M) = 0; } return; }
+    Mat.S = (*++Mat.c = *++Mat.a) ? 0 : Mat.S; Mat.S = (*(Mat.c + Mat.M) = *(Mat.a + Mat.M)) ? 0 : Mat.S; *Mat.o++ = 0; }
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; Mat.S = (*++Mat.c = *++Mat.a) ? 0 : Mat.S;
+  Mat.S = (Mat.S && (*(Mat.c + Mat.M) = *(Mat.a + Mat.M)) == 0x80) ? 2 : (Mat.S && !(*(Mat.c + Mat.M) = *(Mat.a + Mat.M))) ? 1 : 0;
+  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *(Mat.c + Mat.M) = 0x80;
+    Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { c--; Mat.N = Mat.Size; while(--Mat.N) *++c = 0; *(c + Mat.M) = 0; } return; }
+    if (Mat.S == 1 || Mat.T == 1) return; }
   }
 
 ```
