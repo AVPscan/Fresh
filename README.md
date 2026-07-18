@@ -22,87 +22,85 @@
 ### Архитектурный паспорт нового ядра Fresh 2026
 
 ```c
-//  As     [ас]  основа, бытие             (санскр. as     — существовать)
-// n       (санскр. Nimitta   — знак{овое})
-// v       (санскр. Vṛddhi    — увеличение {разрядности вдвое})
-// anu     [ану́] атом, минимальная единица (санскр. anu    — атом)
-// an      [ан]  число, количество         (санскр. anka   — цифра)
-
-typedef uintptr_t  As;              // Разрядность процессора
-#define SCell __SIZEOF_POINTER__    // Размер
-typedef uint8_t anu;                        // 1   anu [0..FF]
-typedef int8_t nanu;                        // 1  n    [0,-7F..-1,inf,+1..+7F] {inf = 80} так как нет обратного как и у нуля
-typedef struct { anu l[1], h; } vanu;       // 2  v    [0..FFFF]
-typedef struct { anu l[1]; nanu h; } vnanu; // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
-//typedef struct { anu l[2], h; };          // 3       [0..FFFFFF]
-//typedef struct { anu l[2]; nanu h; };     // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
-typedef struct { anu l[3], h; } an;         // 4   an  [0..FFFFFFFF]
-typedef struct { anu l[3]; nanu h; } nan;   // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
-typedef struct { anu l[7], h; } van;        // 8  v    [0..FFFFFFFFFFFFFFFF]
-typedef struct { anu l[7]; nanu h; } vnan;  // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
-typedef struct { anu l[511], h; } MatBuf;           // inf 8000{0000{0000{0000}}}}..
-//typedef struct { union { anu l[1]; anu h; }; };   // Возможность работать с anu как со структурой
-//typedef struct { anu l[4..], h; };                // Любые расширения [0..255] 0 на входе будет воспринят как 256 байтовое число!
-
-typedef struct { anu Size, Nim, Carry, N, S, T; MatBuf sr, rr; anu *c, *a, *b, *o, *r, *oh, *rh, *ch; } var_;
-var_ Mat = {.Size = 1,.Nim = 0};
-
+//  As  (санскр. As       — основа, бытие, существовать)
+// anu  (санскр. anu      — атом)
+// an   (санскр. anka     — цифра)
+// n    (санскр. Nimitta  — знак{овое})
+// v    (санскр. Vṛddhi   — увеличение {разрядности вдвое})
+typedef uintptr_t  As;                              //         Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}}
+#define SCell __SIZEOF_POINTER__                    // в знаковом представлении! Любая разрядность [8..2048]{V[16..4096]} бит.
+typedef uint8_t anu;                                // 1   anu [0..FF]
+typedef int8_t nanu;                                // 1  n    [0,-7F..-1,80,+1..+7F]
+//typedef struct { union { anu l[1]; anu h; }; };   // 1       Возможность работать с anu как со структурой
+typedef struct { anu l[1], h; } vanu;               // 2  v    [0..FFFF]
+typedef struct { anu l[1]; nanu h; } vnanu;         // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
+//typedef struct { anu l[2], h; };                  // 3       [0..FFFFFF]    [17..31] бит диапазон теперь доступен
+//typedef struct { anu l[2]; nanu h; };             // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
+typedef struct { anu l[3], h; } an;                 // 4   an  [0..FFFFFFFF]
+typedef struct { anu l[3]; nanu h; } nan;           // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
+//typedef struct { anu l[4:5:6]; nanu h; };         // 5-7                    [33..63] бит диапазон теперь доступен
+typedef struct { anu l[7], h; } van;                // 8  v    [0..FFFFFFFFFFFFFFFF]
+typedef struct { anu l[7]; nanu h; } vnan;          // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
+//typedef struct { anu l[8..254], h; };             // 9-255                  [65..2039] бит диапазон теперь доступен
+//typedef struct { anu l[255], h; };                // 256.....Если передать на вход 0 байт в числе [2040..2048]
+typedef struct { anu l[511], h; } MatBuf;           // 512     Для работы в режиме V
+typedef struct { anu Nim, Carry, Res, N, S, T, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
+var_ Mat = {.Nim = 0};
 // विकार (Vikāra) [вика́ра] — Модификация, изменение состояния
-void Vikara (anu SizeC, anu SizeA, anu *c, anu *a) { Mat.Carry = 1;
-  if (--SizeC <= --SizeA) { SizeA -= SizeC; while(SizeC--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.a = a;
-    while(SizeA--) { Mat.Carry = (*Mat.a++) ? 0 : Mat.Carry; } Mat.S = (*c = *Mat.a);
-    Mat.Carry = (Mat.Carry && Mat.S == 0x80) ? 2 : (Mat.Carry && !Mat.S) ? 0 : 1; return; }
-  SizeC -= SizeA; while(SizeA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.Carry = ((*c = *a) != 0x80) ? 0 : Mat.Carry;
-  Mat.S = 0; Mat.T = 0; if (Mat.Nim) { if (Mat.Carry) { Mat.T = *a; *a = Mat.S; } else { if (*a & 0x80) { Mat.S--; Mat.T--; } } }
-  while(SizeC--) { *++a = Mat.S; } *++a = Mat.T; }
-void Add (anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = Mat.Size;
-  if (Mat.Nim) { Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.b++) ? 0 : Mat.T; }
-    Mat.S = (*Mat.a != 0x80) ? 0 : Mat.S; Mat.T = (*Mat.b != 0x80) ? 0 : Mat.T; if (Mat.S || Mat.T) { Mat.N = Mat.Size;
-      while(--Mat.N) { *Mat.c++ = 0; } *Mat.c = 0x80; Mat.Carry = 2; return; } Mat.a = a; Mat.b = b; Mat.N = Mat.Size; }
-  do { Mat.S = *Mat.a++; Mat.T = *Mat.b++; *Mat.c = Mat.S;
-    Mat.Carry = ((*Mat.c += Mat.T + Mat.Carry) < Mat.S) || (Mat.Carry && (*Mat.c == Mat.S)); Mat.c++; } while(--Mat.N); }
-void Sub (anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = Mat.Size;
-  if (Mat.Nim) { Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.b++) ? 0 : Mat.T; }
-    Mat.S = (*Mat.a != 0x80) ? 0 : Mat.S; Mat.T = (*Mat.b != 0x80) ? 0 : Mat.T; if (Mat.S || Mat.T) { Mat.N = Mat.Size;
-      while(--Mat.N) { *Mat.c++ = 0; } *Mat.c = 0x80; Mat.Carry = 2; return; } Mat.a = a; Mat.b = b; Mat.N = Mat.Size; }
-  do { Mat.S = *Mat.a++; Mat.T = *Mat.b++; *Mat.c = Mat.S;
-    Mat.Carry = ((*Mat.c -= Mat.T + Mat.Carry) > Mat.S) || (Mat.Carry && (*Mat.c == Mat.S)); Mat.c++; } while(--Mat.N); }
+void Vikara (anu sC, anu sA, anu *c, anu *a) { Mat.Carry = 1;
+  if (--sC <= --sA) { sA -= sC; while(sC--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; }
+    Mat.a = a; while(sA--) { Mat.Carry = (*Mat.a++) ? 0 : Mat.Carry; }
+    Mat.Carry = (Mat.Carry && ((*c = *Mat.a) == 0x80)) ? 2 : (Mat.Carry && !*c) ? 4 : Mat.Carry; return; }
+  sC -= sA; while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0; Mat.T = 0;
+  Mat.Carry = (Mat.Carry && ((*c = *Mat.a) == 0x80)) ? 2 : (Mat.Carry && !*c) ? 4 : Mat.Carry;
+  if (Mat.Nim) { if (Mat.Carry) { Mat.T = *c; *c = Mat.S; } else if (*c & 0x80) { Mat.S--; Mat.T--; } }
+  while(sC--) { *++c = Mat.S; } *++c = Mat.T; }
 
-void Mul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = Mat.Size;
+void Add (anu s, anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.a = a; Mat.b = b;
+  if (Mat.Nim) { Mat.S = 2; Mat.T = 2; Mat.N = s; while(--Mat.N) { Mat.S = (*Mat.a++) ? 0 : Mat.S;
+    Mat.T = (*Mat.b++) ? 0 : Mat.T; } Mat.S = (*Mat.a != 0x80) ? 0 : Mat.S; Mat.T = (*Mat.b != 0x80) ? 0 : Mat.T;
+    if (Mat.S || Mat.T) { while(--s) { *c++ = 0; } *c = 0x80; Mat.Carry = 2; return; } Mat.a = a; Mat.b = b; }
+  do { Mat.S = *Mat.a++; Mat.T = *Mat.b++; *c = Mat.S;
+    Mat.Carry = ((*c += Mat.T + Mat.Carry) < Mat.S) || (Mat.Carry && (*c == Mat.S)); c++; } while(--s); }
+
+void Sub (anu s, anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.a = a; Mat.b = b;
+  if (Mat.Nim) { Mat.S = 2; Mat.T = 2; Mat.N = s; while(--Mat.N) { Mat.S = (*Mat.a++) ? 0 : Mat.S;
+    Mat.T = (*Mat.b++) ? 0 : Mat.T; } Mat.S = (*Mat.a != 0x80) ? 0 : Mat.S; Mat.T = (*Mat.b != 0x80) ? 0 : Mat.T;
+    if (Mat.S || Mat.T) { while(--s) { *c++ = 0; } *c = 0x80; Mat.Carry = 2; return; } Mat.a = a; Mat.b = b; }
+  do { Mat.S = *Mat.a++; Mat.T = *Mat.b++; *c = Mat.S;
+    Mat.Carry = ((*c -= Mat.T + Mat.Carry) > Mat.S) || (Mat.Carry && (*c == Mat.S)); c++; } while(--s); }
+
+void Mul (anu s, anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = s;
   Mat.S = 2; Mat.T = 2; while(--Mat.N) { Mat.S = (*Mat.o++ = *Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
-    *Mat.c++ = 0; } Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
-  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *Mat.c = 0;
-  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.c = 0x80;
-    Mat.Carry = 2; } return; }
+    *Mat.c++ = 0; } Mat.S = (Mat.S && (*Mat.o = *Mat.a) == 0x80) ? 2 : (Mat.S && !(*Mat.o = *Mat.a)) ? 4 : 0;
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0; *Mat.c = 0;
+  if (Mat.S || Mat.T) { Mat.Carry = 4; if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.c = 0x80; Mat.Carry = 2; } return; }
   }
 
-void VMul (anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = Mat.Size;
+void VMul (anu s, anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = s;
   Mat.oh = Mat.o + 1 + --Mat.N; Mat.rh = Mat.r + 1 + Mat.N; Mat.ch = Mat.c + 1 + Mat.N++; Mat.S = 2; Mat.T = 2;
   while(--Mat.N) { Mat.S = (*Mat.o++ = *Mat.a++) ? 0 : Mat.S; Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; *Mat.oh++ = 0;
-    *Mat.rh++ = 0; *Mat.c++ = 0; *Mat.ch++ = 0; } Mat.S = ((*Mat.o = *Mat.a) == 0x80) ? Mat.S : (Mat.S && !(*Mat.o = *Mat.a)) ? 1 : 0;
-  Mat.T = ((*Mat.r = *Mat.b) == 0x80) ? Mat.T : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; *Mat.c = 0; *Mat.ch = 0;
-  if (Mat.S || Mat.T) { if (Mat.S == 1 || Mat.T == 1) { return; } if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.ch = 0x80;
-    Mat.Carry = 2; } return; }
+    *Mat.rh++ = 0; *Mat.c++ = 0; *Mat.ch++ = 0; } Mat.S = (Mat.S && (*Mat.o = *Mat.a) == 0x80) ? 2 : (Mat.S && !(*Mat.o = *Mat.a)) ? 4 : 0;
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0; *Mat.c = 0; *Mat.ch = 0;
+  if (Mat.S || Mat.T) { Mat.Carry = 4; if (Mat.Nim && (Mat.S == 2 || Mat.T == 2)) { *Mat.ch = 0x80; Mat.Carry = 2; } return; }
   }
 
-void Div (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
-  Mat.N = Mat.Size; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S; *Mat.o++ = 0; }
-  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0;
-  Mat.S = (Mat.S && (*Mat.c = *Mat.a) == 0x80) ? 2 : (Mat.S && !(*Mat.c = *Mat.a)) ? 1 : 0;
-  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *Mat.c = 0x80; Mat.Carry = 2; }
-    else if (Mat.T == 2 && !Mat.S) { Mat.N = Mat.Size; while(--Mat.N) *c++ = 0; } return; } if (Mat.S == 1 || Mat.T == 1) return; }
+void Div (anu s, anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
+  Mat.N = s; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T; Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S;
+    *Mat.o++ = 0; } Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0;
+  Mat.S = (Mat.S && (*Mat.c = *Mat.a) == 0x80) ? 2 : (Mat.S && !(*Mat.c = *Mat.a)) ? 4 : 0;
+  if (Mat.S || Mat.T) { Mat.Carry = 4; if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; Mat.Carry = 0; }
+    else if (Mat.T == 4) { *Mat.c = 0x80; Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { while(--s) *c++ = 0; } } return; }
   }
 
-void VDiv (anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
-   Mat.oh = Mat.a + 1 + --Mat.N; Mat.rh = Mat.c + 1 + Mat.N++; Mat.ch = Mat.rh; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
+void VDiv (anu s, anu *c, anu *a, anu *b, anu *r) { Mat.r = &Mat.rr.l; Mat.c = c; Mat.a = a; Mat.b = b; Mat.S = 2; Mat.T = 2; Mat.o = r;
+  Mat.oh = Mat.a + 1 + --Mat.N; Mat.rh = Mat.c + 1 + Mat.N++; Mat.ch = Mat.rh; while(--Mat.N) { Mat.T = (*Mat.r++ = *Mat.b++) ? 0 : Mat.T;
     Mat.S = (*Mat.c++ = *Mat.a++) ? 0 : Mat.S; Mat.S = (*Mat.ch++ = *Mat.oh++) ? 0 : Mat.S; *Mat.o++ = 0; }
-  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 1 : 0; Mat.S = (*Mat.c = *Mat.a) ? 0 : Mat.S;
-  Mat.S = (Mat.S && (*Mat.ch = *Mat.oh) == 0x80) ? 2 : (Mat.S && !(*Mat.ch)) ? 1 : 0;
-  if (Mat.S || Mat.T) { if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.c = 0; } else if (Mat.T == 1) { *Mat.ch = 0x80;
-    Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { Mat.N = Mat.Size; while(--Mat.N) *c++ = 0; *Mat.rh++ = 0; } return; }
-    if (Mat.S == 1 || Mat.T == 1) return; }
+  Mat.T = (Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0; Mat.S = (*Mat.c = *Mat.a) ? 0 : Mat.S;
+  Mat.S = (Mat.S && (*Mat.ch = *Mat.oh) == 0x80) ? 2 : (Mat.S && !(*Mat.ch)) ? 4 : 0;
+  if (Mat.S || Mat.T) { Mat.Carry = 4; if (Mat.Nim) { if (Mat.S == Mat.T) { *c = 1; *Mat.ch = 0; Mat.Carry = 0; } else if (Mat.T == 4) { 
+    *Mat.ch = 0x80; Mat.Carry = 2; } else if (Mat.T == 2 && !Mat.S) { while(--s) { *c++ = 0; *Mat.rh++ = 0; } } } return; }
   }
-
 ```
 
 ### Реализация знаковой бесконечности и АЛУ-защиты
