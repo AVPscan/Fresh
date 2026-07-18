@@ -27,32 +27,33 @@
 // an   (санскр. anka     — цифра)
 // n    (санскр. Nimitta  — знак{овое})
 // v    (санскр. Vṛddhi   — увеличение {разрядности вдвое})
-typedef uintptr_t  As;                              //         Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}}
-#define SCell __SIZEOF_POINTER__                    // в знаковом представлении! Любая разрядность [8..2048]{V[16..4096]} бит.
+// Vikāra                 — модификация, изменение состояния विकार
+typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} в
+#define SCell __SIZEOF_POINTER__                    // знаковом представлении! Любая разрядность [8..2048] бит.
 typedef uint8_t anu;                                // 1   anu [0..FF]
 typedef int8_t nanu;                                // 1  n    [0,-7F..-1,80,+1..+7F]
-//typedef struct { union { anu l[1]; anu h; }; };   // 1       Возможность работать с anu как со структурой
+//typedef struct { union { anu l[1]; anu h; }; };   // 1       возможность работать с anu как со структурой
 typedef struct { anu l[1], h; } vanu;               // 2  v    [0..FFFF]
 typedef struct { anu l[1]; nanu h; } vnanu;         // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
-//typedef struct { anu l[2], h; };                  // 3       [0..FFFFFF]    [17..31] бит диапазон теперь доступен
+//typedef struct { anu l[2], h; };                  // 3       [0..FFFFFF]    [17..24] бит диапазон теперь доступен
 //typedef struct { anu l[2]; nanu h; };             // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
 typedef struct { anu l[3], h; } an;                 // 4   an  [0..FFFFFFFF]
 typedef struct { anu l[3]; nanu h; } nan;           // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
-//typedef struct { anu l[4:5:6]; nanu h; };         // 5-7                    [33..63] бит диапазон теперь доступен
+//typedef struct { anu l[4:5:6]; nanu h; };         // 5-7                    [33..56] бит диапазон теперь доступен
 typedef struct { anu l[7], h; } van;                // 8  v    [0..FFFFFFFFFFFFFFFF]
 typedef struct { anu l[7]; nanu h; } vnan;          // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
 //typedef struct { anu l[8..254], h; };             // 9-255                  [65..2039] бит диапазон теперь доступен
-//typedef struct { anu l[255], h; };                // 256.....Если передать на вход 0 байт в числе [2040..2048]
-typedef struct { anu l[511], h; } MatBuf;           // 512     Для работы в режиме V
+//typedef struct { anu l[255], h; };                // 256     если передать на вход 0 байт в числе [8..2048] бит
+typedef struct { anu l[511], h; } MatBuf;           // 512     для работы в режиме V [16..4096] бит
 typedef struct { anu Nim, Carry, Res, N, S, T, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
 var_ Mat = {.Nim = 0};
-// विकार (Vikāra) [вика́ра] — Модификация, изменение состояния
-void Vikara (anu sC, anu sA, anu *c, anu *a) { Mat.Carry = 1;
-  if (--sC <= --sA) { sA -= sC; while(sC--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; }
-    Mat.a = a; while(sA--) { Mat.Carry = (*Mat.a++) ? 0 : Mat.Carry; }
-    Mat.Carry = (Mat.Carry && ((*c = *Mat.a) == 0x80)) ? 2 : (Mat.Carry && !*c) ? 4 : Mat.Carry; return; }
-  sC -= sA; while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0; Mat.T = 0;
-  Mat.Carry = (Mat.Carry && ((*c = *Mat.a) == 0x80)) ? 2 : (Mat.Carry && !*c) ? 4 : Mat.Carry;
+
+void Vikara (anu sC, anu sA, anu *c, anu *a) { Mat.S = 4;
+  if (--sC <= --sA) { sA -= sC; Mat.Carry = 0; while(sC--) { Mat.S = (*c++ = *a++) ? 0 : Mat.S; }
+    while(sA--) { Mat.Carry = (*a++) ? 1 : Mat.Carry; } *c = *a;
+    Mat.Carry |= ((Mat.S) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 1)) : 0); return; }
+  sC -= sA; Mat.Carry = 4; while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0;
+  Mat.T = 0; *c = *a; Mat.Carry = (Mat.Carry) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 0)) : 0;
   if (Mat.Nim) { if (Mat.Carry) { Mat.T = *c; *c = Mat.S; } else if (*c & 0x80) { Mat.S--; Mat.T--; } }
   while(sC--) { *++c = Mat.S; } *++c = Mat.T; }
 
