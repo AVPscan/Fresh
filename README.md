@@ -27,7 +27,6 @@
 // an   (санскр. anka     — цифра)
 // n    (санскр. Nimitta  — знак{овое})
 // v    (санскр. Vṛddhi   — увеличение {разрядности вдвое})
-// Vikāra                 — модификация, изменение состояния विकार
 typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} в
 #define SCell __SIZEOF_POINTER__                    // знаковом представлении! Любая разрядность [8..2048] бит.
 typedef uint8_t anu;                                // 1   anu [0..FF]
@@ -47,15 +46,17 @@ typedef struct { anu l[7]; nanu h; } vnan;          // 8 vn    [0,+1..+7FFFFFFFF
 typedef struct { anu l[511], h; } MatBuf;           // 512     для работы в режиме V [16..4096] бит
 typedef struct { anu Nim, Carry, Res, N, S, T, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
 var_ Mat = {.Nim = 0};
-
+// Vikāra                 — модификация, изменение состояния विकार
+// На выходе Mat.Carry не чётрый {бит 0} (0x01) значит произошло усечение с потерей информации
+// Если установлен {бит 1} (0x02) 2,3 то в результате бесконечность не учитываем знаковость представления (все биты 0 кроме старшего)
+// Если установлен {бит 2} (0x04) 4,5 то в результате ноль (небытиё)
 void Vikara (anu sC, anu sA, anu *c, anu *a) { Mat.S = 4;
   if (--sC <= --sA) { sA -= sC; Mat.Carry = 0; while(sC--) { Mat.S = (*c++ = *a++) ? 0 : Mat.S; }
     while(sA--) { Mat.Carry = (*a++) ? 1 : Mat.Carry; } *c = *a;
-    Mat.Carry |= ((Mat.S) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 1)) : 0); return; }
-  sC -= sA; Mat.Carry = 4; while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0;
-  Mat.T = 0; *c = *a; Mat.Carry = (Mat.Carry) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 0)) : 0;
-  if (Mat.Nim) { if (Mat.Carry) { Mat.T = *c; *c = Mat.S; } else if (*c & 0x80) { Mat.S--; Mat.T--; } }
-  while(sC--) { *++c = Mat.S; } *++c = Mat.T; }
+    Mat.Carry |= ((Mat.S) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 1)) : 0); return; } sC -= sA; Mat.Carry = 4;
+  while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0; Mat.T = 0; *c = *a;
+  Mat.Carry = (Mat.Carry) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 0)) : 0; if (Mat.Nim) { if (Mat.Carry) { Mat.T = *c;
+  *c = Mat.S; } else if (*c & 0x80) { Mat.S--; Mat.T--; } } while(sC--) { *++c = Mat.S; } *++c = Mat.T; }
 
 void Add (anu s, anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.a = a; Mat.b = b;
   if (Mat.Nim) { Mat.S = 2; Mat.T = 2; Mat.N = s; while(--Mat.N) { Mat.S = (*Mat.a++) ? 0 : Mat.S;
