@@ -9,6 +9,7 @@
 !sys_linux.c
 !sys.h
 !main.c
+!math.c
 !engine.c
 !makefile
 !README.md
