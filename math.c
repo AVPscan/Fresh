@@ -30,7 +30,7 @@ typedef struct { anu l[7]; nanu h; } vnan;          // 8 vn    [0,+1..+7FFFFFFFF
 //typedef struct { anu l[8..254], h; };             // 9-255                  [65..2039] бит диапазон теперь доступен
 //typedef struct { anu l[255], h; };                // 256     если передать на вход 0 байт в числе [8..2048] бит
 typedef struct { anu l[511], h, e, r; } MatBuf;     // 514     для работы + extend,reserve!
-typedef struct { anu Nim, Carry, E, N, S, T, Fa, Fb, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
+typedef struct { anu Nim, Carry, E, N, S, T, Fa, Fb, Fe, Bm, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
 var_ Mat = {.Nim = 0};
 // Vikāra                 — модификация, изменение состояния विकार
 // На выходе Mat.Carry не чётрый {бит 0} (0x01) значит произошло усечение с потерей информации
@@ -58,18 +58,24 @@ void Sub (anu s, anu *c, anu *a, anu *b) { Mat.Carry = (Mat.Carry != 0); Mat.a =
   do { Mat.S = *Mat.a++; Mat.T = *Mat.b++; *c = Mat.S;
     Mat.Carry = ((*c -= Mat.T + Mat.Carry) > Mat.S) || (Mat.Carry && (*c == Mat.S)); c++; } while(--s); }
 
+#define SBLEFT() Mat.E = (*b & 0x80) ? ((*b++ = (*b << 1) + Mat.E) ? 1 : 1) : ((*b++ = (*b << 1) + Mat.E) ? 0 : 0)
 void Mul (anu s, anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l;
   Mat.S = 0; Mat.T = 0; Mat.c = c; Mat.a = a; Mat.b = b; Mat.N = s; while(--Mat.N) {
     Mat.S = (Mat.S) ? ((*Mat.o++ = *Mat.a++) ? Mat.S : s - Mat.N) : ((*Mat.a) ? ((*Mat.o++ = *Mat.a++) ? s - Mat.N : 0) : (Mat.a++) ? Mat.S : Mat.S);
     Mat.T = (Mat.T) ? ((*Mat.r++ = *Mat.b++) ? Mat.T : s - Mat.N) : ((*Mat.b) ? ((*Mat.r++ = *Mat.b++) ? s - Mat.N : 0) : (Mat.b++) ? Mat.T : Mat.T);
-    *Mat.c++ = 0; }
-  Mat.S = (!(Mat.Fa = (!Mat.S && (*Mat.o = *Mat.a) == 0x80) ? 2 : (!Mat.S && !(*Mat.o = *Mat.a)) ? 4 : 0)) ? s : Mat.S;
-  Mat.T = (!(Mat.Fb = (!Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (!Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0)) ? s : Mat.T;
-  *Mat.c = 0; Mat.a = &Mat.sr.l; Mat.b = &Mat.rr.l; Mat.E = ((Mat.o -= &Mat.sr.l) < (Mat.r -= &Mat.rr.l)) ? 1 : 0;
-  c += Mat.S - Mat.o + Mat.T - Mat.r; Mat.S = Mat.o + 1; Mat.T = Mat.r + 1;
+    *Mat.c++ = 0; } Mat.S = (!(Mat.Fa = (!Mat.S && (*Mat.o = *Mat.a) == 0x80) ? 2 : (!Mat.S && !(*Mat.o = *Mat.a)) ? 4 : 0)) ? s : Mat.S;
+  Mat.T = (!(Mat.Fb = (!Mat.T && (*Mat.r = *Mat.b) == 0x80) ? 2 : (!Mat.T && !(*Mat.r = *Mat.b)) ? 4 : 0)) ? s : Mat.T; *Mat.c = 0; Mat.a = &Mat.sr.l;
+  Mat.b = &Mat.rr.l; Mat.E = ((Mat.o - Mat.a) < (Mat.r - Mat.b)) ? 1 : ((Mat.o - Mat.a) > (Mat.r - Mat.b)) ? 0 : (*Mat.o < *Mat.r) ? 1 : 0;
   if (Mat.Fa || Mat.Fb) { Mat.Carry = 4; if (Mat.Nim && (Mat.Fa == 2 || Mat.Fb == 2)) { *Mat.c = 0x80; Mat.Carry = 2; } return; }
-  if (Mat.E) { Mat.a = Mat.b; Mat.b = &Mat.sr.l; Mat.E = Mat.S; Mat.S = Mat.T; Mat.T = Mat.E; } s = Mat.T;
-  }
+  Mat.Fa = (Mat.Nim && ((*Mat.o ^ *Mat.r) & 0x80)) ? 0xFF : 0; Mat.r -= Mat.a; Mat.o -= Mat.b; c += Mat.S - Mat.o + Mat.T - Mat.r;
+  Mat.S = Mat.o + 1; Mat.T = Mat.r + 1; if (Mat.E) { Mat.a = Mat.b; Mat.b = &Mat.sr.l; Mat.E = Mat.S; Mat.S = Mat.T; Mat.T = Mat.E; }
+  
+  Mat.Fe = (Mat.S == s) ? 0 : 1; Mat.Bm = (*(Mat.a + --Mat.S) & 0x80) ? 0xFF : 0; Mat.S++; Mat.r = Mat.b + 1 + --s; Mat.c = c;
+  do { if ((s = *Mat.b++)) { Mat.N = Mat.S; b = Mat.r; a = Mat.a; do { *b++ = *a++; } while(--Mat.N); *b = Mat.Bm; do {
+    if (!(s & 1)) { Mat.E = 0; Mat.N = Mat.S; b = Mat.r; do { SBLEFT(); } while(--Mat.N); *b = (*b << 1) + Mat.E; }
+    else { Mat.E = 0; Mat.Fb = 0; Mat.N = Mat.S; b = Mat.r; Mat.Fa = *(c = Mat.c); do {
+      Mat.Fb = ((*c += *b + Mat.Fb) < Mat.Fa) || (Mat.Fb && (*c == Mat.Fa)); SBLEFT(); Mat.Fa = *++c; } while(--Mat.N);
+      *b = (*b << 1) + Mat.E; Mat.Fb = (Mat.Fe) ? (*c += *b + Mat.Fb) : 0; } } while(s >>= 1); } Mat.c++; } while(--Mat.T); }
 
 void VMul (anu s, anu *c, anu *a, anu *b) { Mat.o = &Mat.sr.l; Mat.r = &Mat.rr.l; Mat.S = 2; Mat.T = 2; Mat.c = c; Mat.a = a; Mat.b = b;
   Mat.N = s; Mat.oh = Mat.o + 1 + --s; Mat.rh = Mat.r + 1 + s; Mat.ch = Mat.c + 1 + s++; while(--Mat.N) {
