@@ -36,36 +36,27 @@
 // an   (санскр. anka     — цифра)
 // n    (санскр. Nimitta  — знак{овое})
 // v    (санскр. Vṛddhi   — увеличение {разрядности вдвое})
-typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} в
-#define SCell __SIZEOF_POINTER__                    // знаковом представлении! Любая разрядность [8..2048] бит.
+typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} и
+#define SCell __SIZEOF_POINTER__                    // есть только в знаковом представлении! Любая разрядность [8..] бит.
 typedef uint8_t anu;                                // 1   anu [0..FF]
 typedef int8_t nanu;                                // 1  n    [0,-7F..-1,80,+1..+7F]
-//typedef struct { union { anu l[1]; anu h; }; };   // 1       возможность работать с anu как со структурой
-typedef struct { anu l[1], h; } vanu;               // 2  v    [0..FFFF]
-typedef struct { anu l[1]; nanu h; } vnanu;         // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
-//typedef struct { anu l[2], h; };                  // 3       [0..FFFFFF]    [17..24] бит диапазон теперь доступен
-//typedef struct { anu l[2]; nanu h; };             // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
-typedef struct { anu l[3], h; } an;                 // 4   an  [0..FFFFFFFF]
-typedef struct { anu l[3]; nanu h; } nan;           // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
-//typedef struct { anu l[4:5:6]; nanu h; };         // 5-7                    [33..56] бит диапазон теперь доступен
-typedef struct { anu l[7], h; } van;                // 8  v    [0..FFFFFFFFFFFFFFFF]
-typedef struct { anu l[7]; nanu h; } vnan;          // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
-//typedef struct { anu l[8..254], h; };             // 9-255                  [65..2039] бит диапазон теперь доступен
-//typedef struct { anu l[255], h; };                // 256     если передать на вход 0 байт в числе [8..2048] бит
-typedef struct { anu l[511], h, e, r; } MatBuf;     // 514     для работы + extend,reserve!
-typedef struct { anu Nim, Carry, E, N, S, T, Fa, Fb, *a, *b, *c, *o, *r, *ch, *oh, *rh; MatBuf sr, rr; } var_;
+//typedef struct { union { anu h; anu l[1]; }; };   // 1       возможность работать с anu как со структурой
+//typedef struct { union { nanu h; anu l[1]; }; };  // 1       возможность работать с nanu как со структурой
+typedef struct { anu h, l[1]; } vanu;               // 2  v    [0..FFFF]
+typedef struct { nanu h; anu l[1]; } vnanu;         // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
+//typedef struct { anu h, l[2]; };                  // 3       [0..FFFFFF]    [17..24] бит диапазон теперь доступен
+//typedef struct { nanu h; anu l[2]; };             // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
+typedef struct { anu h, l[3]; } an;                 // 4   an  [0..FFFFFFFF]
+typedef struct { nanu h; anu l[3]; } nan;           // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
+//typedef struct { anu h, l[4..6]; };               // 5-7
+//typedef struct { nanu h; anu l[4..6]; };          // 5-7n                   [33..56] бит диапазон теперь доступен
+typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFFFFF]
+typedef struct { nanu h; anu l[7]; } vnan;          // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
+//typedef struct { anu h, l[0..254]; };             // 1-255
+//typedef struct { nanu h; anu l[0..254]; };        // 1-255n                 [8..2040] бит диапазон теперь доступен
+typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048].для умножения {сдвиговый регистр}
+typedef struct { anu Nim, C, L, Aa, Ab, Ar, Fa, Fb, Fr, Za, Zb, Zr, *a, *b, *r, *er; MatBuf Ho, Lo, Rb; } var_;
 var_ Mat = {.Nim = 0};
-// Vikāra                 — модификация, изменение состояния विकार
-// На выходе Mat.Carry не чётрый {бит 0} (0x01) значит произошло усечение с потерей информации
-// Если установлен {бит 1} (0x02) 2,3 то в результате бесконечность не учитываем знаковость представления (все биты 0 кроме старшего)
-// Если установлен {бит 2} (0x04) 4,5 то в результате ноль (небытиё)
-void Vikara (anu sC, anu sA, anu *c, anu *a) { Mat.S = 4;
-  if (--sC <= --sA) { sA -= sC; Mat.Carry = 0; while(sC--) { Mat.S = (*c++ = *a++) ? 0 : Mat.S; }
-    while(sA--) { Mat.Carry = (*a++) ? 1 : Mat.Carry; } *c = *a;
-    Mat.Carry |= ((Mat.S) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 1)) : 0); return; } sC -= sA; Mat.Carry = 4;
-  while(sA--) { Mat.Carry = (*c++ = *a++) ? 0 : Mat.Carry; } Mat.S = 0; Mat.T = 0; *c = *a;
-  Mat.Carry = (Mat.Carry) ? ((*c == 0x80) ? 2 : (!*c ? 4 : 0)) : 0; if (Mat.Nim) { if (Mat.Carry) { Mat.T = *c;
-  *c = Mat.S; } else if (*c & 0x80) { Mat.S--; Mat.T--; } } while(sC--) { *++c = Mat.S; } *++c = Mat.T; }
 ```
 
 ### Реализация знаковой бесконечности и АЛУ-защиты
