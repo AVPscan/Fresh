@@ -39,24 +39,40 @@
 typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} и
 #define SCell __SIZEOF_POINTER__                    // есть только в знаковом представлении! Любая разрядность [8..] бит.
 typedef uint8_t anu;                                // 1   anu [0..FF]
-typedef int8_t nanu;                                // 1  n    [0,-7F..-1,80,+1..+7F]
+//typedef uint8_t nanu;                             // 1  n    [0,-7F..-1,80,+1..+7F]
 //typedef struct { union { anu h; anu l[1]; }; };   // 1       возможность работать с anu как со структурой
-//typedef struct { union { nanu h; anu l[1]; }; };  // 1       возможность работать с nanu как со структурой
 typedef struct { anu h, l[1]; } vanu;               // 2  v    [0..FFFF]
-typedef struct { nanu h; anu l[1]; } vnanu;         // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
+//typedef struct { anu h, l[1]; } vnanu             // 2 vn    [0,+1..+7FFF,8000,-7FFF..-1]
 //typedef struct { anu h, l[2]; };                  // 3       [0..FFFFFF]    [17..24] бит диапазон теперь доступен
-//typedef struct { nanu h; anu l[2]; };             // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
+//typedef struct { anu h, l[2]; };                  // 3       [0,+1..+7FFFFF,800000,-7FFFFF..-1]
 typedef struct { anu h, l[3]; } an;                 // 4   an  [0..FFFFFFFF]
-typedef struct { nanu h; anu l[3]; } nan;           // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
+//typedef struct { anu h, l[3]; } nan;              // 4  n    [0,+1..+7FFFFFFF,80000000,-7FFFFFFF..-1]
 //typedef struct { anu h, l[4..6]; };               // 5-7
-//typedef struct { nanu h; anu l[4..6]; };          // 5-7n                   [33..56] бит диапазон теперь доступен
+//typedef struct { anu h, l[4..6]; };               // 5-7n                   [33..56] бит диапазон теперь доступен
 typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFFFFF]
-typedef struct { nanu h; anu l[7]; } vnan;          // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
+//typedef struct { anu h, l[7]; } vnan;             // 8 vn    [0,+1..+7FFFFFFFFFFFFFFF,8000000000000000,-7FFFFFFFFFFFFFFF..-1]
 //typedef struct { anu h, l[0..254]; };             // 1-255
-//typedef struct { nanu h; anu l[0..254]; };        // 1-255n                 [8..2040] бит диапазон теперь доступен
-typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048].для умножения {сдвиговый регистр}
-typedef struct { anu Nim, C, L, Aa, Ab, Ar, Fa, Fb, Fr, Za, Zb, Zr, *a, *b, *r, *er; MatBuf Ho, Lo, Rb; } var_;
+//typedef struct { anu h, l[0..254]; };             // 1-255n                 [8..2040] бит диапазон теперь доступен
+typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048] для умножения {сдвиговый регистр}
+typedef struct { anu Nim,   // Единственный рычаг знаковости (0 - беззнаковое). Типов данных НЕТ. Тип - воля создателя!
+  Long, Carry, IZ, Rnim, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e; MatBuf Ho, Lo, Sr; } var_;
 var_ Mat = {.Nim = 0};
+
+// Vikāra                 — модификация, изменение состояния विकार
+// lr=0 la=0    сброс флагов        Mat.IZ,          Mat.Rnim, Mat.Carry = 0;
+// lr=0 la!=0   анализ a            y знак{Mat.Rnim} x {if (Mat.IZ) {0 - ноль / FF - бесконечность}}, Mat.Carry = 0;
+// lr!=0 la=0   создание нуля в r   1                0, Mat.Carry = 0;
+// lr!=0 la!=0  преобразование      при уменьшении размера числа если отброшенная часть не пуста, то Mat.Carry = 1;
+void Vikara (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
+  if (!la) { Mat.IZ = 1; Mat.Rnim = 0; if (!lr) Mat.IZ--; else { do *r++ = 0; while(--lr); } return; }
+  Mat.a = a; Mat.Long = la; Mat.Rnim = (Mat.Nim) ? (*a & 0x80) ? 0xFF : 0 : 0;
+  if ((Mat.IZ = (*a) ? (Mat.Nim && *a == 0x80) ? 1 : 0 : 1)) while(Mat.IZ && --la) Mat.IZ = (*++a) ? 0 : Mat.IZ;
+  if (!lr) { return; } if (Mat.IZ) { *r++ = (Mat.Rnim) ? 0x80 : 0; while(--lr) *r++ = 0; return }
+  if (lr >= Mat.Long) { r += lr; Mat.a += Mat.Long; lr -= Mat.Long; do *--r = *--Mat.a; while(--Mat.Long);
+    while(lr--) *--r = Mat.Rnim; return; }
+  Mat.Long -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Long);
+  if ((Mat.Carry = ((*Mat.a ^ Mat.Rnim) & 0x80) ? Mat.Carry : 1)) { *Mat.a &= 0x7F; *Mat.a &= Mat.Rnim; }
+  do *r++ = *Mat.a++; while(--lr); }
 ```
 
 ### Реализация знаковой бесконечности и АЛУ-защиты
