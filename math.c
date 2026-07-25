@@ -47,8 +47,8 @@ void Vikara (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   if (lr >= Mat.Long) { r += lr; Mat.a += Mat.Long; lr -= Mat.Long; do *--r = *--Mat.a; while(--Mat.Long);
     while(lr--) *--r = Mat.Rnim; return; }
   Mat.Long -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Long); Mat.Ba = *Mat.a;
-  if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F; Mat.Ba |= (Mat.Rnim & 0x80); }
-  *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
+  if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F;
+    Mat.Ba |= (Mat.Rnim & 0x80); } *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
 
 void Add (anu l, anu *r, anu *a, anu *b) {
   Mat.Carry = (Mat.Carry != 0); if (Mat.Nim) { Mat.Fa = (*a == 0x80); Mat.Fb = (*b == 0x80);
@@ -74,12 +74,16 @@ void Mul (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Fa = 0; Mat.Fb = 0; Mat.
     if (Mat.Ba < 2 || Mat.Bb < 2) { if (!Mat.Ba || !Mat.Bb) { Mat.Iz++; Mat.Rnim = 0; return; }
       if (Mat.Nim && (*(Mat.a - 1) == 0x80 || *(Mat.b - 1) == 0x80)) { *r = 0x80; Mat.Iz++; Mat.Rnim = 0xFF; return; } }
     Mat.e = Mat.r + Mat.Fa + Mat.Fb; Mat.Ba = 0; Mat.Bb = 0; do { Mat.Ba = (Mat.Ba) ? Mat.Ba : (*--Mat.a); 
-      Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b); Mat.Fa = (Mat.Ba) ? Mat.Fa : --Mat.Fa; Mat.Fb = (Mat.Bb) ? Mat.Fb : --Mat.Fb;
-      } while(!(Mat.Ba && Mat.Bb)); Mat.Ba = *Mat.a; Mat.Bb = *Mat.b; Mat.a = &Mat.Ho; Mat.b = &Mat.Lo;
-    if (Mat.Fb > Mat.Fa || (Mat.Fb == Mat.Fa && Mat.Bb > Mat.Ba)) { Mat.a = Mat.b; Mat.b = &Mat.Ho; l = Mat.Fa;
-      Mat.Fa = Mat.Fb; Mat.Fb = l; } *(Mat.b + Mat.Fb++) = 0;
-    
-  } }
+      Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b); Mat.Fa = (Mat.Ba) ? Mat.Fa : --Mat.Fa;
+      Mat.Fb = (Mat.Bb) ? Mat.Fb : --Mat.Fb; } while(!(Mat.Ba && Mat.Bb)); Mat.Ba = *Mat.a; Mat.Bb = *Mat.b;
+    Mat.a = &Mat.Ho; Mat.b = &Mat.Lo; if (Mat.Fb > Mat.Fa || (Mat.Fb == Mat.Fa && Mat.Bb > Mat.Ba)) { Mat.a = Mat.b;
+      Mat.b = &Mat.Ho; l = Mat.Fa; Mat.Fa = Mat.Fb; Mat.Fb = l; } *(Mat.b + Mat.Fb++) = 0; r = Mat.e;
+    do { if ((Mat.Ba = *--Mat.a)) { a = &Mat.Sr; b = Mat.b; l = Mat.Fb; do *a++ = *b++; while(--l);
+        do { Mat.Zb = 0; b = &Mat.Sr; l = Mat.Fb; if (!(Mat.Ba & 1)) do { Mat.Zr = (*b << 1) + Mat.Zb;
+            Mat.Zb = ((*b & 0x80) == 0x80); *b++ = Mat.Zr; } while(--l);
+          else { a = r; Mat.Za = 0; do { *--a += *b + Mat.Za; Mat.Za = (*a < *b); Mat.Zr = (*b << 1) + Mat.Zb;
+            Mat.Zb = ((*b & 0x80) == 0x80); *b++ = Mat.Zr; } while(--l); } } while(Mat.Ba >>= 1); } --r; } while(--Mat.Fa);
+    if (Mat.Rnim) { Mat.Br = 1; do { Mat.Ba = *--Mat.e; Mat.Br = !(*Mat.e = ~Mat.Ba + Mat.Br); } while(Mat.e > Mat.r); } } }
 
 void Div (anu l, anu *r, anu *a, anu *b, anu *e) {
   }
