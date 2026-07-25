@@ -5,8 +5,8 @@
  * Данная программа является свободным программным обеспечением: вы можете 
  * распространять ее и/или изменять согласно условиям Стандартной общественной 
  * лицензии GNU (GPLv3).
- * Begin 05.07.2026 in Russia
  */
+//Begin 05.07.2026 in Russia
 //  As  (санскр. As       — основа, бытие, существовать)
 // anu  (санскр. anu      — атом)
 // an   (санскр. anka     — цифра)
@@ -31,7 +31,7 @@ typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFF
 //typedef struct { anu h, l[0..254]; };             // 1-255n                 [8..2040] бит диапазон теперь доступен
 typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048] для умножения {сдвиговый регистр}
 typedef struct { anu Nim,   // Единственный рычаг знаковости (0 - беззнаковое). Типов данных НЕТ. Тип - воля создателя!
-  Long, Carry, IZ, Rnim, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e; MatBuf Ho, Lo, Sr; } var_;
+  Carry, IZ, Rnim, Long, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e; MatBuf Ho, Lo, Sr; } var_;
 var_ Mat = {.Nim = 0};
 
 // Vikāra                 — модификация, изменение состояния विकार
@@ -47,7 +47,7 @@ void Vikara (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   if (lr >= Mat.Long) { r += lr; Mat.a += Mat.Long; lr -= Mat.Long; do *--r = *--Mat.a; while(--Mat.Long);
     while(lr--) *--r = Mat.Rnim; return; }
   Mat.Long -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Long);
-  if ((Mat.Carry = ((*Mat.a ^ Mat.Rnim) & 0x80) ? Mat.Carry : 1)) { *Mat.a &= 0x7F; *Mat.a &= Mat.Rnim; }
+  if ((Mat.Carry = ((*Mat.a ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry)) { *Mat.a &= 0x7F; *Mat.a &= Mat.Rnim; }
   do *r++ = *Mat.a++; while(--lr); }
 
 void Add (anu l, anu *r, anu *a, anu *b) {
