@@ -312,7 +312,7 @@ void _TSet(anu c, anu *a) { anu s = Off, m = Off, h = Off; if (c--) { h = a[0]; 
 void _DSet(van y, anu c, anu *a) { anu m = On, d = On; if (c--) { m = a[0]; if (c) { d = a[1]; } } Base.JDN = Dates(y, m ,d); }
 void _PSet(anu c, van *a) { if (c != 5) { Base.HourInDay = 24; Base.MinInHour = 60; Base.SecInMin = 60; Base.CycleYears = 400; Base.YearLength = 146097; }
   else { van *d = &Base.YearLength; while(c--) { *d-- = a[c]; } }
-  Base.PlainYear = (Base.YearLength / Base.CycleYears); Base.ShiftYear = (Base.HourInDay >> 1) * Base.CycleYears; Base.EpochShift = (Base.ShiftYear / Base.CycleYears) * Base.YearLength - On;
+  Base.PlainYear = (Base.YearLength / Base.CycleYears); Base.ShiftYear = (Base.HourInDay) * Base.CycleYears; Base.EpochShift = (Base.ShiftYear / Base.CycleYears) * Base.YearLength - On;
   Base.PlainVis = Base.YearLength - (Base.PlainYear * Base.CycleYears); Base.DaySec = Times(Base.HourInDay - On, Base.MinInHour - On, Base.SecInMin - On) + On; Base.DaysInWeek = 7;
   Base.CoreJDN = (Base.HourInDay == 24 && Base.MinInHour == 60 && Base.SecInMin == 60 && Base.CycleYears == 400 && Base.YearLength == 146097) ? Dates(2026, 2, 7) : Off; CSTime(Off); }
 void _WData(rgoc n, char *str, anu c, As *a) { if ((n >= Convas.D && n < Convas.S) || n >= Base.Win) return;

@@ -7,11 +7,11 @@
  * лицензии GNU (GPLv3).
  */
 //Begin 05.07.2026 in Russia
-//  As  (санскр. As       — основа, бытие, существовать)
-// anu  (санскр. anu      — атом)
-// an   (санскр. anka     — цифра)
-// n    (санскр. Nimitta  — знак{овое})
-// v    (санскр. Vṛddhi   — увеличение {разрядности вдвое})
+//  As  (санскр. As       — основа, бытие, существовать) अः
+// anu  (санскр. anu      — атом) अणु 
+// an   (санскр. anka     — цифра) अङ्क 
+// n    (санскр. Nimitta  — знак{овое}) निमित्त 
+// v    (санскр. Vṛddhi   — увеличение {разрядности вдвое}) वृद्धि
 typedef uintptr_t  As;                              // Бесконечность не имеет обратного 80{00{00{00{00{00{00{..}}}}}}} и
 #define SCell __SIZEOF_POINTER__                    // есть только в знаковом представлении! Любая разрядность [8..] бит.
 typedef uint8_t anu;                                // 1   anu [0..FF]
@@ -50,7 +50,7 @@ void Vikara (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F;
     Mat.Ba |= (Mat.Rnim & 0x80); } *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
 
-void Add (anu l, anu *r, anu *a, anu *b) {
+/*void Add (anu l, anu *r, anu *a, anu *b) {
   Mat.Carry = (Mat.Carry != 0); if (Mat.Nim) { Mat.Fa = (*a == 0x80); Mat.Fb = (*b == 0x80);
     if (Mat.Fa || Mat.Fb) { Mat.Long = l; Mat.a = a; Mat.b = b; while(--Mat.Long && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
@@ -62,7 +62,12 @@ void Sub (anu l, anu *r, anu *a, anu *b) {
     if (Mat.Fa || Mat.Fb) { Mat.Long = l; Mat.a = a; Mat.b = b; while(--Mat.Long && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
       if (Mat.Fa || Mat.Fb) { Mat.IZ = 1; Mat.Rnim = 0xFF; *r++ = 0x80; while(--l) { *r++ = 0; } return; } } }
-  r += l; a += l; b += l; do { *--r = *--a - *--b - Mat.Carry; Mat.Carry = (*r > *b + Mat.Carry); } while(--l); }
+  r += l; a += l; b += l; do { *--r = *--a - *--b - Mat.Carry; Mat.Carry = (*r > *b + Mat.Carry); } while(--l); }*/
+void Add (anu l, anu *r, anu *a, anu *b) {
+  }
+
+void Sub (anu l, anu *r, anu *a, anu *b) {
+  }
 
 void Mul (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Fa = 0; Mat.Fb = 0; Mat.Ba = 1; Mat.Bb = 1; Mat.Long = l;
     Mat.Iz = 0; Mat.Za = (Mat.Nim) ? (*a & 0x80) ? 0xFF : 0 : 0; Mat.Zb = (Mat.Nim) ? (*b & 0x80) ? 0xFF : 0 : 0;
