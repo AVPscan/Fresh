@@ -46,9 +46,9 @@ void Vikara (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   if (!lr) { return; } if (Mat.IZ) { *r++ = (Mat.Rnim) ? 0x80 : 0; while(--lr) *r++ = 0; return }
   if (lr >= Mat.Long) { r += lr; Mat.a += Mat.Long; lr -= Mat.Long; do *--r = *--Mat.a; while(--Mat.Long);
     while(lr--) *--r = Mat.Rnim; return; }
-  Mat.Long -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Long);
-  if ((Mat.Carry = ((*Mat.a ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry)) { *Mat.a &= 0x7F; *Mat.a &= Mat.Rnim; }
-  do *r++ = *Mat.a++; while(--lr); }
+  Mat.Long -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Long); Mat.Ba = *Mat.a;
+  if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F; Mat.Ba |= (Mat.Rnim & 0x80); }
+  *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
 
 void Add (anu l, anu *r, anu *a, anu *b) {
   Mat.Carry = (Mat.Carry != 0); if (Mat.Nim) { Mat.Fa = (*a == 0x80); Mat.Fb = (*b == 0x80);
