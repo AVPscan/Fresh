@@ -47,7 +47,7 @@ typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFF
 //typedef struct { anu h, l[0..254]; };             // 1-255n                 [8..2040] бит диапазон теперь доступен
 typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048] для умножения {сдвиговый регистр}
 typedef struct { anu Nim,   // Единственный рычаг знаковости (0 - беззнаковое). Типов данных НЕТ. Тип - воля создателя!
-  Carry, IZ, Rnim, Long, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e; MatBuf Ho, Lo, Sr; } var_;
+  Carry, Riz, Rnim, Eiz, Enim, Long, Loop, Fr, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e; MatBuf Ho, Lo, Sr; } var_;
 var_ Mat = {.Nim = 0};
 ```
 
