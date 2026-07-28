@@ -82,7 +82,8 @@ void FADD (anu l, anu *r, anu *a, anu *b) { Mat.Riz = 0; Mat.Rnim = 0; Mat.Br = 
     if (Mat.Fa || Mat.Fb) { Mat.Loop = l; Mat.a = a; Mat.b = b; while(--Mat.Loop && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
       if (Mat.Fa || Mat.Fb) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--l) { *r++ = 0; } return; } } }
-  r += l; a += l; b += l; Mat.Zb = l; do { *--r = *--a + Mat.Carry + (Mat.Bb = *--b); Mat.Carry = (*r < Mat.Bb); } while(--l);
+  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Ba = *--a; Mat.Za = *--b; Mat.Bb = Mat.Za + Mat.Carry; *--r = Mat.Ba + Mat.Bb;
+    Mat.Carry = (*r < Mat.Bb) || (Mat.Bb < Mat.Za); } while(--l);
   if (Mat.Nim && Mat.Carry) { if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; }
     else Mat.Carry = 0; } }
 
@@ -91,7 +92,8 @@ void FSUB (anu l, anu *r, anu *a, anu *b) { Mat.Riz = 0; Mat.Rnim = 0; Mat.Br = 
     if (Mat.Fa || Mat.Fb) { Mat.Loop = l; Mat.a = a; Mat.b = b; while(--Mat.Loop && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
       if (Mat.Fa || Mat.Fb) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--l) { *r++ = 0; } return; } } }
-  r += l; a += l; b += l; Mat.Zb = l; do { *--r = *--a - Mat.Carry - (Mat.Bb = *--b); Mat.Carry = (*r > Mat.Bb); } while(--l);
+  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Ba = *--a; Mat.Za = *--b; Mat.Bb = Mat.Za + Mat.Carry; *--r = Mat.Ba - Mat.Bb;
+    Mat.Carry = (Mat.Ba < Mat.Bb) || (Mat.Bb < Mat.Za); } while(--l);
   if (Mat.Nim && Mat.Carry) { if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; }
     else Mat.Carry = 0; } }
 
