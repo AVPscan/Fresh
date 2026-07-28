@@ -45,8 +45,9 @@ typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8
 typedef struct { anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long, VLong, Loop, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e;
   MatBuf Ho, Sr, Lo; } var_; var_ Mat = {.Nim = 0};
 
-void FBSWAP (anu l, anu *r, anu *a) { if (l) { Mat.r = r + l; Mat.a = a + l; l >>= 1;
-    do { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } while(l--); } }
+void FBSWAP (anu l, anu *r, anu *a) { Mat.r = r + l; Mat.a = a + l;
+  if (!l) { Mat.r += 255 + ++l; Mat.a += 255 + l; Mat.Fa = 0; l = 128; } else { Mat.Fa = (l & 1); l >>= 1; }
+  while(l--) { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } if (Mat.Fa) *r = *a; }
 
 // 00 сброс флагов        Mat.Riz,         Mat.Rnim, Mat.Carry = 0;
 // 0z анализ a            y знак{Mat.Rnim} x {if (Mat.Riz) {0 - ноль / FF - бесконечность}}, Mat.Carry = 0;
@@ -64,15 +65,16 @@ void VIKARA (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
 
 void FMOV (anu l, anu *r, anu d) { Mat.Rnim = (Mat.Nim) ? (d & 0x80) ? 0xFF : 0 : 0;
-  while(--l) { *r++ = Mat.Rnim; } *r = d; Mat.Riz = (d) ? (Mat.Nim && d == 0x80) ? 1 : 0 : 1; }
+  Mat.Riz = (d) ? (Mat.Nim && d == 0x80) ? 1 : 0 : 1; while(--l) { *r++ = Mat.Rnim; } *r = d; }
 
-void FVMOV (anu s, anu *r, anu h, anu l) { if (--s) { Mat.Rnim = (Mat.Nim) ? (h & 0x80) ? 0xFF : 0 : 0;
-  while(--s) { *r++ = Mat.Rnim; } *r++ = h; *r = l; Mat.Riz = (h) ? (Mat.Nim && h == 0x80) ? 1 : 0 : 1; } }
+void FVMOV (anu s, anu *r, anu h, anu l) { --s; Mat.Rnim = (Mat.Nim) ? (h & 0x80) ? 0xFF : 0 : 0;
+  Mat.Riz = (!l) ? (Mat.Nim && h == 0x80) ? 1 : (!h) : 0; if (s) { while(--s) { *r++ = Mat.Rnim; }
+    *r++ = h; *r = l; return; } *r = h; }
 
 void FROR (anu l, anu *r) { r--; do { Mat.Za = *++r & 1; *r >>= 1; if (Mat.Carry) { *r |= 0x80; }
     Mat.Carry = Mat.Za; } while(--l); }
 
-void FROL (anu l, anu *r) { r += l; if (!(l)) { r += ++l + 255; l--; } do { Mat.Za = *--r & 0x80; *r <<= 1;
+void FROL (anu l, anu *r) { if (!l) { r += ++l + 255; l--; } r += l; do { Mat.Za = *--r & 0x80; *r <<= 1;
     if (Mat.Carry) { *r |= 1; } Mat.Carry = Mat.Za; } while(--l); }
 
 void FADD (anu l, anu *r, anu *a, anu *b) { Mat.Riz = 0; Mat.Rnim = 0; Mat.Br = !((*a ^ *b) & 0x80);
