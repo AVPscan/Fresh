@@ -46,8 +46,7 @@ typedef struct { anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long, VLong, Loop, Fa, Fb
   MatBuf Ho, Sr, Lo; } var_; var_ Mat = {.Nim = 0};
 
 void FBSWAP (anu l, anu *r, anu *a) { if (l) { Mat.r = r + l; Mat.a = a + l; Mat.Fa = (l & 1); l >>= 1;
-  if (l) { do { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } while(--l); if (Mat.Fa) *r = *a; return; }
-  if (Mat.Fa) { r--; a--; } *r = *a; } }
+  while(l--) { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } if (Mat.Fa) { *r = *a; } } }
 
 void FMOV (anu l, anu *r, anu d) { if (l) { Mat.Rnim = (Mat.Nim) ? (d & 0x80) ? 0xFF : 0 : 0;
   Mat.Riz = (d) ? (Mat.Nim && d == 0x80) ? 1 : 0 : 1; while(--l) { *r++ = Mat.Rnim; } *r = d; } }
