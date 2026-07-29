@@ -56,11 +56,11 @@ void FVMOV (anu s, anu *r, anu h, anu l) { if (s) { --s; Mat.Rnim = (Mat.Nim) ? 
   Mat.Riz = (!l) ? (Mat.Nim && h == 0x80) ? 1 : (!h) : 0; if (s) { while(--s) { *r++ = Mat.Rnim; } *r++ = h; *r = l; return; }
   *r = h; } }
 
-void FROR (anu l, anu *r) { if (l) { r--; do { Mat.Za = *++r & 1; *r >>= 1; if (Mat.Carry) { *r |= 0x80; } Mat.Carry = Mat.Za;
+void FRR (anu l, anu *r) { if (l) { r--; do { Mat.Za = *++r & 1; *r >>= 1; if (Mat.Carry) { *r |= 0x80; } Mat.Carry = Mat.Za;
     } while(--l); Mat.Carry = (Mat.Carry != 0); } }
 
-void FROL (anu l, anu *r) { if (l) { r += l; do { Mat.Za = *--r & 0x80; *r <<= 1;
-    if (Mat.Carry) { *r |= 1; } Mat.Carry = Mat.Za; } while(--l); Mat.Carry = (Mat.Carry != 0); } }
+void FRL (anu l, anu *r) { if (l) { r += l; do { Mat.Za = *--r & 0x80; *r <<= 1; if (Mat.Carry) { *r |= 1; } Mat.Carry = Mat.Za;
+    } while(--l); Mat.Carry = (Mat.Carry != 0); } }
 
 // 00 сброс флагов        Mat.Riz,         Mat.Rnim, Mat.Carry = 0;
 // 0z анализ a            y знак{Mat.Rnim} x {if (Mat.Riz) {0 - ноль / FF - бесконечность}}, Mat.Carry = 0;
