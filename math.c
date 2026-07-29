@@ -82,20 +82,18 @@ void FADD (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Riz = 0; Mat.Rnim = 0; 
     if (Mat.Fa || Mat.Fb) { Mat.Loop = l; Mat.a = a; Mat.b = b; while(--Mat.Loop && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
       if (Mat.Fa || Mat.Fb) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--l) { *r++ = 0; } return; } } }
-  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Za = *--b; Mat.Bb = Mat.Za + Mat.Carry; *--r = *--a + Mat.Bb;
-    Mat.Carry = (*r < Mat.Bb) || (Mat.Bb < Mat.Za); } while(--l);
-  if (Mat.Nim && Mat.Carry) { if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; }
-    else Mat.Carry = 0; } } }
+  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Bb = *--b; Mat.Ba = Mat.Bb + Mat.Carry; *--r = *--a + Mat.Ba;
+    Mat.Carry = (*r < Mat.Ba) || (Mat.Ba < Mat.Bb); } while(--l); if (Mat.Nim && Mat.Carry) { Mat.Carry--;
+    if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; } } } }
 
 void FSUB (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Riz = 0; Mat.Rnim = 0; Mat.Br = ((*a ^ *b) & 0x80);
    Mat.Carry = (Mat.Carry != 0); if (Mat.Nim) { Mat.Fa = (*a == 0x80); Mat.Fb = (*b == 0x80);
     if (Mat.Fa || Mat.Fb) { Mat.Loop = l; Mat.a = a; Mat.b = b; while(--Mat.Loop && (Mat.Fa || Mat.Fb)) {
         Mat.Fa = (Mat.Fa) ? (*++Mat.a == 0) : Mat.Fa; Mat.Fb = (Mat.Fb) ? (*++Mat.b == 0) : Mat.Fb; }
       if (Mat.Fa || Mat.Fb) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--l) { *r++ = 0; } return; } } }
-  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Za = *--b; Mat.Bb = Mat.Za + Mat.Carry; *--r = *--a - Mat.Bb;
-    Mat.Carry = (*r > *a) || (Mat.Bb < Mat.Za); } while(--l);
-  if (Mat.Nim && Mat.Carry) { if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; }
-    else Mat.Carry = 0; } } }
+  r += l; a += l; b += l; Mat.Zb = l; do { Mat.Bb = *--b; Mat.Ba = Mat.Bb + Mat.Carry; *--r = *--a - Mat.Ba;
+    Mat.Carry = (*r > Mat.Ba) || (Mat.Ba < Mat.Bb); } while(--l); if (Mat.Nim && Mat.Carry) { Mat.Carry--;
+    if (Mat.Br) { Mat.Riz++; Mat.Rnim--; *r++ = 0x80; while(--Mat.Zb) *r++ = 0; } } } }
 
 void FMUL (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Fa = 0; Mat.Fb = 0; Mat.Ba = 1; Mat.Bb = 1; Mat.Loop = l;
     Mat.Riz = 0; Mat.Za = (Mat.Nim) ? (*a & 0x80) ? 0xFF : 0 : 0; Mat.Zb = (Mat.Nim) ? (*b & 0x80) ? 0xFF : 0 : 0;
