@@ -23,7 +23,7 @@
 //Mat.Rnim  {00/FF}{Не бытие/Бесконечность} Результата
 //Mat.Enim  {00/FF}{Не бытие/Бесконечность} Остатка
 //Mat.Long  Для удобства при использовании {переменная константа}
-//Mat.VLong Для удобства при использовании {переменная константа}
+//Mat.VLong Для удобства при использовании h,l {переменная константа}
 
 typedef uintptr_t  As;
 typedef uint8_t anu;                                // 1   anu [0..FF]
@@ -42,8 +42,9 @@ typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFF
 //typedef struct { anu h, l[0..254]; };             // 1-255
 //typedef struct { anu h, l[0..254]; };             // 1-255n                 [8..2040] бит диапазон теперь доступен
 typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048] для умножения {сдвиговый регистр}
-typedef struct { anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long; vanu VLong; anu Loop, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e;
-  MatBuf Ho, Sr, Lo; } var_; var_ Mat = {.Nim = 0, .Long = 2, .VLong = {0, 4}};
+typedef struct { MatBuf Ho, Sr, Lo; anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long, VLongh, VLongl, Loop, Fa, Fb, Zr, Za, Zb, Br, Ba, Bb,
+  *r, *a, *b, *e; } var_;
+var_ Mat = {.Nim = 0, .Long = 2, .VLongh = 0, .VLongl = 4};
 
 void FBSWAP (anu l, anu *r, anu *a) { if (l) { Mat.r = r + l; Mat.a = a + l; Mat.Fa = (l & 1); l >>= 1;
   while(l--) { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } if (Mat.Fa) { *r = *a; } } }
@@ -97,10 +98,10 @@ void FMUL (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Fa = 0; Mat.Fb = 0; Mat
       Mat.Ba = (Mat.Fa) ? (Mat.Za) ? !(*Mat.a++ = ~*a + Mat.Ba) : (*Mat.a++ = *a) : Mat.Ba;
       Mat.Bb = (Mat.Fb) ? (Mat.Zb) ? !(*Mat.b++ = ~*b + Mat.Bb) : (*Mat.b++ = *b) : Mat.Bb;
       *--r = 0; *--Mat.e = 0; } while(--Mat.Loop); Mat.Ba = Mat.a - &Mat.Ho; Mat.Bb = Mat.b - &Mat.Lo;
+    Mat.VLongl = l + l; Mat.VLongh = (Mat.VLongl < l); Mat.e = Mat.r + Mat.Fa + Mat.Fb;
     if (Mat.Ba < 2 || Mat.Bb < 2) { Mat.Riz++; Mat.Rnim = 0; if (!Mat.Ba || !Mat.Bb) return;
       if (Mat.Nim && (*(Mat.a - 1) == 0x80 || *(Mat.b - 1) == 0x80)) { *r = 0x80; Mat.Rnim--; } return; }
-    Mat.VLong.l[0] = l + l; Mat.VLong.h = (Mat.VLong.l[0] < l); Mat.e = Mat.r + Mat.Fa + Mat.Fb; Mat.Ba = 0; Mat.Bb = 0;
-    do { Mat.Ba = (Mat.Ba) ? Mat.Ba : (*--Mat.a); Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b);
+     Mat.Ba = 0; Mat.Bb = 0; do { Mat.Ba = (Mat.Ba) ? Mat.Ba : (*--Mat.a); Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b);
       Mat.Fa = (Mat.Ba) ? Mat.Fa : --Mat.Fa; Mat.Fb = (Mat.Bb) ? Mat.Fb : --Mat.Fb; } while(!(Mat.Ba && Mat.Bb));
     Mat.Ba = *Mat.a; Mat.Bb = *Mat.b; Mat.a = &Mat.Ho; Mat.b = &Mat.Lo;
     if (Mat.Fb > Mat.Fa || (Mat.Fb == Mat.Fa && Mat.Bb > Mat.Ba)) { Mat.a = Mat.b; Mat.b = &Mat.Ho; l = Mat.Fa;
