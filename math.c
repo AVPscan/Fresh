@@ -68,13 +68,12 @@ void FRL (anu l, anu *r) { if (l) { r += l; do { Mat.Za = *--r & 0x80; *r <<= 1;
 void VIKARA (anu lr, anu la, anu *r, anu *a) { Mat.Carry = 0;
   if (!la) { Mat.Riz = 1; Mat.Rnim = 0; if (!lr) Mat.Riz--; else { do *r++ = 0; while(--lr); } return; }
   Mat.a = a; Mat.Loop = la; Mat.Rnim = (Mat.Nim) ? (*a & 0x80) ? 0xFF : 0 : 0;
-  if ((Mat.Riz = (*a) ? (Mat.Nim && *a == 0x80) ? 1 : 0 : 2)) while(Mat.Riz && --la) Mat.Riz = (*++a) ? 0 : Mat.Riz;
-  if (!lr) { return; } if (Mat.Riz) { *r++ = (Mat.Riz == 1) ? 0x80 : 0; Mat.Riz = 1; while(--lr) *r++ = 0; return; }
-  if (lr >= Mat.Loop) { r += lr; Mat.a += Mat.Loop; lr -= Mat.Loop; do *--r = *--Mat.a; while(--Mat.Loop); if (lr) {
-    do *--r = Mat.Rnim; while(--lr); } return; }
-  Mat.Loop -= lr; do Mat.Carry = (*Mat.a++ == Mat.Rnim) ? Mat.Carry : 1; while(--Mat.Loop); Mat.Ba = *Mat.a;
-  if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F; Mat.Ba |= (Mat.Rnim & 0x80); }
-  *r++ = Mat.Ba; while(--lr) *r++ = *++Mat.a; }
+  if ((Mat.Riz = (*a) ? (Mat.Nim && *a == 0x80) ? 1 : 0 : 2)) while(--Mat.Loop && (Mat.Riz = (*++Mat.a) ? 0 : Mat.Riz));
+  if (Mat.Riz) { if (lr) { *r++ = (Mat.Riz == 1) ? 0x80 : 0; while(--lr) *r++ = 0; } Mat.Riz = 1; return; }
+  if (!lr) { return; } if (lr >= la) { r += lr; a += la; lr -= la; do *--r = *--a; while(--la);
+    while(lr--) { *--r = Mat.Rnim; } return; } la -= lr; do Mat.Carry = (*a++ == Mat.Rnim) ? Mat.Carry : 1; while(--la);
+  Mat.Ba = *a; if (Mat.Nim) { Mat.Carry = ((Mat.Ba ^ Mat.Rnim) & 0x80) ? 1 : Mat.Carry; Mat.Ba &= 0x7F;
+    Mat.Ba |= (Mat.Rnim & 0x80); } *r++ = Mat.Ba; while(--lr) *r++ = *++a; }
 
 void FADD (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Riz = 0; Mat.Rnim = 0; Mat.Za = !((*a ^ *b) & 0x80);
   Mat.Loop = l; Mat.Carry = (Mat.Carry != 0); if (Mat.Nim) { Mat.Fa = (*a == 0x80); Mat.Fb = (*b == 0x80);
