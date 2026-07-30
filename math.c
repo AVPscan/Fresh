@@ -42,8 +42,8 @@ typedef struct { anu h, l[7]; } van;                // 8  v    [0..FFFFFFFFFFFFF
 //typedef struct { anu h, l[0..254]; };             // 1-255
 //typedef struct { anu h, l[0..254]; };             // 1-255n                 [8..2040] бит диапазон теперь доступен
 typedef struct { anu h, l[255]; } MatBuf;           // 256....................[8..2048] для умножения {сдвиговый регистр}
-typedef struct { anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long, VLong, Loop, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e;
-  MatBuf Ho, Sr, Lo; } var_; var_ Mat = {.Nim = 0};
+typedef struct { anu Nim, Carry, Riz, Rnim, Eiz, Enim, Long; vanu VLong; anu Loop, Fa, Fb, Za, Zb, Br, Ba, Bb, *r, *a, *b, *e;
+  MatBuf Ho, Sr, Lo; } var_; var_ Mat = {.Nim = 0, .Long = 2, .VLong = {0, 4}};
 
 void FBSWAP (anu l, anu *r, anu *a) { if (l) { Mat.r = r + l; Mat.a = a + l; Mat.Fa = (l & 1); l >>= 1;
   while(l--) { Mat.Ba = *--Mat.a; Mat.Bb = *a++; *r++ = Mat.Ba; *--Mat.r = Mat.Bb; } if (Mat.Fa) { *r = *a; } } }
@@ -96,14 +96,15 @@ void FMUL (anu l, anu *r, anu *a, anu *b) { if (l) { Mat.Fa = 0; Mat.Fb = 0; Mat
     do { Mat.Fa = (Mat.Fa) ? Mat.Fa : (*--a) ? l : Mat.Fa; Mat.Fb = (Mat.Fb) ? Mat.Fb : (*--b) ? l : Mat.Fb;
       Mat.Ba = (Mat.Fa) ? (Mat.Za) ? !(*Mat.a++ = ~*a + Mat.Ba) : (*Mat.a++ = *a) : Mat.Ba;
       Mat.Bb = (Mat.Fb) ? (Mat.Zb) ? !(*Mat.b++ = ~*b + Mat.Bb) : (*Mat.b++ = *b) : Mat.Bb;
-      *--r = 0; *--Mat.e = 0; } while(--l); Mat.Ba = Mat.a - &Mat.Ho; Mat.Bb = Mat.b - &Mat.Lo;
+      *--r = 0; *--Mat.e = 0; } while(--Mat.Loop); Mat.Ba = Mat.a - &Mat.Ho; Mat.Bb = Mat.b - &Mat.Lo;
     if (Mat.Ba < 2 || Mat.Bb < 2) { Mat.Riz++; Mat.Rnim = 0; if (!Mat.Ba || !Mat.Bb) return;
       if (Mat.Nim && (*(Mat.a - 1) == 0x80 || *(Mat.b - 1) == 0x80)) { *r = 0x80; Mat.Rnim--; } return; }
-    Mat.e = Mat.r + Mat.Fa + Mat.Fb; Mat.Ba = 0; Mat.Bb = 0; do { Mat.Ba = (Mat.Ba) ? Mat.Ba : (*--Mat.a); 
-      Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b); Mat.Fa = (Mat.Ba) ? Mat.Fa : --Mat.Fa;
-      Mat.Fb = (Mat.Bb) ? Mat.Fb : --Mat.Fb; } while(!(Mat.Ba && Mat.Bb)); Mat.Ba = *Mat.a; Mat.Bb = *Mat.b;
-    Mat.a = &Mat.Ho; Mat.b = &Mat.Lo; if (Mat.Fb > Mat.Fa || (Mat.Fb == Mat.Fa && Mat.Bb > Mat.Ba)) { Mat.a = Mat.b;
-      Mat.b = &Mat.Ho; l = Mat.Fa; Mat.Fa = Mat.Fb; Mat.Fb = l; } *(Mat.b + Mat.Fb++) = 0; r = Mat.e;
+    Mat.VLong.l[0] = l + l; Mat.VLong.h = (Mat.VLong.l[0] < l); Mat.e = Mat.r + Mat.Fa + Mat.Fb; Mat.Ba = 0; Mat.Bb = 0;
+    do { Mat.Ba = (Mat.Ba) ? Mat.Ba : (*--Mat.a); Mat.Bb = (Mat.Bb) ? Mat.Bb : (*--Mat.b);
+      Mat.Fa = (Mat.Ba) ? Mat.Fa : --Mat.Fa; Mat.Fb = (Mat.Bb) ? Mat.Fb : --Mat.Fb; } while(!(Mat.Ba && Mat.Bb));
+    Mat.Ba = *Mat.a; Mat.Bb = *Mat.b; Mat.a = &Mat.Ho; Mat.b = &Mat.Lo;
+    if (Mat.Fb > Mat.Fa || (Mat.Fb == Mat.Fa && Mat.Bb > Mat.Ba)) { Mat.a = Mat.b; Mat.b = &Mat.Ho; l = Mat.Fa;
+      Mat.Fa = Mat.Fb; Mat.Fb = l; } *(Mat.b + Mat.Fb++) = 0; r = Mat.e;
     do { if ((Mat.Ba = *--Mat.a)) { a = &Mat.Sr; b = Mat.b; l = Mat.Fb; do *a++ = *b++; while(--l);
         do { Mat.Zb = 0; b = &Mat.Sr; l = Mat.Fb; if (!(Mat.Ba & 1)) do { Mat.Br = (*b << 1) + Mat.Zb;
             Mat.Zb = ((*b & 0x80) == 0x80); *b++ = Mat.Br; } while(--l);
