@@ -41,14 +41,14 @@ endif
 endif
 
 SOURCES = main.c engine.c $(SYS_SRC)
-.PHONY: all c musl run clean size
+.PHONY: all c s run clean size
 all: clean
 	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 c: clean
 	@clang $(CLANG_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(CDFLAGS)
 	@$(MAKE) --no-print-directory size
-musl: clean
+s: clean
 	@$(CC) $(BASE_CFLAGS) -static -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 size:
