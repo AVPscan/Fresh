@@ -49,7 +49,7 @@ c: clean
 	@clang $(CLANG_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(CDFLAGS)
 	@$(MAKE) --no-print-directory size
 musl: clean
-	@$(CC) $(BASE_CFLAGS) -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
+	@$(CC) $(BASE_CFLAGS) -static -o $(TARGET)$(EXT) $(SOURCES) $(LDFLAGS)
 	@$(MAKE) --no-print-directory size
 size:
 	@SIZE=$$($(GET_SIZE)); echo "$(TARGET)$(EXT) $$SIZE byte"
