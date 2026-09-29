@@ -1,0 +1,127 @@
+name: Cross-Platform Build & Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags: 
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версия (например: 3.00)'
+        required: true
+        default: 'manual'
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+jobs:
+  # 1. Честная сборка Musl в Alpine
+  build-musl:
+    runs-on: ubuntu-latest
+    container: alpine:latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Build Static
+        run: |
+          apk add --no-cache build-base make
+          make s CC=gcc
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: linux-static
+          path: fresh
+
+  # 2. Матрица для остальных (без контейнера)
+  build-others:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - desc: "Linux-Dynamic"
+            os: ubuntu-latest
+            cmd: make
+            artifact: linux-dynamic
+          - desc: "Windows"
+            os: windows-latest
+            cmd: make
+            artifact: windows-executable
+          - desc: "macOS"
+            os: macos-latest
+            cmd: make
+            artifact: macos-executable
+
+    steps:
+      - uses: actions/checkout@main
+      - name: Build
+        shell: bash
+        run: ${{ matrix.cmd }}
+      - name: Upload
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ matrix.artifact }}
+          path: fresh*
+          
+  # 3. Релиз, который собирает всё воедино
+  create-release:
+    needs: [build-musl, build-others]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+      - name: Get Version
+        id: v
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" == "push" ]; then
+            # Самый надежный способ выкусить только цифры из тега
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            VERSION=${TAG_NAME#v}
+            echo "ver=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          else
+            echo "ver=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag=v${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download All
+        uses: actions/download-artifact@main
+        with:
+          path: ./artefacts
+
+      - name: Assets & Upload
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 1. Данные
+          NAME=$(basename ${{ github.repository }})
+          VER="${{ steps.v.outputs.ver }}"
+          TAG="v$VER"
+
+          gh release create "$TAG" --title="Release $TAG" --generate-notes --latest || echo "Exists"
+
+          # 2. Создаем временную папку для готовых файлов
+          mkdir -p ./out
+
+          # 3. Собираем файлы из артефактов без лишних префиксов
+          for folder in ./artefacts/*; do
+            if [ -d "$folder" ]; then
+              PLATFORM=$(basename "$folder")
+              
+              find "$folder" -type f | while read -r src; do
+                ext=""
+                [[ "$src" == *.exe ]] && ext=".exe"
+                
+                # Имя файла будет типа: Fresh-linux-static-v2.90
+                # Без всяких sys_ в начале
+                dst="${NAME}-${PLATFORM}-v${VER}${ext}"
+                
+                cp "$src" "./out/$dst"
+                echo "✅ Ready: $dst"
+              done
+            fi
+          done
+
+          # 4. Заходим в папку с готовыми файлами и заливаем всё оттуда
+          cd out
+          sha256sum * > ../checksums.txt
+          gh release upload "$TAG" * ../checksums.txt --clobber

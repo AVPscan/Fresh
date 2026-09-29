@@ -16,6 +16,8 @@
 !LICENSE
 !NOTICE
 !.forgejo/
+!.forgejo/workflows/
+!.forgejo/workflows/*
 !.gitignore
 !.github/
 !.github/workflows/
