@@ -34,7 +34,7 @@ void GetKey(anu *b) {
   if (read(0, p, 1) <= 0) { *p = K_ESC; return; }
   c = *p; if (c > 127) {
     len = (c >= 0xF0) ? 4 : (c >= 0xE0) ? 3 : (c >= 0xC0) ? 2 : 1;
-    while (--len) read(0, ++p, 1);
+    while (--len) { if (read(0, ++p, 1) <= 0) break; }
     return; }
   if (c > 31 && c < 127) return;
   *p++ = K_ESC; *p = c; if (c != K_ESC) return; 
@@ -46,7 +46,7 @@ void GetKey(anu *b) {
       s1 = p; while (*++s1 == *++s2 && *s2);
       if (!*s2) { *p = NameId[j].id; break; } }
     if (j == (anu)~Off) *p = Off;
-    if (*p++ == (anu)K_Mouse) { len = 3; while(len--) read(0, p++, 1); } } }
+    if (*p++ == (anu)K_Mouse) { len = 3; while(len--) { if (read(0, p++, 1) <= 0) break; } } } }
 
 goc Real(rgoc fps) { if (!fps) { struct timespec f; clock_gettime(CLOCK_MONOTONIC_COARSE, &f); Flag.s = f.tv_sec; Flag.ns = f.tv_nsec; return fps; }
   struct timespec f = {0, 1000000000L / fps}; nanosleep(&f, NULL); clock_gettime(CLOCK_MONOTONIC_COARSE, &f);
@@ -69,6 +69,8 @@ void SWD(void) { if (!VRam.addr) return;
   char *path = (char*)(var.dbuf); As len = readlink("/proc/self/exe", path, 1024); if (len <= 0) return;
   path[len] = 0; if (MemCmp(path, "/nix/store", 10) == 0) {
     for (char **env = environ; *env != NULL; env++) { char *e = *env;
-      if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') { chdir(e + 5); return; } }
+      if (e[0] == 'H' && e[1] == 'O' && e[2] == 'M' && e[3] == 'E' && e[4] == '=') {
+        if (chdir(e + 5) == 0) { return; } break; } }
     return; }
-  for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0'; chdir(path); break; } }
+  for (char *p = path + len; p > path; p--) if (*p == '/') { *p = '\0';
+    if (chdir(path) == 0) break; } }

@@ -9,8 +9,8 @@
 
 TARGET = fresh
 UNAME_S := $(shell uname -s 2>/dev/null || echo Windows)
-BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra -Wno-unused-result -fno-builtin -flto
-CLANG_CFLAGS = -std=c11 -Oz -DNDEBUG -Wall -Wextra -Wno-unused-result -fno-builtin -flto
+BASE_CFLAGS = -std=c11 -Os -DNDEBUG -Wall -Wextra -flto
+CLANG_CFLAGS = -std=c11 -Oz -DNDEBUG -Wall -Wextra -flto
 LDFLAGS =
 CDFLAGS =
 

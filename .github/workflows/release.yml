@@ -18,14 +18,16 @@ env:
 jobs:
   # 1. Честная сборка Musl в Alpine
   build-musl:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     container: alpine:latest
     steps:
       - uses: actions/checkout@main
       - name: Build Static
         run: |
-          apk add --no-cache build-base make
-          make s CC=gcc
+          apk add --no-cache build-base gcc-13 g++-13 make
+          ln -sf /usr/bin/gcc-13 /usr/bin/gcc
+          ln -sf /usr/bin/g++-13 /usr/bin/g++
+          make s CC=gcc-13
       - name: Upload
         uses: actions/upload-artifact@main
         with:
@@ -39,20 +41,27 @@ jobs:
       matrix:
         include:
           - desc: "Linux-Dynamic"
-            os: ubuntu-latest
+            os: ubuntu-24.04
             cmd: make
             artifact: linux-dynamic
           - desc: "Windows"
-            os: windows-latest
+            os: windows-2025
             cmd: make
             artifact: windows-executable
           - desc: "macOS"
-            os: macos-latest
+            os: macos-15
             cmd: make
             artifact: macos-executable
 
     steps:
       - uses: actions/checkout@main
+      - name: Install GCC 13 (Linux)
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 g++-13
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
       - name: Build
         shell: bash
         run: ${{ matrix.cmd }}
