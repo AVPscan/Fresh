@@ -19,13 +19,14 @@ jobs:
   # 1. Честная сборка Musl в Alpine
   build-musl:
     runs-on: ubuntu-24.04
-    container: alpine:latest
     steps:
       - uses: actions/checkout@main
       - name: Build Static
-        run: |
-          apk add --no-cache build-base make
-          make s CC=gcc
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-13 musl-tools
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          make s CC=musl-gcc
       - name: Upload
         uses: actions/upload-artifact@main
         with:
@@ -47,7 +48,7 @@ jobs:
             cmd: make
             artifact: windows-executable
           - desc: "macOS"
-            os: macos-15
+            os: macos-latest
             cmd: make
             artifact: macos-executable
 
