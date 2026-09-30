@@ -24,10 +24,8 @@ jobs:
       - uses: actions/checkout@main
       - name: Build Static
         run: |
-          apk add --no-cache build-base gcc-13 g++-13 make
-          ln -sf /usr/bin/gcc-13 /usr/bin/gcc
-          ln -sf /usr/bin/g++-13 /usr/bin/g++
-          make s CC=gcc-13
+          apk add --no-cache build-base make
+          make s CC=gcc
       - name: Upload
         uses: actions/upload-artifact@main
         with:
