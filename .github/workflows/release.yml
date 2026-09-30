@@ -16,21 +16,20 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
-  # 1. Честная сборка Musl в Alpine
   build-musl:
     runs-on: ubuntu-24.04
-  steps:
-    - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@main
 
-    - name: Build Static
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-13 musl-tools
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
-        make s CC=musl-gcc
+      - name: Build Static
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-13 musl-tools
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
+          make s CC=musl-gcc
 
-    - name: Upload
-      uses: actions/upload-artifact@v4
+      - name: Upload
+        uses: actions/upload-artifact@main
         with:
           name: linux-static
           path: fresh
