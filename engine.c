@@ -161,10 +161,10 @@ void SwitchPalette(void) { anu* a = (var.dcon + sizeof(Canalysis)); if (a == var
 void GenLast(vnanu c) { GenRGB(Off, c, 511); GenFC(Base.Last, Base.Deep); var.XY = var.Spal; anu *off = (anu*)APal(Base.Last);
   if (var.dpal != (var.dcon + sizeof(Canalysis))) { var.XY = -var.XY; } MemCpy(off + var.XY, off, 20);
   MemCpy(off + var.XY + (var.Spal >> 1), off + (var.Spal >> 1), 20); }
-void GenPalettes(void) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; GenLast(Off); var.X = 2;
+void GenPalettes(void) { Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 127) ? Base.Colours : 126; Base.Last = Base.Colours + 1; GenLast(Off); var.X = 2;
   while(var.X--) { SetPalette(var.X); var.R = 0; var.G = 0; var.B = 0; GenFC(Off, Base.Deep); var.R = 255; var.G = var.R; var.B = var.R;
     var.XZ = Base.Colours; while(var.XZ) { GenFC((Base.Last - var.XZ), Base.Deep); GenRGB(var.X, --var.XZ, Base.Colours); } } }
-void ColourInit(vanu c, vanu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; Base.Colours = (c < 1) ? 1 : (c < 255) ? c : 254; Base.Last = Base.Colours + 1;
+void ColourInit(vanu c, vanu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; Base.Colours = (c < 1) ? 1 : (c < 127) ? c : 126; Base.Last = Base.Colours + 1;
   Base.AF = Base.Colours + 2; var.Spal = (((Base.AF << 2) + Base.AF) << 3); var.dbuf = (char*)var.dcon + sizeof(Canalysis) + (var.Spal << 1);
   Base.I[0] = Off; Base.I[1] = On; Base.I[2] = (c == 1) ? 1 : 2; Base.I[3] = (c == 1) ? 1 : ((((c << 3) / 5) + 14) >> 3); Base.I[4] = ((((c << 4) / 5) + 12) >> 3);
   Base.I[5] = (c == 1) ? 1 : ((((((c << 1) + c) << 3) / 5) + 12) >> 3); Base.I[6] = (c == 1) ? 1 : ((((c << 5) / 5) + 10) >> 3); Base.I[7] = Base.Colours;
@@ -172,7 +172,7 @@ void ColourInit(vanu c, vanu d) { Base.Deep = (d < b3) ? 3 : (d > b3) ? 24 : 8; 
 As HowSize(anu c, anu d, vanu w, As a) { Base.PCell = sizeof(As); Base.Goc = sizeof(goc); w = (w < 2) ? 2 : w;
   var.R = (Base.Goc < 8) ? (Base.Goc << 3) : 60; c = (c < 3) ? 3 : (c > var.R) ? var.R : c; var.off = 1 << c; Base.Mcol = var.off - 1;
   Base.W = ((var.off + (var.off << 3)) >> 5); Base.Mstr = Base.W - 1; var.off = (1 << ((c << 1) - 2)) | (1 << ((c << 1) - 5));
-  Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 255) ? Base.Colours : 254; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
+  Base.Colours = (Base.Colours < 1) ? 1 : (Base.Colours < 127) ? Base.Colours : 126; Base.Last = Base.Colours + 1; Base.AF = Base.Colours + 2;
   var.Spal = (((Base.AF << 2) + Base.AF) << 3); Base.Dynamic = (d < w) ? d : 1; Base.CellP = c; Base.Win = w; var.dkey = (anu*)a;
   if (var.dkey < (var.data = var.dkey + (256 << 3))) {
     if (var.data < (var.ds = var.data + (var.off << 2))) {
