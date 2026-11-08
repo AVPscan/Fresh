@@ -1,9 +1,9 @@
-/* 
+/*
  * Fresh (C) 2026 A.Pozdnyakov GPLv3 - see LICENSE
  * E-mail: avp70ru@mail.ru
- * 
- * Данная программа является свободным программным обеспечением: вы можете 
- * распространять ее и/или изменять согласно условиям Стандартной общественной 
+ *
+ * Данная программа является свободным программным обеспечением: вы можете
+ * распространять ее и/или изменять согласно условиям Стандартной общественной
  * лицензии GNU (GPLv3).
  */
 
@@ -12,7 +12,7 @@
 
 void Body(void) {  // пока не дописано WinData,Render9
   char *b = var.dbuf + 512, *p = b; anu l, v, w, j = 60, i = 8; Print(Base.Fone, Off, "\033[H"); while(i--) Print(Fon(7-i),Off," ");
-  Print(Base.Fone, Off, ""); As s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; } 
+  Print(Base.Fone, Off, ""); As s = ((VRam.size + 1023) / 1024); i = 3; *p++ = '\n'; *p++ = 'v'; while(i--) { *p++ = (VP.Mode & (1 << i)) ? '1' : '0'; }
   snprintf(p, 91, " %lu Kbyte %d %d %d %d %ld ", s, Base.CellP, Base.Dynamic, Base.Win, Base.Colours, var.end - var.dbuf); i = (anu)StrLen(b);
   Print((Base.Colours == 1) ? Ink(0) : Ink(3), aB, b); snprintf(b, 100, "%lu %lu %lu %lu:%lu:%lu                         ", Base.Din, Base.Sap, Base.Sam, Base.Hor, Base.Kal,
   Base.Vik); if ((anu)StrLen(b) > (j - i)) { *(b + j - i) = Off; } if ((anu)StrLen(b) >= (TS.c - i)) { *(b + TS.c - On - i) = Off; } Print(Ink(8), Off, b); if (TS.r < 3) return;
@@ -29,7 +29,7 @@ void Body(void) {  // пока не дописано WinData,Render9
 void Tim(void) { static anu c = Off; c = ((c + 1) & 7); SetBorder(Base.On, Fon(c)); }
 void Space(void) { if (!Base.On) Tim(); }
 
-void Init(void) { Fresh(8, 1, 100, Off, 500, 250); Colour(127, 24); Planet(97, 365, 400); Date(2026, 10, 9); Time(11, 35); SetPalette(On); Keys(K_ESC);
+void Init(void) { Fresh(8, 1, 100, Off, 500, 200); Colour(7, 24); Planet(97, 365, 400); Date(2026, 11, 8); Time(15, 0); SetPalette(On); Keys(K_ESC);
   Even(' ', Timer, K_ALT_TAB, K_ALT_ENT); Exec(Space, Tim, WDown, WUp); rgoc control = WStatic(Ink(7), -2, -2), W1 = WDynamic(Rand(Base.Colours + On) + On, Off, Off, 80, 24);
   WSet(W1, On, On); WView(W1, On, On); VP.Wexe = W1; WData(control, " %+5dMb %+3 %|6:%|6 %02c.%02.%4 %02:%02:%02 ", ((VRam.size + 1048575)/1048576), Ink(8));
   WExec(control, K_NO, Body); WExec(control, K_Ctrl_K, WSwitch); }
