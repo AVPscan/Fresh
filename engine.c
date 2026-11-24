@@ -1,9 +1,9 @@
 /*
  * Fresh (C) 2026 A.Pozdnyakov GPLv3 - see LICENSE
  * E-mail: avp70ru@mail.ru
- * 
- * Данная программа является свободным программным обеспечением: вы можете 
- * распространять ее и/или изменять согласно условиям Стандартной общественной 
+ *
+ * Данная программа является свободным программным обеспечением: вы можете
+ * распространять ее и/или изменять согласно условиям Стандартной общественной
  * лицензии GNU (GPLv3).
  */
 
@@ -51,21 +51,21 @@ void UTFinfo(anu *s) { var.Y = *s++; Buf.Dat = Off; if (var.Y < 0x80) var.RGB = 
   else if ((var.Y & 0xE0) == 0xC0 && (*s & 0xC0) == 0x80) { Buf.Dat++; var.RGB = ((var.Y & 0x1F) << 0x06) | (*s & 0x3F); }
   else if ((var.Y & 0xF0) == 0xE0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80)
     { Buf.Dat = 0x02; var.RGB = ((var.Y & 0x0F) << 0x0C) | ((*s & 0x3F) << 0x06) | (*(s + 0x01) & 0x3F); }
-  else if ((var.Y & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80) 
+  else if ((var.Y & 0xF8) == 0xF0 && (*s & 0xC0) == 0x80 && (*(s + 0x01) & 0xC0) == 0x80 && (*(s + 0x02) & 0xC0) == 0x80)
     { Buf.Dat = 0x03; var.RGB = ((var.Y & 0x07) << 0x12) | ((*s & 0x3F) << 0x0C) | ((*(s + 0x01) & 0x3F) << 0x06) | (*(s + 0x02) & 0x3F); }
   else { Buf.Dat |= b7; return; }
   if (var.RGB < 0x20 || (var.RGB >= 0x7F && var.RGB < 0xA0)) { Buf.Dat |= b5; return; }
   if (var.RGB < 0x100) { Buf.Dat |= b2; return; }
   if (var.RGB >= 0x0590 && var.RGB <= 0x08FF) Buf.Dat |= b4;
-  if (((Buf.Dat & 0x03) == 0x01 && var.RGB < 0x80) || ((Buf.Dat & 0x03) == 0x02 && (var.RGB < 0x800 || (var.RGB >= 0xD800 && var.RGB <= 0xDFFF))) || 
+  if (((Buf.Dat & 0x03) == 0x01 && var.RGB < 0x80) || ((Buf.Dat & 0x03) == 0x02 && (var.RGB < 0x800 || (var.RGB >= 0xD800 && var.RGB <= 0xDFFF))) ||
       ((Buf.Dat & 0x03) == 0x03 && (var.RGB < 0x10000 || var.RGB > 0x10FFFF))) { Buf.Dat |= b7; return; }
   if ((var.RGB >= 0x0300 && var.RGB <= 0x036F) || (var.RGB >= 0x1DC0 && var.RGB <= 0x1DFF) || (var.RGB >= 0x20D0 && var.RGB <= 0x20FF) ||
       (var.RGB == 0x200D || (var.RGB >= 0xFE00 && var.RGB <= 0xFE0F))) { Buf.Dat &= 0xF3; return; }
   if (var.RGB == 0x200B || var.RGB == 0x200C || var.RGB == 0x200E || var.RGB == 0x200F || (var.RGB >= 0xFE20 && var.RGB <= 0xFE2F) ||
       (var.RGB >= 0xE0100 && var.RGB <= 0xE01EF)) { Buf.Dat &= 0xF3; return; }
-  if ((var.RGB >= 0x1100 && var.RGB <= 0x115F) || (var.RGB == 0x2329 || var.RGB == 0x232A) || (var.RGB >= 0x2E80 && var.RGB <= 0xA4CF && var.RGB != 0x303F) || 
-      (var.RGB >= 0xAC00 && var.RGB <= 0xD7A3) || (var.RGB >= 0xF900 && var.RGB <= 0xFAFF) || (var.RGB >= 0xFE10 && var.RGB <= 0xFE19) || 
-      (var.RGB >= 0xFE30 && var.RGB <= 0xFE6F) || (var.RGB >= 0xFF00 && var.RGB <= 0xFF60) || (var.RGB >= 0xFFE0 && var.RGB <= 0xFFE6) || 
+  if ((var.RGB >= 0x1100 && var.RGB <= 0x115F) || (var.RGB == 0x2329 || var.RGB == 0x232A) || (var.RGB >= 0x2E80 && var.RGB <= 0xA4CF && var.RGB != 0x303F) ||
+      (var.RGB >= 0xAC00 && var.RGB <= 0xD7A3) || (var.RGB >= 0xF900 && var.RGB <= 0xFAFF) || (var.RGB >= 0xFE10 && var.RGB <= 0xFE19) ||
+      (var.RGB >= 0xFE30 && var.RGB <= 0xFE6F) || (var.RGB >= 0xFF00 && var.RGB <= 0xFF60) || (var.RGB >= 0xFFE0 && var.RGB <= 0xFFE6) ||
       (var.RGB >= 0x20000 && var.RGB <= 0x2FFFD) || (var.RGB >= 0x30000 && var.RGB <= 0x3FFFD) || (var.RGB >= 0x1F300)) { Buf.Dat |= 0x08; return; }
   Buf.Dat |= b2; }
 
@@ -111,7 +111,7 @@ van Times(van h, van m, van s) { return (van)(((((h % Base.HourInDay) * Base.Min
 van Dates(van y, van m, van d) { y += Base.ShiftYear - (m < Base.ShiftMonth); m += ((m < Base.ShiftMonth) * Base.MonInYear) - Base.ShiftMonth;
   return (van)(((y * Base.PlainYear) + ((y * Base.PlainVis) / Base.CycleYears)) + (((m * Base.YearLength) + (Base.YearLength >> 1)) / (Base.MonInYear * Base.CycleYears)) + d - Base.EpochShift); }
 
-void CSTime(an add) { 
+void CSTime(an add) {
   if (Base.JDN < Base.CoreJDN) Base.JDN = Base.CoreJDN;
   if ((Base.Time += add) >= Base.DaySec) { Base.JDN += (Base.Time / Base.DaySec); Base.Time %= Base.DaySec; }
   if (Base.JDN != Base.LJDN) { Base.LJDN = Base.JDN; Base.Sam = ((Base.JDN + Base.EpochShift) * Base.CycleYears) / Base.YearLength;
@@ -127,8 +127,8 @@ nanu Fsin(vnanu u) { static anu s[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,
   22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,
   55,56,57,58,59,60,61,62,63,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,
   87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,
-  115,116,117,118,119,120,121,122,123,124,125,126};
-  nanu r = s[u & 127]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
+  115,116,117,118,119,120,121,122,123,124,125,126}; nanu r = (u&b8) ? -u : u;
+  r = s[u & 127]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
 nanu Ftg(vnanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
 nanu Fctg(vnanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
 van CoreSqrt(van x) { if (!x) { return Off; } var.X1 = x >> 1;
@@ -155,7 +155,7 @@ void GenFC(vanu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ?
   src->d[src->l++] = 'm'; dst->l = src->l; MemCpy(dst->d, src->d, src->l); src->d[2] = '4';
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void GenRGB(anu mode, vanu c, vanu n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (anu)var.RGB;
-    var.RGB >>= 8; var.B = (anu)var.RGB; var.RGB >>= 8; var.R  = (anu)var.RGB; } 
+    var.RGB >>= 8; var.B = (anu)var.RGB; var.RGB >>= 8; var.R  = (anu)var.RGB; }
   else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
 void SetBorder(anu on, vanu b) {
   Print((Base.Border = (on) ? (Base.AF + Base.Last) : (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b), var.A, "\033[2J"); }
@@ -282,7 +282,7 @@ void _WView(rgoc n, anu c, vgoc *a) { vgoc x = Off, y = Off;
     if (x && !(w->F & b0)) { x = (x < Off) ? -x : x; y = (y < Off) ? -y : y;
       if ((rvgoc)VP.X > (rvgoc)Base.Mcol || (rvgoc)VP.Y > (rvgoc)Base.Mstr) return; } }
   if (c == Off) { x = VP.Xs + On; y = VP.Ys + On;
-    if (w->F & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; } 
+    if (w->F & b0) { if (TS.c < (x + w->W)) { x = -On; } if (TS.r < (y + w->H)) y = -On; }
     else if ((rvgoc)VP.X > (rvgoc)Base.Mcol || (rvgoc)VP.Y > (rvgoc)Base.Mstr) return; }
   w->Xr = x; w->Yr = y; if (w->Xr) { w->F |= b1; } else { w->F &= ~b1; } }
 rgoc _Window(anu t, anu col, anu c, rvgoc *a) { rgoc l, n; Windows* w;
