@@ -122,15 +122,7 @@ void CSTime(an add) {
 
 void IRnd(void) { Base.Rnd = (vanu)(Flag.ns | On); }
 vnanu Rand(vnanu n) { Base.Rnd = (vanu)(var.XYz = 0x3A7B + (0x4F2D * Base.Rnd)); return ((var.XYz * n) >> 16); }
-nanu Fcos(vnanu u) { return Fsin(u + 128); }
-nanu Fsin(vnanu u) { static anu s[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
-  22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,
-  55,56,57,58,59,60,61,62,63,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,
-  87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,
-  115,116,117,118,119,120,121,122,123,124,125,126}; nanu r = (u&b8) ? -u : u;
-  r = s[u & 127]; r = (u & b7) ? 127 - r : r; return ((u & b8) ? -r : r); }
-nanu Ftg(vnanu u) { return (Fcos(u) ? (Fsin(u) / Fcos(u)) : -128); }
-nanu Fctg(vnanu u) { return (Fsin(u) ? (Fcos(u) / Fsin(u)) : -128); }
+nanu Ftri(vnanu u) { nanu r = (u&b7) ? 127-(u&127):(u&127); return ((u&b8) ? ~r+1:r); }
 van CoreSqrt(van x) { if (!x) { return Off; } var.X1 = x >> 1;
   do { var.X2 = var.X1; var.X1 = (var.X1 + x / var.X1) >> 1; }
   while ((var.X2 > var.X1 ? var.X2 - var.X1 : var.X1 - var.X2) > On);
@@ -156,7 +148,7 @@ void GenFC(vanu c, anu deep) { anu i, j = 1, k = (deep > b3) ? 2 : (deep < b3) ?
   if (dst->d[2] == '9') { src->l++; src->d[2] = '1'; src->d[5] = src->d[4]; src->d[4] = src->d[3]; src->d[3] = '0'; } }
 void GenRGB(anu mode, vanu c, vanu n) { n = (n) ? n : 1; if (mode) { var.RGB = (((an)c << 24) / n) - On; var.G = (anu)var.RGB;
     var.RGB >>= 8; var.B = (anu)var.RGB; var.RGB >>= 8; var.R  = (anu)var.RGB; }
-  else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Fsin(var.Z); var.G = 128 + Fsin(var.Z + 171); var.R  = 128 + Fsin(var.Z + 342); } }
+  else { var.Z = var.U + ((an)c << 9) / n; var.B = 128 + Ftri(var.Z); var.G = 128 + Ftri(var.Z + 171); var.R  = 128 + Ftri(var.Z + 342); } }
 void SetBorder(anu on, vanu b) {
   Print((Base.Border = (on) ? (Base.AF + Base.Last) : (b < Base.AF || b > (Base.AF + Base.Colours)) ? Base.AF : b), var.A, "\033[2J"); }
 void SetPalette(anu set) { var.dpal = (var.dcon + sizeof(Canalysis)); if (set) var.dpal += var.Spal; }
